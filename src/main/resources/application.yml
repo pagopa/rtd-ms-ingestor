@@ -1,0 +1,94 @@
+logging:
+  level:
+    root: INFO
+
+decrypt:
+  resources:
+    base:
+      path: src/test/resources
+  api:
+    baseurl: https://${CSV_TRANSACTION_DECRYPT_HOST:internal.it}
+  blobclient:
+    basepath: storage
+    apikey: ${INTERNAL_SERVICES_API_KEY:myapikey}
+    sourceContainer: rtd-transactions-decrypted
+  
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+  cloud:
+    stream:
+      bindings:
+        blobStorageConsumer-in-0: # name must match [handler name]-in-0
+          destination: rtd-platform-events
+          group: rtd-platform-events-consumer-group
+          content-type: application/json
+          binder: kafka
+
+      kafka:
+        binder:
+          auto-create-topics: false
+          consumerProperties:
+            key: 
+              deserializer: org.apache.kafka.common.serialization.StringDeserializer
+            value:
+              deserializer: org.apache.kafka.common.serialization.StringDeserializer
+---
+spring: 
+  config:
+    activate:
+      on-profile: default
+  cloud:
+    stream:
+      bindings:
+        blobStorageConsumer-in-0: # name must match [handler name]-in-0
+          destination: rtd-platform-events
+          group: rtd-platform-events-consumer-group
+          content-type: application/json
+          binder: kafka
+      kafka:
+        binder:
+          auto-create-topics: false 
+          brokers: ${KAFKA_BROKER}          
+          configuration:
+            sasl:
+              jaas:
+                config: ${KAFKA_SASL_JAAS_CONFIG_CONSUMER_BLOB_STORAGE_EVENTS}
+              mechanism: PLAIN
+            security:
+              protocol: SASL_SSL
+          consumerProperties:
+            key: 
+              deserializer: org.apache.kafka.common.serialization.StringDeserializer
+            value:
+              deserializer: org.apache.kafka.common.serialization.StringDeserializer
+            socket:
+              connection:
+                setup:
+                  timeout:
+                    max:
+                      ms: 200000
+                    ms: 100000
+            request:
+              timeout:
+                ms: 60000
+            connections:
+              max:
+                idle:
+                  ms: 180000
+            max:
+              partition:
+                fetch:
+                  bytes: 10485760
+            session:
+              timeout:
+                ms: 10000
+            metadata:
+              max:
+                age:
+                  ms: 180000
+            # partition:
+            #   assignment:
+            #     strategy: org.apache.kafka.clients.consumer.RangeAssignor
