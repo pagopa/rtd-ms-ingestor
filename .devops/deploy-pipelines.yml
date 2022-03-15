@@ -1,21 +1,15 @@
-# Deploy to Azure Kubernetes Service
 # Build and push image to Azure Container Registry; Deploy to Azure Kubernetes Service
 # https://docs.microsoft.com/azure/devops/pipelines/languages/docker
 
 trigger:
   branches:
     include:
-      - master
+      - main
       - develop
-      - release-*
-      - features/*
-      - hotfix/*
+      - uat
   paths:
     include:
-      - api/*
-      - app/*
-      - core/*
-      - integration/*
+      - src/*
       - pom.xml
 
 pr: none
@@ -24,48 +18,38 @@ resources:
   - repo: self
 
 variables:
-  dockerfileRelativePath: '$(DOCKERFILE)' # DockerfileV1
 
-  # Agent VM image name for Build
   vmImageNameDefault: 'ubuntu-latest'
 
-  # Image Repository Name
   imageRepository: '$(K8S_IMAGE_REPOSITORY_NAME)'
   deployNamespace: '$(DEPLOY_NAMESPACE)'
   settingsXmlROsecureFileName: '$(SETTINGS_XML_RO_SECURE_FILE_NAME)'
   settingsXmlSecureFileName: '$(SETTINGS_XML_RO_SECURE_FILE_NAME)'
-  mavenGoals: 'package'
 
-  #isToDeploy: $[and(ne(variables['Build.Reason'], 'PullRequest'), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release'), startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix')))]
-  isToDeploy: false
-
-  ${{ if or(startsWith(variables['Build.SourceBranch'], 'refs/heads/release-dev'), startsWith(variables['Build.SourceBranch'], 'refs/heads/CEN-')) }}:
+  # If the branch is develop or a feature branch starting with CEN, deploy in DEV environment
+  ${{ if or(startsWith(variables['Build.SourceBranch'], 'refs/heads/develop'), startsWith(variables['Build.SourceBranch'], 'refs/heads/CEN')) }}:
     environment: 'DEV'
+    isToDeploy: true
     dockerRegistryServiceConnection: '$(DEV_CONTAINER_REGISTRY_SERVICE_CONN)'
     kubernetesServiceConnection: '$(DEV_KUBERNETES_SERVICE_CONN)'
     containerRegistry: '$(DEV_CONTAINER_REGISTRY_NAME)'
-    deployment: deployment-dev
     selfHostedAgentPool: $(DEV_AGENT_POOL)
-    # postman environment secure file
-    postmanEnvFile: fa_dev.postman_environment.json
-  ${{ if or(startsWith(variables['Build.SourceBranch'], 'refs/heads/release-uat'), startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix')) }}:
+
+  ${{ if startsWith(variables['Build.SourceBranch'], 'refs/heads/uat') }}:
     environment: 'UAT'
+    isToDeploy: true
     dockerRegistryServiceConnection: '$(UAT_CONTAINER_REGISTRY_SERVICE_CONN)'
     kubernetesServiceConnection: '$(UAT_KUBERNETES_SERVICE_CONN)'
     containerRegistry: '$(UAT_CONTAINER_REGISTRY_NAME)'
-    deployment: deployment-uat
     selfHostedAgentPool: $(UAT_AGENT_POOL)
-    # postman environment secure file
-    postmanEnvFile: fa_uat.postman_environment.json
-  ${{ if or(eq(variables['Build.SourceBranch'], 'refs/heads/master'),eq(variables['Build.SourceBranch'], 'refs/heads/release-prod')) }}:
+
+  ${{ if startsWith(variables['Build.SourceBranch'], 'refs/heads/main') }}:
     environment: 'PROD'
+    isToDeploy: true
     dockerRegistryServiceConnection: '$(PROD_CONTAINER_REGISTRY_SERVICE_CONN)'
     kubernetesServiceConnection: '$(PROD_KUBERNETES_SERVICE_CONN)'
     containerRegistry: '$(PROD_CONTAINER_REGISTRY_NAME)'
-    deployment: deployment-prod
     selfHostedAgentPool: $(PROD_AGENT_POOL)
-    # postman environment secure file
-    postmanEnvFile: fa_uat.postman_environment.json
 
 stages:
   - stage: Release
@@ -77,12 +61,6 @@ stages:
         pool:
           vmImage: $(vmImageNameDefault)
         steps:
-          - task: DownloadSecureFile@1
-            displayName: 'download settings.xml for Maven'
-            name: settingsxml
-            inputs:
-              secureFile: '$(settingsXmlSecureFileName)'
-              retryCount: '2'
           - task: Bash@3
             displayName: Get POM version
             name: getpomversion
@@ -90,10 +68,9 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
-                version=$(cat pom.xml | grep '^.*<version>' | sed -n 2p | awk -F'[><]' '{print $3}')
+                version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
                 echo "##vso[task.setvariable variable=outputpomversion;isOutput=true]$version"
               failOnStderr: true
-
   - stage: 'Build'
     displayName: 'Build_and_Publish_to_${{ variables.environment }}'
     dependsOn: Release
@@ -106,24 +83,6 @@ stages:
         pool:
           vmImage: $(vmImageNameDefault)
         steps:
-          - task: DownloadSecureFile@1
-            displayName: 'download settings.xml for Maven'
-            name: settingsxml
-            inputs:
-              secureFile: '$(settingsXmlSecureFileName)'
-              retryCount: '2'
-          - task: Maven@3
-            inputs:
-              mavenPomFile: 'pom.xml'
-              goals: '$(mavenGoals)'
-              options: '-B -s $(settingsxml.secureFilePath) -DskipTests=true'
-              javaHomeOption: 'JDKVersion'
-              jdkVersionOption: '1.8'
-              mavenVersionOption: 'Default'
-              mavenOptions: '-Xmx3072m'
-              mavenAuthenticateFeed: false
-              effectivePomSkip: true
-              sonarQubeRunAnalysis: false
           - task: Docker@2
             displayName: 'Publish_image_to_${{ variables.environment }}'
             condition: succeeded()
@@ -131,8 +90,6 @@ stages:
               containerRegistry: '$(dockerRegistryServiceConnection)'
               repository: '$(imageRepository)'
               command: 'buildAndPush'
-              Dockerfile: '$(Build.Repository.LocalPath)/$(dockerfileRelativePath)'
-              buildContext: '$(Build.Repository.LocalPath)'
               tags: |
                 $(Build.BuildId)
                 latest
@@ -146,14 +103,14 @@ stages:
               publishLocation: 'pipeline'
 
   - stage: 'Deploy'
-    displayName: 'Deploy_to_${{ variables.environment }}'
+    displayName: 'Deploy to ${{ variables.environment }} K8S'
     dependsOn: ['Release', 'Build']
     condition: and(succeeded(), eq(variables.isToDeploy, true))
     variables:
       pomversion: $[ stageDependencies.Release.POM.outputs['getpomversion.outputpomversion'] ]
     jobs:
       - deployment: 'Deploy_to_${{ variables.environment }}'
-        displayName: 'Deploy_to_${{ variables.environment }}'
+        displayName: 'Deploy to ${{ variables.environment }} K8S'
         pool:
           name: $(selfHostedAgentPool)
         environment: '$(environment)'
@@ -167,47 +124,34 @@ stages:
                     buildType: 'current'
                     artifactName: 'manifests'
                     targetPath: '$(Pipeline.Workspace)/manifests'
+        
+                - task: Bash@3
+                  displayName: Generate Kustomization
+                  name: generateKustomization
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      cd $(Pipeline.Workspace)/manifests
+                      rm -rf kustomization.*
+                      curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+                      ./kustomize create --autodetect
+                      ./kustomize edit set image rtdmsdecrypter=$(containerRegistry)/$(imageRepository):latest
+                      rm -rf kustomize
+                      cd $(Pipeline.Workspace)
+                    failOnStderr: true
                 - task: KubernetesManifest@0
-                  displayName: Deploy to Kubernetes cluster
+                  displayName: Customize Manifest
+                  name: customizeManifest
+                  inputs:
+                    action: bake
+                    renderType: kustomize
+                    kustomizationPath: $(Pipeline.Workspace)/manifests
+                - task: KubernetesManifest@0
+                  displayName: Deploy to Kubernetes Cluster
                   inputs:
                     action: deploy
-                    rolloutStatusTimeout: 120
+                    rolloutStatusTimeout: 180
                     kubernetesServiceConnection: ${{ variables.kubernetesServiceConnection }}
                     namespace: '$(deployNamespace)'
-                    manifests: |
-                      $(Pipeline.Workspace)/manifests/pagoPa/$(deployment).yml
-                      $(Pipeline.Workspace)/manifests/service.yml
+                    manifests:  $(customizeManifest.manifestsBundle)
                     containers: '$(containerRegistry)/$(imageRepository):$(pomversion)'
-
-  - stage: Test_e2e
-    displayName: 'Test_e2e_on_${{ variables.environment }}'
-    # TODO: before merging into release-dev modify the following condition
-    #       to depend on previous stages exit status
-    condition: always()
-    jobs:
-      - job: 'Run_Postman_collection_on_${{ variables.environment }}'
-        displayName: 'Run_Postman_collection_on_${{ variables.environment }}'
-        pool:
-          vmImage: $(vmImageNameDefault)
-        steps:
-          - task: Npm@1
-            displayName: Install newman
-            inputs:
-              command: custom
-              customCommand: install -g newman
-          - task: DownloadSecureFile@1
-            displayName: 'download postman environment'
-            name: postman_env
-            inputs:
-              secureFile: $(postmanEnvFile)
-          - task: CmdLine@2
-            displayName: Run newman
-            continueOnError: true # Useful to avoid the skipping of result publishing task
-            inputs:
-              script: newman run postman/CEN-518-user-onboarding.postman_collection.json -e $(postman_env.secureFilePath) --reporters cli,junit --reporter-junit-export result/test-result.xml              
-          - task: PublishTestResults@2
-            inputs:
-              testResultsFormat: 'JUnit'
-              testResultsFiles: '**/test-*.xml'
-              searchFolder: '$(System.DefaultWorkingDirectory)/result/'
-              testRunTitle: 'Publish Newman Test Results'
