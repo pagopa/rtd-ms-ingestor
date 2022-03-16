@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
-import org.springframework.cloud.stream.messaging.DirectWithAttributesChannel;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
@@ -27,7 +27,7 @@ class RtdMsIngestorApplicationTests {
 	EventHandler eh;
 
 	@Autowired
-	private DirectWithAttributesChannel channel;
+	private StreamBridge channel;
 
 	@Test
 	void shouldConsumeMessage() {
@@ -45,7 +45,7 @@ class RtdMsIngestorApplicationTests {
 
 		await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
 
-			channel.send(MessageBuilder.withPayload(my_list).build());
+			channel.send("blobStorageConsumer-in-0", MessageBuilder.withPayload(my_list).build());
 
 			verify(eh, times(1)).blobStorageConsumer();
 
