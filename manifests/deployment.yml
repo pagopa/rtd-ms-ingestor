@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rtdmsingestor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rtdmsingestor
+  template:
+    metadata:
+      labels:
+        app: rtdmsingestor
+    spec:
+      containers:
+        - name: rtdmsingestor
+          image: rtdmsingestor
+          imagePullPolicy: Always
+          envFrom:
+            # - configMapRef:
+            #     name: rtdingestor
+            - secretRef:
+                name: application-insights
+            - secretRef:
+                name: rtd-blob-storage-events
+            - secretRef:
+                name: rtd-internal-api
+          resources:
+            limits:
+              cpu: 500m
+              memory: 4Gi
+            requests:
+              cpu: 50m
+              memory: 256Mi
+
+
+

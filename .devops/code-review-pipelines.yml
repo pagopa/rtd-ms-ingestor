@@ -8,19 +8,7 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
-#variables:
-#  MAVEN_CACHE_FOLDER: $(Pipeline.Workspace)/.m2/repository
-#  MAVEN_OPTS: '-Dmaven.repo.local=$(MAVEN_CACHE_FOLDER)'
-
 steps:
-  #  - task: Cache@2
-  #    inputs:
-  #      key: 'maven | "$(Agent.OS)" | pom.xml'
-  #      restoreKeys: |
-  #        maven | "$(Agent.OS)"
-  #        maven
-  #      path: $(MAVEN_CACHE_FOLDER)
-  #    displayName: Cache Maven local repo
 
   - task: SonarCloudPrepare@1
     displayName: 'Prepare SonarCloud analysis configuration'
@@ -31,7 +19,7 @@ steps:
       extraProperties: |
         sonar.projectKey=$(SONARCLOUD_PROJECT_KEY)
         sonar.projectName=$(SONARCLOUD_PROJECT_NAME)
-        sonar.exclusions='**/enums/**, **/model/**, **/*Constant*, **/*Config.java, **/*Scheduler.java, **/*Application.java, **/src/test/**, **/Dummy*.java'
+
   - task: Maven@3
     inputs:
       mavenPomFile: 'pom.xml'
