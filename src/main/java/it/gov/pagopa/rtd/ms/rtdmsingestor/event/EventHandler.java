@@ -21,8 +21,6 @@ public class EventHandler {
   /**
    * Constructor.
    *
-   * @param decrypterImpl an instance of a Decrypter
-   * @param blobRestConnectorImpl an instance of a blobRestConnector
    * @return a consumer for Event Grid events
    */
   @Bean
