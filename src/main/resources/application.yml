@@ -23,7 +23,7 @@ spring:
       bindings:
         blobStorageConsumer-in-0: # name must match [handler name]-in-0
           destination: rtd-platform-events
-          group: rtd-platform-events-consumer-group
+          group: rtd-ingestor-consumer-group
           content-type: application/json
           binder: kafka
 
@@ -45,7 +45,7 @@ spring:
       bindings:
         blobStorageConsumer-in-0: # name must match [handler name]-in-0
           destination: rtd-platform-events
-          group: rtd-platform-events-consumer-group
+          group: rtd-ingestor-consumer-group
           content-type: application/json
           binder: kafka
       kafka:
