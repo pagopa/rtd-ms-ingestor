@@ -1,8 +1,11 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.model;
 
 
-import lombok.*;
-
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
