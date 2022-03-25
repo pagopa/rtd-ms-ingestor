@@ -3,23 +3,29 @@ logging:
     root: INFO
 
 ingestor:
+  resources:
+    base:
+      path: src/test/resources
   api:
-    baseurl: https://${CSV_INGESTOR_HOST:internal.it}
+    baseurl: https://${CSV_TRANSACTION_DECRYPT_HOST:internal.it}
   blobclient:
     basepath: storage
     apikey: ${INTERNAL_SERVICES_API_KEY:myapikey}
     sourceContainer: rtd-transactions-decrypted
+# kafka:
+#   binder:
+#     brokers: ${KAFKA_BROKER:localhost}
 
 ---
 spring:
   config:
     activate:
-      on-profile: default
+      on-profile: test
   cloud:
     stream:
       source: rtdTrxProducer
       function:
-        definition: blobStorageConsumer
+        definition: blobStorageConsumer;rtdTrxConsumer
       bindings:
         blobStorageConsumer-in-0: # name must match [handler name]-in-0
           destination: rtd-platform-events
@@ -27,6 +33,10 @@ spring:
           content-type: application/json
           binder: blob-storage
         rtdTrxProducer-out-0: # name must match [handler name]-out-0
+          destination: rtd-trx
+          binder: rtd-trx
+        rtdTrxConsumer-in-0: # name must match [handler name]-out-0
+          group: rtd-trx
           destination: rtd-trx
           binder: rtd-trx
       binders:
@@ -39,14 +49,12 @@ spring:
                   kafka:
                     binder:
                       auto-create-topics: false 
-                      brokers: ${KAFKA_BROKER}
-                      configuration:
-                        sasl:
-                          jaas:
-                            config: ${KAFKA_SASL_JAAS_CONFIG_CONSUMER_RTD_TRANSACTIONS}
-                          mechanism: PLAIN
-                        security:
-                          protocol: SASL_SSL 
+                      brokers: ${spring.embedded.kafka.brokers}
+                      # consumerProperties:
+                      #   key: 
+                      #     deserializer: org.apache.kafka.common.serialization.StringDeserializer
+                      #   value:
+                      #     deserializer: org.apache.kafka.common.serialization.StringDeserializer  
         blob-storage:
           type: kafka
           environment:
@@ -56,14 +64,7 @@ spring:
                   kafka:
                     binder:
                       auto-create-topics: false
-                      brokers: ${KAFKA_BROKER}
-                      configuration:
-                        sasl:
-                          jaas:
-                            config: ${KAFKA_SASL_JAAS_CONFIG_CONSUMER_BLOB_STORAGE_EVENTS}
-                          mechanism: PLAIN
-                        security:
-                          protocol: SASL_SSL
+                      brokers: ${spring.embedded.kafka.brokers}
                       consumerProperties:
                         key: 
                           deserializer: org.apache.kafka.common.serialization.StringDeserializer
