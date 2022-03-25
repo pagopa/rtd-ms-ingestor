@@ -43,7 +43,7 @@ spring:
                       configuration:
                         sasl:
                           jaas:
-                            config: ${KAFKA_SASL_JAAS_CONFIG_CONSUMER_RTD_TRANSACTIONS}
+                            config: ${KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_TRX}
                           mechanism: PLAIN
                         security:
                           protocol: SASL_SSL 
