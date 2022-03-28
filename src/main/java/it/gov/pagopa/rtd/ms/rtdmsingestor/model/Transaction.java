@@ -1,14 +1,16 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.model;
 
-
-import lombok.NoArgsConstructor;
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import lombok.NoArgsConstructor;
 
+/**
+ * This class represents the object containing transaction fields as attributes.
+ */
 @Data
 @Builder
 @NoArgsConstructor
