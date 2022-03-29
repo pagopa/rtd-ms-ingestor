@@ -9,9 +9,10 @@ import static org.mockito.Mockito.verify;
 
 import it.gov.pagopa.rtd.ms.rtdmsingestor.event.EventHandler;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.event.EventHandlerIntegration;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.EventGridEvent;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.service.BlobApplicationAware;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.service.BlobRestConnector;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +48,9 @@ class RtdMsIngestorApplicationTests {
   @SpyBean
   private BlobApplicationAware blobApplicationAware;
 
+  @SpyBean
+  private BlobRestConnector blobRestConnector;
+
   @Test
   void shouldSendMessageOnRtdQueue() {
     String container = "rtd-transactions-32489876908u74bh781e2db57k098c5ad034341i8u7y";
@@ -77,7 +81,7 @@ class RtdMsIngestorApplicationTests {
 
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
 
-      verify(blobApplicationAware, atLeastOnce())
+      verify(blobRestConnector, atLeastOnce())
           .test(ArgumentMatchers.<Message<Transaction>>any());
 
     });
