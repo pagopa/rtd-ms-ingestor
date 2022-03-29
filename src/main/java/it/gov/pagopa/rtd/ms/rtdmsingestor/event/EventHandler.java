@@ -28,11 +28,10 @@ public class EventHandler {
    * @return a consumer for Event Grid events.
    */
   @Bean
-  public Consumer<Message<List<EventGridEvent>>> blobStorageConsumer(
-      BlobApplicationAware blobApplicationAware) {
+  public Consumer<Message<List<EventGridEvent>>> blobStorageConsumer() {
     return message -> message.getPayload().stream()
         .filter(e -> "Microsoft.Storage.BlobCreated".equals(e.getEventType()))
-        .map(EventGridEvent::getSubject).map(blobApplicationAware::init)
+        .map(EventGridEvent::getSubject).map(BlobApplicationAware::new)
         .map(blobRestConnector::download).map(blobRestConnector::open)
         .map(blobRestConnector::produce).collect(Collectors.toList());
   }
