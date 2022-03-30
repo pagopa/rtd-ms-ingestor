@@ -20,12 +20,12 @@ public class BlobRestConnector {
   StreamBridge sb;
 
   public BlobApplicationAware download(BlobApplicationAware blob) {
-    log.info("Init: %s", blob.getUri());
+    log.info("Init: {}", blob.getUri());
     return blob;
   }
 
   public BlobApplicationAware open(BlobApplicationAware blob) {
-    log.info("Open: %s", blob.getUri());
+    log.info("Open: {}", blob.getUri());
     return blob;
   }
 
@@ -36,7 +36,7 @@ public class BlobRestConnector {
    * @return the transaction with the Acquiredr id set to "idtrx".
    */
   public Transaction produce(BlobApplicationAware blob) {
-    log.info("Produce: %s", blob.getUri());
+    log.info("Produce: {}", blob.getUri());
     Transaction t = new Transaction();
     t.setIdTrxAcquirer("idtrx");
     sb.send("rtdTrxProducer-out-0",  MessageBuilder.withPayload(t).build());
