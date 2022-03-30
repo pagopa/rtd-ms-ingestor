@@ -91,9 +91,11 @@ class BlobRestConnectorTest {
     assertThat(output.getOut(), containsString("GET Blob failed"));
   }
 
+  //This test is temporary
   @Test
   void shouldProduce(CapturedOutput output) {
     blobRestConnector.produce(blobIn);
+    assertThat(output.getOut(), containsString("Produce:"));
   }
 
 }
