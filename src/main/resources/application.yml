@@ -3,6 +3,9 @@ logging:
     root: INFO
 
 ingestor:
+  resources:
+    base:
+      path: src/test/resources
   api:
     baseurl: https://${CSV_INGESTOR_HOST:internal.it}
   blobclient:
