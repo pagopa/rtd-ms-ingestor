@@ -1,14 +1,17 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.service;
 
+import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
-import lombok.extern.slf4j.Slf4j;
 
+/**
+ * This class contains handling methods for blobs.
+ */
 @Service
 @Slf4j
 public class BlobRestConnector {
