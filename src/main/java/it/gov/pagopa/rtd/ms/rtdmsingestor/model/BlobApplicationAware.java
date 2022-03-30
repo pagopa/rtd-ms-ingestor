@@ -41,7 +41,6 @@ public class BlobApplicationAware {
       "^.*containers/((rtd)-transactions-[a-z0-9]{44})/blobs/(.*)");
 
   private static final String WRONG_FORMAT_NAME_WARNING_MSG = "Wrong name format:";
-  private static final String CONFLICTING_SERVICE_WARNING_MSG = "Conflicting service in URI:";
   private static final String EVENT_NOT_OF_INTEREST_WARNING_MSG = "Event not of interest:";
 
   private static final String FAIL_FILE_DELETE_WARNING_MSG = "Failed to delete local blob file:";
@@ -66,16 +65,8 @@ public class BlobApplicationAware {
       String[] blobNameTokenized = blob.split("\\.");
 
       if (checkNameFormat(blobNameTokenized)) {
-
-        //Check whether the blob's service matches in path and name,
-        // then assign the target container
-        if (matcher.group(2).equalsIgnoreCase("RTD")
-            && blobNameTokenized[0].equalsIgnoreCase("CSTAR")) {
-          targetContainer = targetContainerRtd;
-          status = Status.RECEIVED;
-        } else {
-          log.warn(CONFLICTING_SERVICE_WARNING_MSG + blobUri);
-        }
+        targetContainer = targetContainerRtd;
+        status = Status.RECEIVED;
       } else {
         log.warn(WRONG_FORMAT_NAME_WARNING_MSG + blobUri);
       }
