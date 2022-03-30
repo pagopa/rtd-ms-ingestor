@@ -1,35 +1,32 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.service;
 
+import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
 /**
- * Thi calss represents the mapping of a blob storage to Java object.
+ * This class contains handling methods for blobs.
  */
 @Service
 @Slf4j
-public class BlobApplicationAware {
+public class BlobRestConnector {
 
   @Autowired
   StreamBridge sb;
 
-  String uri;
-
-  public BlobApplicationAware init(String uri) {
-    this.uri = uri;
-    return this;
-  }
-
   public BlobApplicationAware download(BlobApplicationAware blob) {
-    return this;
+    log.info("Init: {}", blob.getUri());
+    return blob;
   }
 
   public BlobApplicationAware open(BlobApplicationAware blob) {
-    return this;
+    log.info("Open: {}", blob.getUri());
+    return blob;
   }
 
   /**
@@ -39,8 +36,10 @@ public class BlobApplicationAware {
    * @return the transaction with the Acquiredr id set to "idtrx".
    */
   public Transaction produce(BlobApplicationAware blob) {
+    log.info("Produce: {}", blob.getUri());
     Transaction t = new Transaction();
     t.setIdTrxAcquirer("idtrx");
+    sb.send("rtdTrxProducer-out-0",  MessageBuilder.withPayload(t).build());
     return t;
   }
 
