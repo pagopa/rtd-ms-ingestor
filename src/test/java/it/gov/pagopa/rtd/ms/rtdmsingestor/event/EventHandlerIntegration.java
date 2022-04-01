@@ -29,9 +29,7 @@ public class EventHandlerIntegration {
   @Bean
   public Consumer<Message<Transaction>> rtdTrxConsumer() {
     return message -> {
-      blobRestConnector.test(message);
-      log.info("\n\n\n\n\n\nTEST\n\n\n\n\n\n");
+      log.info("Received transaction:" + message.getPayload());
     };
   }
-
 }
