@@ -1,7 +1,6 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.model;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,7 +34,6 @@ public class Transaction {
   @CsvField(pos = 4)
   String hpan;
 
-  //TODO sistema il formato
   @CsvField(pos = 5)
   String trxDate;
 
