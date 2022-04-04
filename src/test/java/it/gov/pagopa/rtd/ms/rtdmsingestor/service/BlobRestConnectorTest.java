@@ -106,7 +106,7 @@ class BlobRestConnectorTest {
 
 
   @Test
-  void shouldProduce(CapturedOutput output) throws IOException {
+  void shouldProcess(CapturedOutput output) throws IOException {
     String transactions = "testTransactions.csv";
 
     FileOutputStream blobDst = new FileOutputStream(Path.of(resources, blobName).toString());
@@ -115,7 +115,7 @@ class BlobRestConnectorTest {
     fakeBlob.setTargetDir(resources);
     fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
 
-    blobRestConnector.produce(fakeBlob);
+    blobRestConnector.process(fakeBlob);
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
       assertThat(output.getOut(), containsString("Extracting transactions from:"));
       assertThat(output.getOut(), containsString("Extracted 5 transactions from:"));
@@ -124,7 +124,7 @@ class BlobRestConnectorTest {
   }
 
   @Test
-  void shouldNotProduceMissingFile(CapturedOutput output) throws IOException {
+  void shouldNotProcessForMissingFile(CapturedOutput output) throws IOException {
     String transactions = "testTransactions.csv";
 
     FileOutputStream blobDst = new FileOutputStream(Path.of(resources, blobName).toString());
@@ -134,7 +134,7 @@ class BlobRestConnectorTest {
     fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
     fakeBlob.setBlob(blobName + ".missing");
 
-    blobRestConnector.produce(fakeBlob);
+    blobRestConnector.process(fakeBlob);
     await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
       assertThat(output.getOut(), containsString("Extracting transactions from:"));
       assertThat(output.getOut(), containsString("Missing blob file:"));
