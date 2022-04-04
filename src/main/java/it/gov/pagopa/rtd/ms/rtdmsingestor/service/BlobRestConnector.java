@@ -72,12 +72,12 @@ public class BlobRestConnector {
   }
 
   /**
-   * Method that maps transaction fields taken them from csv into Transaction object. Then send it
-   * on the produce out queue. This is done for each transaction inside the blob received.
+   * Method that maps transaction fields taken them from csv into Transaction object, then send it
+   * on the output queue. This is done for each transaction inside the blob received.
    *
    * @param blob the blob of the transaction.
    */
-  public void produce(BlobApplicationAware blob) {
+  public void process(BlobApplicationAware blob) {
     log.info("Extracting transactions from:{}", blob.getBlobUri());
 
     boolean failProduce = false;
