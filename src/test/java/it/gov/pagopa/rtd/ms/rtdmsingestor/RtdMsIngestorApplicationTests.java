@@ -19,17 +19,18 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.cloud.stream.test.binder.TestSupportBinderAutoConfiguration;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.kafka.test.context.EmbeddedKafka;
-import org.springframework.messaging.Message;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -43,6 +44,7 @@ import org.springframework.test.context.TestPropertySource;
 @ContextConfiguration(classes = {EventHandler.class, EventHandlerIntegration.class})
 @TestPropertySource(value = {"classpath:application-test.yml"}, inheritProperties = false)
 @DirtiesContext
+@ExtendWith(OutputCaptureExtension.class)
 class RtdMsIngestorApplicationTests {
 
   @Autowired
@@ -66,7 +68,7 @@ class RtdMsIngestorApplicationTests {
   private final String myEventType = "Microsoft.Storage.BlobCreated";
 
   @Test
-  void shouldSendMessageOnRtdQueue() {
+  void shouldConsumeMessage() {
 
     BlobApplicationAware blobDownloaded = new BlobApplicationAware(blobUri);
     blobDownloaded.setStatus(BlobApplicationAware.Status.DOWNLOADED);
@@ -85,21 +87,6 @@ class RtdMsIngestorApplicationTests {
 
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
       verify(blobRestConnector, times(1)).download(any());
-
-    });
-  }
-
-
-  @Test
-  public void shouldReceiveMessgeFromRtdQueue() {
-    Transaction t = new Transaction();
-    t.setIdTrxAcquirer("idtrx");
-    stream.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
-
-    await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-
-      verify(blobRestConnector, atLeastOnce())
-          .test(ArgumentMatchers.<Message<Transaction>>any());
 
     });
   }
