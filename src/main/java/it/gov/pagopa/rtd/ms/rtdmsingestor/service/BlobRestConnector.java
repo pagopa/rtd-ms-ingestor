@@ -93,7 +93,7 @@ public class BlobRestConnector {
         //Get a StringReader from the next line of the blob
         StringReader line = new StringReader(it.nextLine());
         //Obtain the (only) Transaction object parsed from the csv line
-        Transaction t = (Transaction) new CsvToBeanBuilder(line).withSeparator(';')
+        Transaction t = new CsvToBeanBuilder<Transaction>(line).withSeparator(';')
             .withType(Transaction.class)
             .build().parse().get(0);
         sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
