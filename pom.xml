@@ -69,11 +69,10 @@
       <classifier>test-binder</classifier>
       <type>test-jar</type>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/net.sf.jsefa/jsefa -->
     <dependency>
-      <groupId>net.sf.jsefa</groupId>
-      <artifactId>jsefa</artifactId>
-      <version>1.1.1.RELEASE</version>
+      <groupId>com.opencsv</groupId>
+      <artifactId>opencsv</artifactId>
+      <version>5.6</version>
     </dependency>
   </dependencies>
   <dependencyManagement>

@@ -1,5 +1,6 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.service;
 
+import com.opencsv.bean.CsvToBeanBuilder;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
 import java.io.FileOutputStream;
@@ -9,8 +10,6 @@ import java.io.StringReader;
 import java.nio.file.Path;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
-import net.sf.jsefa.Deserializer;
-import net.sf.jsefa.csv.CsvIOFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.http.HttpResponse;
@@ -86,22 +85,20 @@ public class BlobRestConnector {
 
     String blobPath = Path.of(blob.getTargetDir(), blob.getBlob()).toString();
 
-    Deserializer deserializer = CsvIOFactory.createFactory(Transaction.class).createDeserializer();
-
     try (
         LineIterator it = FileUtils.lineIterator(
             Path.of(blobPath).toFile(), "UTF-8")
     ) {
       while (it.hasNext()) {
+        //Get a StringReader from the next line of the blob
         StringReader line = new StringReader(it.nextLine());
-        deserializer.open(line);
-        while (deserializer.hasNext()) {
-          Transaction t = deserializer.next();
-          sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
-          log.info(t.toString());
-          numTrx++;
-        }
-        deserializer.close(true);
+        //Obtain the (only) Transaction object parsed from the csv line
+        Transaction t = (Transaction) new CsvToBeanBuilder(line).withSeparator(';')
+            .withType(Transaction.class)
+            .build().parse().get(0);
+        sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
+        log.info(t.toString());
+        numTrx++;
       }
     } catch (IOException e) {
       failProduce = true;

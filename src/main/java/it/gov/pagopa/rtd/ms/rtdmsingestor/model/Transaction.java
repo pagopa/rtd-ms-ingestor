@@ -1,13 +1,12 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.model;
 
+import com.opencsv.bean.CsvBindByPosition;
 import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import net.sf.jsefa.csv.annotation.CsvDataType;
-import net.sf.jsefa.csv.annotation.CsvField;
 
 /**
  * This class represents the object containing transaction fields as attributes.
@@ -19,63 +18,62 @@ import net.sf.jsefa.csv.annotation.CsvField;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = {"idTrxAcquirer", "acquirerCode", "trxDate"}, callSuper = false)
-@CsvDataType()
 public class Transaction {
 
-  @CsvField(pos = 1)
+  @CsvBindByPosition(position = 0)
   String acquirerCode;
 
-  @CsvField(pos = 2)
+  @CsvBindByPosition(position = 1)
   String operationType;
 
-  @CsvField(pos = 3)
+  @CsvBindByPosition(position = 2)
   String circuitType;
 
-  @CsvField(pos = 4)
+  @CsvBindByPosition(position = 3)
   String hpan;
 
-  @CsvField(pos = 5)
+  @CsvBindByPosition(position = 4)
   String trxDate;
 
-  @CsvField(pos = 6)
+  @CsvBindByPosition(position = 5)
   String idTrxAcquirer;
 
-  @CsvField(pos = 7)
+  @CsvBindByPosition(position = 7)
   String idTrxIssuer;
 
-  @CsvField(pos = 8)
+  @CsvBindByPosition(position = 8)
   String correlationId;
 
-  @CsvField(pos = 9)
+  @CsvBindByPosition(position = 9)
   BigDecimal totalAmount;
 
-  @CsvField(pos = 10)
+  @CsvBindByPosition(position = 10)
   String amountCurrency;
 
-  @CsvField(pos = 11)
+  @CsvBindByPosition(position = 11)
   String acquirerId;
 
-  @CsvField(pos = 12)
+  @CsvBindByPosition(position = 12)
   String merchantId;
 
-  @CsvField(pos = 13)
+  @CsvBindByPosition(position = 13)
   String terminalId;
 
-  @CsvField(pos = 14)
+  @CsvBindByPosition(position = 14)
   String bin;
 
-  @CsvField(pos = 15)
+  @CsvBindByPosition(position = 15)
   String mcc;
 
-  @CsvField(pos = 16)
+  @CsvBindByPosition(position = 16)
   String fiscalCode;
 
-  @CsvField(pos = 17)
+  @CsvBindByPosition(position = 17)
   String vat;
 
-  @CsvField(pos = 18)
+  @CsvBindByPosition(position = 18)
   String posType;
 
-  @CsvField(pos = 19)
+  @CsvBindByPosition(position = 19)
   String par;
 }
