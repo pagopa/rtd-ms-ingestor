@@ -38,10 +38,6 @@ public class EventHandler {
         .filter(b -> Status.RECEIVED.equals(b.getStatus()))
         .map(blobRestConnector::download)
         .filter(b -> Status.DOWNLOADED.equals(b.getStatus()))
-        //.map(blobRestConnector::process)
-        //.filter(b -> Status.PRODUCED.equals(b.getStatus()))
-        //.map(blobRestConnector::delete)
-        //..filter(b -> Status.DELETED.equals(b.getStatus()))
         .map(EventHandler::test)
         .collect(Collectors.toList());
   }
