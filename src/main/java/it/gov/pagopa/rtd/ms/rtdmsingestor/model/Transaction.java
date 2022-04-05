@@ -9,9 +9,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 /**
- * This class represents the object containing transaction fields as attributes.
- * The format is based on the one specified at:
- * https://docs.pagopa.it/digital-transaction-register/v/digital-transaction-filter/acquirer-integration-with-pagopa-centrostella/integration/standard-pagopa-file-transactions
+ * This class represents the object containing transaction fields as attributes. The format is based
+ * on the one specified at: https://docs.pagopa.it/digital-transaction-register/v/digital-transaction-filter/acquirer-integration-with-pagopa-centrostella/integration/standard-pagopa-file-transactions
  */
 @Data
 @Builder
@@ -38,42 +37,42 @@ public class Transaction {
   @CsvBindByPosition(position = 5)
   String idTrxAcquirer;
 
-  @CsvBindByPosition(position = 7)
+  @CsvBindByPosition(position = 6)
   String idTrxIssuer;
 
-  @CsvBindByPosition(position = 8)
+  @CsvBindByPosition(position = 7)
   String correlationId;
 
-  @CsvBindByPosition(position = 9)
+  @CsvBindByPosition(position = 8)
   BigDecimal totalAmount;
 
-  @CsvBindByPosition(position = 10)
+  @CsvBindByPosition(position = 9)
   String amountCurrency;
 
-  @CsvBindByPosition(position = 11)
+  @CsvBindByPosition(position = 10)
   String acquirerId;
 
-  @CsvBindByPosition(position = 12)
+  @CsvBindByPosition(position = 11)
   String merchantId;
 
-  @CsvBindByPosition(position = 13)
+  @CsvBindByPosition(position = 12)
   String terminalId;
 
-  @CsvBindByPosition(position = 14)
+  @CsvBindByPosition(position = 13)
   String bin;
 
-  @CsvBindByPosition(position = 15)
+  @CsvBindByPosition(position = 14)
   String mcc;
 
-  @CsvBindByPosition(position = 16)
+  @CsvBindByPosition(position = 15)
   String fiscalCode;
 
-  @CsvBindByPosition(position = 17)
+  @CsvBindByPosition(position = 16)
   String vat;
 
-  @CsvBindByPosition(position = 18)
+  @CsvBindByPosition(position = 17)
   String posType;
 
-  @CsvBindByPosition(position = 19)
+  @CsvBindByPosition(position = 18)
   String par;
 }
