@@ -25,6 +25,7 @@ public class BlobApplicationAware {
     INIT,
     RECEIVED,
     DOWNLOADED,
+    PROCESSED,
   }
 
   private String blobUri;
