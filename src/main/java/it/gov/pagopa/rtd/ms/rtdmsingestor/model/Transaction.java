@@ -1,7 +1,9 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.model;
 
 import com.opencsv.bean.CsvBindByPosition;
+import com.opencsv.bean.CsvDate;
 import java.math.BigDecimal;
+import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,7 +34,8 @@ public class Transaction {
   String hpan;
 
   @CsvBindByPosition(position = 4)
-  String trxDate;
+  @CsvDate(value = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+  Date trxDate;
 
   @CsvBindByPosition(position = 5)
   String idTrxAcquirer;
