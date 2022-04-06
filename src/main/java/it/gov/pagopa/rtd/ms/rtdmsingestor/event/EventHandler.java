@@ -41,9 +41,4 @@ public class EventHandler {
         .map(EventHandler::test)
         .collect(Collectors.toList());
   }
-
-  public static Object test(Object o) {
-    log.info("--OK---");
-    return o;
-  }
 }
