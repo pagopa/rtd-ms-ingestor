@@ -38,7 +38,8 @@ public class EventHandler {
         .filter(b -> Status.RECEIVED.equals(b.getStatus()))
         .map(blobRestConnector::download)
         .filter(b -> Status.DOWNLOADED.equals(b.getStatus()))
-        .map(EventHandler::test)
+        .map(blobRestConnector::process)
+        .filter(b -> Status.PROCESSED.equals(b.getStatus()))
         .collect(Collectors.toList());
   }
 }
