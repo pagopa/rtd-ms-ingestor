@@ -122,7 +122,7 @@ class BlobRestConnectorTest {
       assertThat(output.getOut(), containsString("Extracting transactions from:"));
       assertThat(output.getOut(), containsString("Extracted 5 transactions from:"));
       assertThat(output.getOut(), containsString("Received transaction:"));
-      assertEquals(fakeBlob.getStatus(), Status.PROCESSED);
+      assertEquals(Status.PROCESSED, fakeBlob.getStatus());
     });
   }
 
@@ -143,7 +143,7 @@ class BlobRestConnectorTest {
       assertThat(output.getOut(), containsString("Missing blob file:"));
       assertThat(output.getOut(), not(containsString("Extracted 5 transactions from:")));
       assertThat(output.getOut(), not(containsString("Received transaction:")));
-      assertNotEquals(fakeBlob.getStatus(), Status.PROCESSED);
+      assertNotEquals(Status.PROCESSED, fakeBlob.getStatus());
     });
   }
 
