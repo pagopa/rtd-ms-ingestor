@@ -1,13 +1,17 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.service;
 
+import com.opencsv.bean.CsvToBeanBuilder;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.StringReader;
 import java.nio.file.Path;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.LineIterator;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
@@ -16,7 +20,6 @@ import org.apache.http.message.BasicHeader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
-import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
@@ -68,21 +71,44 @@ public class BlobRestConnector {
   }
 
   /**
-   * TEMPORARY IMPL - Method that currently set the Acquirer Id to "idtrx".
+   * Method that maps transaction fields taken them from csv into Transaction object, then send it
+   * on the output queue. This is done for each transaction inside the blob received.
    *
    * @param blob the blob of the transaction.
-   * @return the transaction with the Acquiredr id set to "idtrx".
    */
-  public Transaction produce(BlobApplicationAware blob) {
-    log.info("Produce: {}", blob.getBlobUri());
-    Transaction t = new Transaction();
-    t.setIdTrxAcquirer("idtrx");
-    sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
-    return t;
-  }
+  public void process(BlobApplicationAware blob) {
+    log.info("Extracting transactions from:{}", blob.getBlobUri());
 
-  public void test(Message<Transaction> t) {
-    log.info("\n" + t.getPayload().getIdTrxAcquirer() + "\n");
+    boolean failProduce = false;
+
+    int numTrx = 0;
+
+    String blobPath = Path.of(blob.getTargetDir(), blob.getBlob()).toString();
+
+    try (
+        LineIterator it = FileUtils.lineIterator(
+            Path.of(blobPath).toFile(), "UTF-8")
+    ) {
+      while (it.hasNext()) {
+        //Get a StringReader from the next line of the blob
+        StringReader line = new StringReader(it.nextLine());
+        //Obtain the (only) Transaction object parsed from the csv line
+        //Read in batch is possible but requires a change in the use of line iterator
+        Transaction t = new CsvToBeanBuilder<Transaction>(line).withSeparator(';')
+            .withType(Transaction.class)
+            .build().parse().get(0);
+        sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
+        log.info(t.toString());
+        numTrx++;
+      }
+    } catch (IOException e) {
+      failProduce = true;
+      log.error("Missing blob file:{}", blobPath);
+    }
+
+    if (!failProduce) {
+      log.info("Extracted {} transactions from:{}", numTrx, blob.getBlobUri());
+    }
   }
 
   static class FileDownloadResponseHandler implements ResponseHandler<OutputStream> {
