@@ -5,6 +5,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -13,6 +14,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -120,6 +122,7 @@ class BlobRestConnectorTest {
       assertThat(output.getOut(), containsString("Extracting transactions from:"));
       assertThat(output.getOut(), containsString("Extracted 5 transactions from:"));
       assertThat(output.getOut(), containsString("Received transaction:"));
+      assertEquals(fakeBlob.getStatus(), Status.PROCESSED);
     });
   }
 
@@ -135,11 +138,12 @@ class BlobRestConnectorTest {
     fakeBlob.setBlob(blobName + ".missing");
 
     blobRestConnector.process(fakeBlob);
-    await().atMost(Duration.ofSeconds(3)).untilAsserted(() -> {
+    await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
       assertThat(output.getOut(), containsString("Extracting transactions from:"));
       assertThat(output.getOut(), containsString("Missing blob file:"));
       assertThat(output.getOut(), not(containsString("Extracted 5 transactions from:")));
       assertThat(output.getOut(), not(containsString("Received transaction:")));
+      assertNotEquals(fakeBlob.getStatus(), Status.PROCESSED);
     });
   }
 
