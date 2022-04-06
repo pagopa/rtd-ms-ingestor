@@ -93,6 +93,7 @@ public class BlobRestConnector {
         //Get a StringReader from the next line of the blob
         StringReader line = new StringReader(it.nextLine());
         //Obtain the (only) Transaction object parsed from the csv line
+        //Read in batch is possible but requires a change in the use of line iterator
         Transaction t = new CsvToBeanBuilder<Transaction>(line).withSeparator(';')
             .withType(Transaction.class)
             .build().parse().get(0);
