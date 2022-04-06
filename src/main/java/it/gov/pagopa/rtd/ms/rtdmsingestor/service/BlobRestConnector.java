@@ -2,6 +2,7 @@ package it.gov.pagopa.rtd.ms.rtdmsingestor.service;
 
 import com.opencsv.bean.CsvToBeanBuilder;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -76,7 +77,7 @@ public class BlobRestConnector {
    *
    * @param blob the blob of the transaction.
    */
-  public void process(BlobApplicationAware blob) {
+  public BlobApplicationAware process(BlobApplicationAware blob) {
     log.info("Extracting transactions from:{}", blob.getBlobUri());
 
     boolean failProduce = false;
@@ -108,7 +109,10 @@ public class BlobRestConnector {
 
     if (!failProduce) {
       log.info("Extracted {} transactions from:{}", numTrx, blob.getBlobUri());
+      blob.setStatus(Status.PROCESSED);
     }
+
+    return blob;
   }
 
   static class FileDownloadResponseHandler implements ResponseHandler<OutputStream> {
