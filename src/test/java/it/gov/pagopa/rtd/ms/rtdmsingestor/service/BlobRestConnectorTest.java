@@ -172,5 +172,54 @@ class BlobRestConnectorTest {
     });
   }
 
+  @Test
+  void shouldDelete(CapturedOutput output) throws IOException {
+
+    CloseableHttpResponse mockedResponse = mock(CloseableHttpResponse.class);
+    when(mockedResponse.getStatusLine()).thenReturn(
+        new BasicStatusLine(HttpVersion.HTTP_1_1, HttpStatus.SC_ACCEPTED,
+            "Blob successfully deleted."));
+
+    doReturn(mockedResponse).when(client)
+        .execute(any(HttpDelete.class));
+
+    blobRestConnector.delete(fakeBlob);
+
+    verify(client, times(1)).execute(any(HttpUriRequest.class));
+    assertEquals(Status.REMOTELY_DELETED, fakeBlob.getStatus());
+    assertThat(output.getOut(), not(containsString("Can't delete blob")));
+    assertThat(output.getOut(), containsString(fakeBlob.getBlob() + " deleted successfully"));
+  }
+
+  @Test
+  void shouldFailDeleteExceptionOnHttpCall(CapturedOutput output) throws IOException {
+
+    doThrow(new IOException("Connection problem.")).when(client)
+        .execute(any(HttpDelete.class));
+
+    blobRestConnector.delete(fakeBlob);
+
+    verify(client, times(1)).execute(any(HttpUriRequest.class));
+    assertNotEquals(Status.REMOTELY_DELETED, fakeBlob.getStatus());
+    assertThat(output.getOut(), containsString("Unexpected error:"));
+  }
+
+  @Test
+  void shouldFailDeleteWrongStatusCode(CapturedOutput output) throws IOException {
+
+    CloseableHttpResponse mockedResponse = mock(CloseableHttpResponse.class);
+    when(mockedResponse.getStatusLine()).thenReturn(
+        new BasicStatusLine(HttpVersion.HTTP_1_1, HttpStatus.SC_FORBIDDEN,
+            "Authentication failed."));
+
+    doReturn(mockedResponse).when(client)
+        .execute(any(HttpDelete.class));
+
+    blobRestConnector.delete(fakeBlob);
+
+    verify(client, times(1)).execute(any(HttpUriRequest.class));
+    assertNotEquals(Status.REMOTELY_DELETED, fakeBlob.getStatus());
+    assertThat(output.getOut(), containsString("Invalid HTTP response:"));
+  }
 
 }
