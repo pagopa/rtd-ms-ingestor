@@ -14,7 +14,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicHeader;
@@ -110,6 +113,36 @@ public class BlobRestConnector {
     if (!failProduce) {
       log.info("Extracted {} transactions from:{}", numTrx, blob.getBlobUri());
       blob.setStatus(Status.PROCESSED);
+    }
+
+    return blob;
+  }
+
+  /**
+   * Method that allows the deletion of the blob from a remote storage.
+   *
+   * @param blob a blob that has been processed and have to be removed both remotely ad locally.
+   * @return a remotely deleted blob with REMOTELY_DELETED status.
+   */
+  public BlobApplicationAware delete(BlobApplicationAware blob) {
+    String uri = baseUrl + "/" + blobBasePath + "/" + blob.getContainer() + "/" + blob.getBlob();
+    final HttpDelete deleteBlob = new HttpDelete(uri);
+    deleteBlob.setHeader(new BasicHeader("Ocp-Apim-Subscription-Key", blobApiKey));
+    deleteBlob.setHeader(new BasicHeader("x-ms-version", "2021-04-10"));
+
+    try (CloseableHttpResponse myResponse = httpClient.execute(deleteBlob)) {
+
+      int statusCode = myResponse.getStatusLine().getStatusCode();
+      if (statusCode == HttpStatus.SC_ACCEPTED) {
+        blob.setStatus(Status.REMOTELY_DELETED);
+        log.info("Remote blob {} deleted successfully", uri);
+      } else {
+        log.error("Can't delete blob {}. Invalid HTTP response: {}, {}", uri, statusCode,
+            myResponse.getStatusLine().getReasonPhrase());
+      }
+
+    } catch (Exception ex) {
+      log.error("Can't delete blob {}. Unexpected error: {}", uri, ex.getMessage());
     }
 
     return blob;
