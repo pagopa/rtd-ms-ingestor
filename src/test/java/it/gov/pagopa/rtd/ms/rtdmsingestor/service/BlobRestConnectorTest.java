@@ -12,19 +12,28 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import org.apache.commons.io.FileUtils;
+import org.apache.http.HttpStatus;
+import org.apache.http.HttpVersion;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.message.BasicStatusLine;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
@@ -57,6 +66,9 @@ class BlobRestConnectorTest {
   @Value("${ingestor.resources.base.path}")
   String resources;
 
+  @Value("${ingestor.resources.base.path}/tmp")
+  String tmpDirectory;
+
   @Autowired
   private StreamBridge stream;
 
@@ -70,17 +82,30 @@ class BlobRestConnectorTest {
   CloseableHttpClient client;
 
   private final String container = "rtd-transactions-32489876908u74bh781e2db57k098c5ad034341i8u7y";
-  private final String blobName = "CSTAR.99910.TRNLOG.20220228.103107.001.csv.pgp";
+  private final String blobName = "CSTAR.99910.TRNLOG.20220228.103107.001.csv.pgp.decrypted";
 
-  private final BlobApplicationAware fakeBlob = new BlobApplicationAware(
+  private BlobApplicationAware fakeBlob = new BlobApplicationAware(
       "/blobServices/default/containers/" + container + "/blobs/" + blobName);
+
+  @AfterEach
+  void cleanTmpFiles() throws IOException {
+    FileUtils.deleteDirectory(Path.of(tmpDirectory).toFile());
+  }
+
 
   @Test
   void shouldDownload(CapturedOutput output) throws IOException {
     // Improvement idea: mock all the stuff needed in order to allow the FileDownloadResponseHandler
     // class to create a file in a temporary directory and test the content of the downloaded file
     // for an expected content.
+
+    //Create the mocked output stream to simulate the blob download
+    File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
+    decryptedFile.getParentFile().mkdirs();
+    decryptedFile.createNewFile();
+    fakeBlob.setTargetDir(tmpDirectory);
     OutputStream mockedOutputStream = mock(OutputStream.class);
+
     doReturn(mockedOutputStream).when(client)
         .execute(any(HttpGet.class), any(BlobRestConnector.FileDownloadResponseHandler.class));
 
@@ -111,10 +136,14 @@ class BlobRestConnectorTest {
   void shouldProcess(CapturedOutput output) throws IOException {
     String transactions = "testTransactions.csv";
 
-    FileOutputStream blobDst = new FileOutputStream(Path.of(resources, blobName).toString());
+    //Create fake file to process
+    File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
+    decryptedFile.getParentFile().mkdirs();
+    decryptedFile.createNewFile();
+    FileOutputStream blobDst = new FileOutputStream(Path.of(tmpDirectory, blobName).toString());
     Files.copy(Path.of(resources, transactions), blobDst);
 
-    fakeBlob.setTargetDir(resources);
+    fakeBlob.setTargetDir(tmpDirectory);
     fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
 
     blobRestConnector.process(fakeBlob);
@@ -127,11 +156,7 @@ class BlobRestConnectorTest {
   }
 
   @Test
-  void shouldNotProcessForMissingFile(CapturedOutput output) throws IOException {
-    String transactions = "testTransactions.csv";
-
-    FileOutputStream blobDst = new FileOutputStream(Path.of(resources, blobName).toString());
-    Files.copy(Path.of(resources, transactions), blobDst);
+  void shouldNotProcessForMissingFile(CapturedOutput output) {
 
     fakeBlob.setTargetDir(resources);
     fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
