@@ -26,6 +26,7 @@ public class BlobApplicationAware {
     RECEIVED,
     DOWNLOADED,
     PROCESSED,
+    REMOTELY_DELETED,
   }
 
   private String blobUri;
