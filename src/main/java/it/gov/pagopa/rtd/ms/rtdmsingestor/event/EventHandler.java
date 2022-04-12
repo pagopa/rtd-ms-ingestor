@@ -42,6 +42,8 @@ public class EventHandler {
         .filter(b -> Status.PROCESSED.equals(b.getStatus()))
         .map(blobRestConnector::deleteRemote)
         .filter(b -> Status.REMOTELY_DELETED.equals(b.getStatus()))
+        .map(BlobApplicationAware::localCleanup)
+        .filter(b -> Status.LOCALLY_DELETED.equals(b.getStatus()))
         .collect(Collectors.toList());
   }
 }
