@@ -119,9 +119,10 @@ class BlobApplicationAwareTest {
     assertFalse(Files.exists(Path.of(tmpDirectory, fakeBlob.getBlob())));
   }
 
-  //This test simulates the scenario where in the temporary folder with the same name as the blob
-  // to be deleted.
-  //Thi is done in order to trigger the catch clause in the localCleanup method.
+  //This test simulates the following scenario:
+  // In the temporary folder there is a folder (containing a dummy file) with the name that
+  // starts as the blob to be deleted.
+  // This is done in order to trigger the catch clause in the localCleanup method.
   @Test
   void shouldFailFindingLocalEncryptedFile(CapturedOutput output) throws IOException {
     File nestedBlob = Path.of(tmpDirectory, blobNameRtd + ".dir", blobNameRtd + ".nested").toFile();
