@@ -97,47 +97,53 @@ public class BlobRestConnector {
     ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
     Validator validator = factory.getValidator();
 
-    try (
-        LineIterator it = FileUtils.lineIterator(
-            Path.of(blobPath).toFile(), "UTF-8")
-    ) {
-      while (it.hasNext()) {
-        //Get a StringReader from the next line of the blob
-        StringReader line = new StringReader(it.nextLine());
-        //Obtain the (only) Transaction object parsed from the csv line
-        //Read in batch is possible but requires a change in the use of line iterator
-        try {
-          Transaction t = new CsvToBeanBuilder<Transaction>(line).withSeparator(';')
-              .withThrowExceptions(false)
-              .withType(Transaction.class)
-              .build().parse().get(0);
-
-          Set<ConstraintViolation<Transaction>> violations = validator.validate(t);
-          if (violations.isEmpty()) {
-            //If no field format violation has been found the transaction is sent
-            sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
-            log.info(t.toString());
-            numTrx++;
-          } else {
-            //Creates a string with all the malformed fields
-            StringBuilder malformedFields = new StringBuilder();
-            for (ConstraintViolation<Transaction> violation : violations) {
-              malformedFields.append(violation.getPropertyPath().toString()).append(" ");
-            }
-            log.error("Malformed fields extracted from {}: {}",
-                blob.getBlob(), malformedFields);
-          }
-        } catch (RuntimeException e) {
-          log.error(
-              "Malformed fields extracted from {}:"
-                  + " at least non-ISO8601 date or non-numeric amount.",
-              blob.getBlob());
-        }
-        numRows++;
-      }
+    LineIterator it;
+    try {
+      it = FileUtils.lineIterator(Path.of(blobPath).toFile(), "UTF-8");
     } catch (IOException e) {
       log.error("Missing blob file:{}", blobPath);
       return blob;
+    }
+
+    while (it.hasNext()) {
+      //Get a StringReader from the next line of the blob
+      StringReader line = new StringReader(it.nextLine());
+      //Obtain the (only) Transaction object parsed from the csv line
+      //Read in batch is possible but requires a change in the use of line iterator
+      try {
+        Transaction t = new CsvToBeanBuilder<Transaction>(line).withSeparator(';')
+            .withThrowExceptions(false)
+            .withType(Transaction.class)
+            .build().parse().get(0);
+
+        Set<ConstraintViolation<Transaction>> violations = validator.validate(t);
+        if (violations.isEmpty()) {
+          //If no field format violation has been found the transaction is sent
+          sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
+          log.info(t.toString());
+          numTrx++;
+        } else {
+          //Creates a string with all the malformed fields
+          StringBuilder malformedFields = new StringBuilder();
+          for (ConstraintViolation<Transaction> violation : violations) {
+            malformedFields.append(violation.getPropertyPath().toString()).append(" ");
+          }
+          log.error("Malformed fields extracted from {}: {}",
+              blob.getBlob(), malformedFields);
+        }
+      } catch (RuntimeException e) {
+        log.error(
+            "Malformed fields extracted from {}:"
+                + " at least non-ISO8601 date or non-numeric amount.",
+            blob.getBlob());
+      }
+      numRows++;
+    }
+
+    try {
+      it.close();
+    } catch (IOException e) {
+      log.error("Error closing line iterator");
     }
 
     if (numRows == numTrx) {
