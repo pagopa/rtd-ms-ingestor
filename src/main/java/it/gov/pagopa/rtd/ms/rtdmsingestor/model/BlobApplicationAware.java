@@ -1,7 +1,11 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.model;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.Getter;
@@ -27,6 +31,7 @@ public class BlobApplicationAware {
     DOWNLOADED,
     PROCESSED,
     REMOTELY_DELETED,
+    LOCALLY_DELETED,
   }
 
   private String blobUri;
@@ -45,7 +50,7 @@ public class BlobApplicationAware {
   private static final String WRONG_FORMAT_NAME_WARNING_MSG = "Wrong name format:";
   private static final String EVENT_NOT_OF_INTEREST_WARNING_MSG = "Event not of interest:";
 
-  private static final String FAIL_FILE_DELETE_WARNING_MSG = "Failed to delete local blob file:";
+  private static final String FAIL_FILE_DELETE_WARNING_MSG = "Failed to delete local file:";
 
   /**
    * Constructor.
@@ -121,6 +126,31 @@ public class BlobApplicationAware {
 
     // Check for progressive value
     return (uriTokens[5] != null) && uriTokens[5].matches("[0-9]{3}");
+  }
+
+  /**
+   * This method deletes the local files left by the blob handling.
+   */
+  public BlobApplicationAware localCleanup() {
+
+    boolean failCleanup = false;
+
+    for (File f : Objects.requireNonNull(Path.of(this.targetDir).toFile().listFiles())) {
+      //Delete every file in the temporary directory that starts with the name of the blob.
+      if (f.getName().startsWith(blob)) {
+        try {
+          Files.delete(f.toPath());
+        } catch (Exception e) {
+          log.warn(FAIL_FILE_DELETE_WARNING_MSG + f.getName() + " (" + e + ")");
+          failCleanup = true;
+        }
+      }
+    }
+
+    if (!failCleanup) {
+      status = Status.LOCALLY_DELETED;
+    }
+    return this;
   }
 
 }
