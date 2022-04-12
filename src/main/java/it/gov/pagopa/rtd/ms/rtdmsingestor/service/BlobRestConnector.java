@@ -10,6 +10,11 @@ import java.io.OutputStream;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Set;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
@@ -83,11 +88,14 @@ public class BlobRestConnector {
   public BlobApplicationAware process(BlobApplicationAware blob) {
     log.info("Extracting transactions from:{}", blob.getBlobUri());
 
-    boolean failProduce = false;
-
+    int numRows = 0;
     int numTrx = 0;
 
     String blobPath = Path.of(blob.getTargetDir(), blob.getBlob()).toString();
+
+    //Validator for checking transaction fields' correctness
+    ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+    Validator validator = factory.getValidator();
 
     try (
         LineIterator it = FileUtils.lineIterator(
@@ -98,23 +106,54 @@ public class BlobRestConnector {
         StringReader line = new StringReader(it.nextLine());
         //Obtain the (only) Transaction object parsed from the csv line
         //Read in batch is possible but requires a change in the use of line iterator
-        Transaction t = new CsvToBeanBuilder<Transaction>(line).withSeparator(';')
-            .withType(Transaction.class)
-            .build().parse().get(0);
-        sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
-        log.info(t.toString());
-        numTrx++;
+        try {
+          Transaction t = new CsvToBeanBuilder<Transaction>(line).withSeparator(';')
+              .withThrowExceptions(false)
+              .withType(Transaction.class)
+              .build().parse().get(0);
+
+          Set<ConstraintViolation<Transaction>> violations = validator.validate(t);
+          if (violations.isEmpty()) {
+            //If no field format violation has been found the transaction is sent
+            sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
+            log.info(t.toString());
+            numTrx++;
+          } else {
+            //Creates a string with all the malformed fields
+            StringBuilder malformedFields = new StringBuilder();
+            for (ConstraintViolation<Transaction> violation : violations) {
+              malformedFields.append(violation.getPropertyPath().toString()).append(" ");
+            }
+            log.error("Malformed fields extracted from {}: {}",
+                blob.getBlob(), malformedFields);
+            //Send the malformed transactions to the Dead Letter Queue
+            //Something like sb.send("trx-error-out-0", MessageBuilder.withPayload(t).build());
+          }
+        } catch (RuntimeException e) {
+          log.error(
+              "Malformed fields extracted from {}:"
+                  + " at least non-ISO8601 date or non-numeric amount.",
+              blob.getBlob());
+          //Send the malformed transactions to the Dead Letter Queue
+          //Something like sb.send("trx-error-out-0", MessageBuilder.withPayload(line).build());
+        }
+        numRows++;
       }
     } catch (IOException e) {
-      failProduce = true;
       log.error("Missing blob file:{}", blobPath);
+      return blob;
     }
 
-    if (!failProduce) {
-      log.info("Extracted {} transactions from:{}", numTrx, blob.getBlobUri());
-      blob.setStatus(Status.PROCESSED);
+    if (numRows == numTrx) {
+      log.info("Extraction result: extracted all {} transactions from:{}", numTrx,
+          blob.getBlobUri());
+    } else {
+      log.info("Extraction result: {} well formed transactions out of {} rows extracted from:{}",
+          numTrx, numRows,
+          blob.getBlobUri());
     }
 
+    blob.setStatus(Status.PROCESSED);
     return blob;
   }
 
