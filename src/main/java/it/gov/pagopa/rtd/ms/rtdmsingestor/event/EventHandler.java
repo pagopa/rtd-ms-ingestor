@@ -40,6 +40,8 @@ public class EventHandler {
         .filter(b -> Status.DOWNLOADED.equals(b.getStatus()))
         .map(blobRestConnector::process)
         .filter(b -> Status.PROCESSED.equals(b.getStatus()))
+        .map(blobRestConnector::deleteRemote)
+        .filter(b -> Status.REMOTELY_DELETED.equals(b.getStatus()))
         .collect(Collectors.toList());
   }
 }
