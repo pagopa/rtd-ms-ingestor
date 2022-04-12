@@ -126,16 +126,12 @@ public class BlobRestConnector {
             }
             log.error("Malformed fields extracted from {}: {}",
                 blob.getBlob(), malformedFields);
-            //Send the malformed transactions to the Dead Letter Queue
-            //Something like sb.send("trx-error-out-0", MessageBuilder.withPayload(t).build());
           }
         } catch (RuntimeException e) {
           log.error(
               "Malformed fields extracted from {}:"
                   + " at least non-ISO8601 date or non-numeric amount.",
               blob.getBlob());
-          //Send the malformed transactions to the Dead Letter Queue
-          //Something like sb.send("trx-error-out-0", MessageBuilder.withPayload(line).build());
         }
         numRows++;
       }
