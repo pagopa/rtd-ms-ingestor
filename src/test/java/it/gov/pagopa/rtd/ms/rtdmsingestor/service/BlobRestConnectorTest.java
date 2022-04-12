@@ -149,7 +149,8 @@ class BlobRestConnectorTest {
     blobRestConnector.process(fakeBlob);
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
       assertThat(output.getOut(), containsString("Extracting transactions from:"));
-      assertThat(output.getOut(), containsString("Extracted 5 transactions from:"));
+      assertThat(output.getOut(),
+          containsString("Extraction result: extracted all 5 transactions from:"));
       assertThat(output.getOut(), containsString("Received transaction:"));
       assertEquals(Status.PROCESSED, fakeBlob.getStatus());
     });
@@ -166,9 +167,35 @@ class BlobRestConnectorTest {
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
       assertThat(output.getOut(), containsString("Extracting transactions from:"));
       assertThat(output.getOut(), containsString("Missing blob file:"));
-      assertThat(output.getOut(), not(containsString("Extracted 5 transactions from:")));
+      assertThat(output.getOut(), not(containsString("Extracted")));
       assertThat(output.getOut(), not(containsString("Received transaction:")));
       assertNotEquals(Status.PROCESSED, fakeBlob.getStatus());
+    });
+  }
+
+  //This test uses a file with all malformed transaction
+  // There is one malformed transaction for every field in the object Transaction.
+  @Test
+  void shouldNotProcessForMalformedFields(CapturedOutput output) throws IOException {
+    String transactions = "testMalformedTransactions.csv";
+
+    //Create fake file to process
+    File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
+    decryptedFile.getParentFile().mkdirs();
+    decryptedFile.createNewFile();
+    FileOutputStream blobDst = new FileOutputStream(Path.of(tmpDirectory, blobName).toString());
+    Files.copy(Path.of(resources, transactions), blobDst);
+
+    fakeBlob.setTargetDir(tmpDirectory);
+    fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
+
+    blobRestConnector.process(fakeBlob);
+    await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
+      assertThat(output.getOut(), containsString("Extracting transactions from:"));
+      assertThat(output.getOut(),
+          containsString("Extraction result: 0 well formed transactions out of"));
+      assertThat(output.getOut(), not(containsString("Received transaction:")));
+      assertEquals(Status.PROCESSED, fakeBlob.getStatus());
     });
   }
 
