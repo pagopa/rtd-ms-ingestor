@@ -183,7 +183,7 @@ class BlobRestConnectorTest {
     doReturn(mockedResponse).when(client)
         .execute(any(HttpDelete.class));
 
-    blobRestConnector.delete(fakeBlob);
+    blobRestConnector.deleteRemote(fakeBlob);
 
     verify(client, times(1)).execute(any(HttpUriRequest.class));
     assertEquals(Status.REMOTELY_DELETED, fakeBlob.getStatus());
@@ -197,7 +197,7 @@ class BlobRestConnectorTest {
     doThrow(new IOException("Connection problem.")).when(client)
         .execute(any(HttpDelete.class));
 
-    blobRestConnector.delete(fakeBlob);
+    blobRestConnector.deleteRemote(fakeBlob);
 
     verify(client, times(1)).execute(any(HttpUriRequest.class));
     assertNotEquals(Status.REMOTELY_DELETED, fakeBlob.getStatus());
@@ -215,7 +215,7 @@ class BlobRestConnectorTest {
     doReturn(mockedResponse).when(client)
         .execute(any(HttpDelete.class));
 
-    blobRestConnector.delete(fakeBlob);
+    blobRestConnector.deleteRemote(fakeBlob);
 
     verify(client, times(1)).execute(any(HttpUriRequest.class));
     assertNotEquals(Status.REMOTELY_DELETED, fakeBlob.getStatus());

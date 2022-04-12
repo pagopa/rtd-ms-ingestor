@@ -124,7 +124,7 @@ public class BlobRestConnector {
    * @param blob a blob that has been processed and have to be removed both remotely ad locally.
    * @return a remotely deleted blob with REMOTELY_DELETED status.
    */
-  public BlobApplicationAware delete(BlobApplicationAware blob) {
+  public BlobApplicationAware deleteRemote(BlobApplicationAware blob) {
     String uri = baseUrl + "/" + blobBasePath + "/" + blob.getContainer() + "/" + blob.getBlob();
     final HttpDelete deleteBlob = new HttpDelete(uri);
     deleteBlob.setHeader(new BasicHeader("Ocp-Apim-Subscription-Key", blobApiKey));
