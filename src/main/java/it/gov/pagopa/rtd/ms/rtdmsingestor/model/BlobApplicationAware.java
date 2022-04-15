@@ -45,7 +45,7 @@ public class BlobApplicationAware {
   private String targetDir = "/tmp";
 
   private Pattern uriPattern = Pattern.compile(
-      "^.*containers/((rtd)-transactions-[a-z0-9]{44})/blobs/(.*)");
+      "^.*containers/((rtd)-transactions-decrypted)/blobs/(.*)");
 
   private static final String WRONG_FORMAT_NAME_WARNING_MSG = "Wrong name format:";
   private static final String EVENT_NOT_OF_INTEREST_WARNING_MSG = "Event not of interest:";
