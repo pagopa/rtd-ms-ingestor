@@ -81,7 +81,7 @@ class BlobRestConnectorTest {
   @MockBean
   CloseableHttpClient client;
 
-  private final String container = "rtd-transactions-32489876908u74bh781e2db57k098c5ad034341i8u7y";
+  private final String container = "rtd-transactions-decrypted";
   private final String blobName = "CSTAR.99910.TRNLOG.20220228.103107.001.csv.pgp.decrypted";
 
   private BlobApplicationAware fakeBlob = new BlobApplicationAware(
