@@ -74,7 +74,7 @@ class BlobApplicationAwareTest {
 
   @Test
   void shouldNotMatchRegexEventNotOfInterest(CapturedOutput output) {
-    String containerAde = "ade-transactions-32489876908u74bh781e2db57k098c5ad034341i8u7y";
+    String containerAde = "ade-transactions-decrypted";
     String blobAde = "ADE.99910.TRNLOG.20220228.203107.001.csv.pgp";
     String blobUri = "/blobServices/default/containers/" + containerAde + "/blobs/" + blobAde;
     BlobApplicationAware myBlob = new BlobApplicationAware(blobUri);
