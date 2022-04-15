@@ -40,7 +40,7 @@ class BlobApplicationAwareTest {
   @MockBean
   CloseableHttpClient closeableHttpClient;
 
-  String containerRtd = "rtd-transactions-32489876908u74bh781e2db57k098c5ad034341i8u7y";
+  String containerRtd = "rtd-transactions-decrypted";
   String blobNameRtd = "CSTAR.99910.TRNLOG.20220316.164707.001.csv.pgp.decrypted";
 
   BlobApplicationAware fakeBlob;
