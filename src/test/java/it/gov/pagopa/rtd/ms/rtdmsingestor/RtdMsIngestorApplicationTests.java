@@ -101,7 +101,7 @@ class RtdMsIngestorApplicationTests {
   void shouldConsumeMessage() {
 
     //Mock every step of the message handling
-    doReturn(blobDownloaded).when(blobRestConnector).download(any(BlobApplicationAware.class));
+    doReturn(blobDownloaded).when(blobRestConnector).get(any(BlobApplicationAware.class));
     doReturn(blobProcessed).when(blobRestConnector).process(any(BlobApplicationAware.class));
     doReturn(blobApplicationAware).when(blobRestConnector)
         .deleteRemote(any(BlobApplicationAware.class));
@@ -114,7 +114,7 @@ class RtdMsIngestorApplicationTests {
         stream.send("blobStorageConsumer-in-0", MessageBuilder.withPayload(myList).build()));
 
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-      verify(blobRestConnector, times(1)).download(any());
+      verify(blobRestConnector, times(1)).get(any());
       verify(blobRestConnector, times(1)).process(any());
       verify(blobRestConnector, times(1)).deleteRemote(any());
       verify(blobApplicationAware, times(1)).localCleanup();
@@ -133,7 +133,7 @@ class RtdMsIngestorApplicationTests {
         stream.send("blobStorageConsumer-in-0", MessageBuilder.withPayload(myList).build()));
 
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-      verify(blobRestConnector, times(0)).download(any());
+      verify(blobRestConnector, times(0)).get(any());
       verify(blobRestConnector, times(0)).process(any());
       verify(blobRestConnector, times(0)).deleteRemote(any());
       verify(blobApplicationAware, times(0)).localCleanup();
@@ -144,14 +144,14 @@ class RtdMsIngestorApplicationTests {
   @Test
   void shouldFilterMessageForFailedDownload() {
 
-    //Mock the download step of the message handling
-    doReturn(blobReceived).when(blobRestConnector).download(any(BlobApplicationAware.class));
+    //Mock the get step of the message handling
+    doReturn(blobReceived).when(blobRestConnector).get(any(BlobApplicationAware.class));
 
     assertThat("Should Send",
         stream.send("blobStorageConsumer-in-0", MessageBuilder.withPayload(myList).build()));
 
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-      verify(blobRestConnector, times(1)).download(any());
+      verify(blobRestConnector, times(1)).get(any());
       verify(blobRestConnector, times(0)).process(any());
       verify(blobRestConnector, times(0)).deleteRemote(any());
       verify(blobApplicationAware, times(0)).localCleanup();
@@ -161,15 +161,15 @@ class RtdMsIngestorApplicationTests {
   @Test
   void shouldFilterMessageForFailedProcess() {
 
-    //Mock the download step of the message handling
-    doReturn(blobDownloaded).when(blobRestConnector).download(any(BlobApplicationAware.class));
+    //Mock the get step of the message handling
+    doReturn(blobDownloaded).when(blobRestConnector).get(any(BlobApplicationAware.class));
     doReturn(blobDownloaded).when(blobRestConnector).process(any(BlobApplicationAware.class));
 
     assertThat("Should Send",
         stream.send("blobStorageConsumer-in-0", MessageBuilder.withPayload(myList).build()));
 
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-      verify(blobRestConnector, times(1)).download(any());
+      verify(blobRestConnector, times(1)).get(any());
       verify(blobRestConnector, times(1)).process(any());
       verify(blobRestConnector, times(0)).deleteRemote(any());
       verify(blobApplicationAware, times(0)).localCleanup();
@@ -179,8 +179,8 @@ class RtdMsIngestorApplicationTests {
   @Test
   void shouldFilterMessageForFailedRemoteDelete() {
 
-    //Mock the download step of the message handling
-    doReturn(blobDownloaded).when(blobRestConnector).download(any(BlobApplicationAware.class));
+    //Mock the get step of the message handling
+    doReturn(blobDownloaded).when(blobRestConnector).get(any(BlobApplicationAware.class));
     doReturn(blobProcessed).when(blobRestConnector).process(any(BlobApplicationAware.class));
     doReturn(blobProcessed).when(blobRestConnector).deleteRemote(any(BlobApplicationAware.class));
 
@@ -188,7 +188,7 @@ class RtdMsIngestorApplicationTests {
         stream.send("blobStorageConsumer-in-0", MessageBuilder.withPayload(myList).build()));
 
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-      verify(blobRestConnector, times(1)).download(any());
+      verify(blobRestConnector, times(1)).get(any());
       verify(blobRestConnector, times(1)).process(any());
       verify(blobRestConnector, times(1)).deleteRemote(any());
       verify(blobApplicationAware, times(0)).localCleanup();

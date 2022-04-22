@@ -56,12 +56,13 @@ public class BlobRestConnector {
   StreamBridge sb;
 
   /**
-   * Method that allows the download of the blob from a remote storage.
+   * Method that allows the get of the blob from a remote storage.
    *
    * @param blob a blob that has been received from the event hub but not downloaded.
    * @return a locally available blob
    */
-  public BlobApplicationAware download(BlobApplicationAware blob) {
+  public BlobApplicationAware get(BlobApplicationAware blob) {
+
     String uri = baseUrl + "/" + blobBasePath + "/" + blob.getContainer() + "/" + blob.getBlob();
     final HttpGet getBlob = new HttpGet(uri);
     getBlob.setHeader(new BasicHeader("Ocp-Apim-Subscription-Key", blobApiKey));

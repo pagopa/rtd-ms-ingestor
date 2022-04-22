@@ -36,7 +36,7 @@ public class EventHandler {
         .filter(e -> "Microsoft.Storage.BlobCreated".equals(e.getEventType()))
         .map(EventGridEvent::getSubject).map(BlobApplicationAware::new)
         .filter(b -> Status.RECEIVED.equals(b.getStatus()))
-        .map(blobRestConnector::download)
+        .map(blobRestConnector::get)
         .filter(b -> Status.DOWNLOADED.equals(b.getStatus()))
         .map(blobRestConnector::process)
         .filter(b -> Status.PROCESSED.equals(b.getStatus()))
