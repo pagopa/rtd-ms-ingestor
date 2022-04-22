@@ -82,7 +82,7 @@ class BlobRestConnectorTest {
   CloseableHttpClient client;
 
   private final String container = "rtd-transactions-decrypted";
-  private final String blobName = "CSTAR.99910.TRNLOG.20220228.103107.001.csv.pgp.decrypted";
+  private final String blobName = "CSTAR.99910.TRNLOG.20220228.103107.001.csv.pgp.0.decrypted";
 
   private BlobApplicationAware fakeBlob = new BlobApplicationAware(
       "/blobServices/default/containers/" + container + "/blobs/" + blobName);
@@ -99,7 +99,7 @@ class BlobRestConnectorTest {
     // class to create a file in a temporary directory and test the content of the downloaded file
     // for an expected content.
 
-    //Create the mocked output stream to simulate the blob download
+    //Create the mocked output stream to simulate the blob get
     File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
     decryptedFile.getParentFile().mkdirs();
     decryptedFile.createNewFile();
@@ -109,7 +109,7 @@ class BlobRestConnectorTest {
     doReturn(mockedOutputStream).when(client)
         .execute(any(HttpGet.class), any(BlobRestConnector.FileDownloadResponseHandler.class));
 
-    BlobApplicationAware blobOut = blobRestConnector.download(fakeBlob);
+    BlobApplicationAware blobOut = blobRestConnector.get(fakeBlob);
 
     verify(client, times(1)).execute(any(HttpUriRequest.class),
         ArgumentMatchers.<ResponseHandler<OutputStream>>any());
@@ -123,7 +123,7 @@ class BlobRestConnectorTest {
     doThrow(IOException.class).when(client)
         .execute(any(HttpGet.class), any(BlobRestConnector.FileDownloadResponseHandler.class));
 
-    BlobApplicationAware blobOut = blobRestConnector.download(fakeBlob);
+    BlobApplicationAware blobOut = blobRestConnector.get(fakeBlob);
 
     verify(client, times(1)).execute(any(HttpUriRequest.class),
         ArgumentMatchers.<ResponseHandler<OutputStream>>any());
