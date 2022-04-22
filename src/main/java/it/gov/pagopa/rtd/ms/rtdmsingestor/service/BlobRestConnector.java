@@ -73,8 +73,10 @@ public class BlobRestConnector {
               new FileOutputStream(Path.of(blob.getTargetDir(), blob.getBlob()).toFile())));
       result.close();
       blob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
+      log.info("Successful GET of blob {} from {}", blob.getBlob(), blob.getContainer());
     } catch (Exception ex) {
-      log.error("{}, GET Blob failed:{}", ex, blob.getBlobUri());
+      log.error("Cannot GET blob {} from {}: {}", blob.getBlob(), blob.getContainer(),
+          ex.getMessage());
     }
 
     return blob;
