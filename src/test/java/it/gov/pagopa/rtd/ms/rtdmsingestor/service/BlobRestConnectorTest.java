@@ -114,7 +114,7 @@ class BlobRestConnectorTest {
     verify(client, times(1)).execute(any(HttpUriRequest.class),
         ArgumentMatchers.<ResponseHandler<OutputStream>>any());
     assertEquals(BlobApplicationAware.Status.DOWNLOADED, blobOut.getStatus());
-    assertThat(output.getOut(), not(containsString("GET Blob failed")));
+    assertThat(output.getOut(), not(containsString("Cannot GET blob ")));
   }
 
 
@@ -128,7 +128,7 @@ class BlobRestConnectorTest {
     verify(client, times(1)).execute(any(HttpUriRequest.class),
         ArgumentMatchers.<ResponseHandler<OutputStream>>any());
     assertEquals(BlobApplicationAware.Status.RECEIVED, blobOut.getStatus());
-    assertThat(output.getOut(), containsString("GET Blob failed"));
+    assertThat(output.getOut(), containsString("Cannot GET blob "));
   }
 
 
