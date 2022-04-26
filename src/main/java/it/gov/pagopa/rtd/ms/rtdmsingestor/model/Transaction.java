@@ -66,8 +66,8 @@ public class Transaction {
   BigDecimal totalAmount;
 
   @CsvBindByPosition(position = 9)
-  @Pattern(regexp = "[a-zA-Z0-9]{1,3}",
-      message = "Currency length must be 3 alphanumeric char at max")
+  @Pattern(regexp = "978",
+      message = "Currency must be 978 (fixed value, ISO 4217 for Euro)")
   String amountCurrency;
 
   @CsvBindByPosition(position = 10)
