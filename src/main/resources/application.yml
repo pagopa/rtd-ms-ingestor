@@ -50,7 +50,9 @@ spring:
                             config: ${KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_TRX}
                           mechanism: PLAIN
                         security:
-                          protocol: SASL_SSL 
+                          protocol: SASL_SSL
+                        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+                        default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
         blob-storage:
           type: kafka
           environment:
