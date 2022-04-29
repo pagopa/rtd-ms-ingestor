@@ -31,6 +31,7 @@ spring:
           binder: blob-storage
         rtdTrxProducer-out-0: # name must match [handler name]-out-0
           destination: rtd-trx
+          content-type: application/json
           binder: rtd-trx
       binders:
         rtd-trx:
