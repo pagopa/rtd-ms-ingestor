@@ -63,7 +63,7 @@ public class Transaction {
 
   @NotNull
   @CsvBindByPosition(position = 8)
-  BigDecimal totalAmount;
+  BigDecimal amount;
 
   @CsvBindByPosition(position = 9)
   @Pattern(regexp = "978",
