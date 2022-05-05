@@ -7,7 +7,6 @@ import com.opencsv.bean.CsvBindByPosition;
 import com.opencsv.bean.CsvDate;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.Date;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
@@ -59,9 +58,6 @@ public class Transaction {
   @NotNull
   @CsvBindByPosition(position = 4)
   @CsvDate(value = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
-  @JsonSerialize(using = OffsetDateTimeSerializer.class)
-  OffsetDateTime tmptrxDate;
-
   @JsonSerialize(using = OffsetDateTimeSerializer.class)
   OffsetDateTime trxDate;
 
