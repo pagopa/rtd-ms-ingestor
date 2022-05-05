@@ -58,8 +58,16 @@ public class Transaction {
   //ISO8601
   @NotNull
   @CsvBindByPosition(position = 4)
-  @CsvDate(value = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-  Date trxDate;
+  //@CsvDate(value = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+  @CsvDate(value = "DATE_TIME")
+  //@JsonSerialize(using = DateSerializer.class)
+  OffsetDateTime tmptrxDate;
+  //@CsvDate(value = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+  //@CsvBindByPosition(position = 4, capture = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+  //@CsvDate(chronology = "ISO")
+  //@CsvDate(value = "uuuu-MM-dd HH:mm:ss.n")
+  //@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  //@DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
 
   @JsonSerialize(using = OffsetDateTimeSerializer.class)
   OffsetDateTime trxDate;
