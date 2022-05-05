@@ -123,21 +123,6 @@ public class BlobRestConnector {
       //Read in batch is possible but requires a change in the use of line iterator
       try {
 
-        //TEST
-
-        PrintStream output;
-        output = new PrintStream("/tmp/temp.txt");
-
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        //mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        System.err.println("TEST");
-        System.err.println(DateTimeFormat.ISO.DATE_TIME);
-        mapper.writeValue(output, OffsetDateTime.parse("2020-08-06T12:19:16.000+01:00"));
-        System.err.println("TEST1");
-
-        //FINE TEST
-
         Transaction t = new CsvToBeanBuilder<Transaction>(line).withSeparator(';')
             .withThrowExceptions(false)
             .withType(Transaction.class)
@@ -145,10 +130,6 @@ public class BlobRestConnector {
 
         Set<ConstraintViolation<Transaction>> violations = validator.validate(t);
         if (violations.isEmpty()) {
-
-          //Workaround to send a filed named trxDate of time OffsetDateTime
-          t.setTrxDate(t.getTmptrxDate().toInstant().atOffset(ZoneOffset.UTC));
-
 
           //If no field format violation has been found the transaction is sent
           sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
@@ -169,10 +150,6 @@ public class BlobRestConnector {
             "Malformed fields extracted from {}:"
                 + " at least non-ISO8601 date or non-numeric amount.",
             blob.getBlob());
-      } catch (StreamWriteException e) {
-        e.printStackTrace();
-      } catch (IOException e) {
-        e.printStackTrace();
       }
       numRows++;
     }
