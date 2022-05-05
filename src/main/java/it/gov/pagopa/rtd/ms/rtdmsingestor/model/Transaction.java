@@ -1,9 +1,14 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.ser.OffsetDateTimeSerializer;
 import com.opencsv.bean.CsvBindByPosition;
 import com.opencsv.bean.CsvDate;
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.Date;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
@@ -23,18 +28,28 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(of = {"idTrxAcquirer", "acquirerCode", "trxDate"}, callSuper = false)
 public class Transaction {
 
+  @NotNull
+  @NotBlank
   @CsvBindByPosition(position = 0)
   @Pattern(regexp = "[a-zA-Z0-9]{5}", message = "ABI length must be 5 alphanumeric char")
+  @JsonProperty(value = "acquirerCode", required = true)
   String acquirerCode;
 
+  @NotNull
+  @NotBlank
   @CsvBindByPosition(position = 1)
   @Pattern(regexp = "[0-9]{2}", message = "Operation type length must match [0-9]{2}")
+  @JsonProperty(value = "operationType", required = true)
   String operationType;
 
+  @NotNull
+  @NotBlank
   @CsvBindByPosition(position = 2)
   @Pattern(regexp = "[0-9]{2}", message = "Circuit type length must match [0-9]{2}")
   String circuitType;
 
+  @NotNull
+  @NotBlank
   @CsvBindByPosition(position = 3)
   @Pattern(regexp = "[a-zA-Z0-9]{1,64}",
       message = "HPAN length must be 64 alphanumeric alphanumeric char at max")
@@ -46,11 +61,18 @@ public class Transaction {
   @CsvDate(value = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
   Date trxDate;
 
+  @JsonSerialize(using = OffsetDateTimeSerializer.class)
+  OffsetDateTime trxDate;
+
+  @NotNull
+  @NotBlank
   @CsvBindByPosition(position = 5)
   @Pattern(regexp = "[a-zA-Z0-9]{1,255}",
       message = "ID trx acquirer length must be 255 alphanumeric char at max")
   String idTrxAcquirer;
 
+  @NotNull
+  @NotBlank
   @CsvBindByPosition(position = 6)
   @Pattern(regexp = "[a-zA-Z0-9]{1,255}",
       message = "ID trx issuer length must be 255 alphanumeric char at max")
@@ -65,31 +87,43 @@ public class Transaction {
   @CsvBindByPosition(position = 8)
   BigDecimal amount;
 
+  @NotNull
+  @NotBlank
   @CsvBindByPosition(position = 9)
   @Pattern(regexp = "978",
       message = "Currency must be 978 (fixed value, ISO 4217 for Euro)")
   String amountCurrency;
 
+  @NotNull
+  @NotBlank
   @CsvBindByPosition(position = 10)
   @Pattern(regexp = "[a-zA-Z0-9]{1,255}",
       message = "Acquirer ID length must be 255 alphanumeric char at max")
   String acquirerId;
 
+  @NotNull
+  @NotBlank
   @CsvBindByPosition(position = 11)
   @Pattern(regexp = "[a-zA-Z0-9]{1,255}",
       message = "Merchant ID length must be 255 alphanumeric char at max")
   String merchantId;
 
+  @NotNull
+  @NotBlank
   @CsvBindByPosition(position = 12)
   @Pattern(regexp = "[a-zA-Z0-9]{1,255}",
       message = "Terminal ID length must be 255 alphanumeric char at max")
   String terminalId;
 
+  @NotNull
+  @NotBlank
   @CsvBindByPosition(position = 13)
   @Pattern(regexp = "[0-9]{6}|[0-9]{8}",
       message = "Correlation ID length must match [0-9]{6}|[0-9]{8}")
   String bin;
 
+  @NotNull
+  @NotBlank
   @CsvBindByPosition(position = 14)
   @Pattern(regexp = "[a-zA-Z0-9]{1,5}", message = "MCC length must be 5 alphanumeric char at max")
   String mcc;
@@ -104,6 +138,8 @@ public class Transaction {
       message = "VAT code length must be 50 alphanumeric char at max")
   String vat;
 
+  @NotNull
+  @NotBlank
   @CsvBindByPosition(position = 17)
   @Pattern(regexp = "[0-9]{2}", message = "Pos type must match [0-9]{2}")
   String posType;
