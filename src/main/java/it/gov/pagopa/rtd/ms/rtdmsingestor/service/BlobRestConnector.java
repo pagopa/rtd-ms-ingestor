@@ -1,5 +1,9 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.service;
 
+import com.fasterxml.jackson.core.exc.StreamWriteException;
+import com.fasterxml.jackson.databind.DatabindException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.opencsv.bean.CsvToBeanBuilder;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
@@ -7,8 +11,11 @@ import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.StringReader;
 import java.nio.file.Path;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Objects;
 import java.util.Set;
 import javax.validation.ConstraintViolation;
@@ -29,6 +36,7 @@ import org.apache.http.message.BasicHeader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
@@ -114,6 +122,22 @@ public class BlobRestConnector {
       //Obtain the (only) Transaction object parsed from the csv line
       //Read in batch is possible but requires a change in the use of line iterator
       try {
+
+        //TEST
+
+        PrintStream output;
+        output = new PrintStream("/tmp/temp.txt");
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        //mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        System.err.println("TEST");
+        System.err.println(DateTimeFormat.ISO.DATE_TIME);
+        mapper.writeValue(output, OffsetDateTime.parse("2020-08-06T12:19:16.000+01:00"));
+        System.err.println("TEST1");
+
+        //FINE TEST
+
         Transaction t = new CsvToBeanBuilder<Transaction>(line).withSeparator(';')
             .withThrowExceptions(false)
             .withType(Transaction.class)
@@ -121,6 +145,11 @@ public class BlobRestConnector {
 
         Set<ConstraintViolation<Transaction>> violations = validator.validate(t);
         if (violations.isEmpty()) {
+
+          //Workaround to send a filed named trxDate of time OffsetDateTime
+          t.setTrxDate(t.getTmptrxDate().toInstant().atOffset(ZoneOffset.UTC));
+
+
           //If no field format violation has been found the transaction is sent
           sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
           log.info(t.toString());
@@ -139,6 +168,10 @@ public class BlobRestConnector {
             "Malformed fields extracted from {}:"
                 + " at least non-ISO8601 date or non-numeric amount.",
             blob.getBlob());
+      } catch (StreamWriteException e) {
+        e.printStackTrace();
+      } catch (IOException e) {
+        e.printStackTrace();
       }
       numRows++;
     }
