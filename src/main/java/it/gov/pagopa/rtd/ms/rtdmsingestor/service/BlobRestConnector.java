@@ -164,6 +164,7 @@ public class BlobRestConnector {
               blob.getBlob(), malformedFields);
         }
       } catch (RuntimeException e) {
+        e.printStackTrace();
         log.error(
             "Malformed fields extracted from {}:"
                 + " at least non-ISO8601 date or non-numeric amount.",
