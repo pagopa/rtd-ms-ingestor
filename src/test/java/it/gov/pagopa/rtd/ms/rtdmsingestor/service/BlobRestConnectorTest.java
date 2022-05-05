@@ -151,7 +151,6 @@ class BlobRestConnectorTest {
       assertThat(output.getOut(), containsString("Extracting transactions from:"));
       assertThat(output.getOut(),
           containsString("Extraction result: extracted all 5 transactions from:"));
-      assertThat(output.getOut(), containsString("Received transaction:"));
       assertEquals(Status.PROCESSED, fakeBlob.getStatus());
     });
   }

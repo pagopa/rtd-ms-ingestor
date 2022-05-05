@@ -26,10 +26,10 @@ public class EventHandlerIntegration {
    *
    * @return a consumer handling events.
    */
-  @Bean
+  //@Bean
   public Consumer<Message<Transaction>> rtdTrxConsumer() {
     return message -> {
-      log.info("Received transaction:" + message.getPayload());
+      //log.info("Received transaction:" + message.getPayload());
     };
   }
 }
