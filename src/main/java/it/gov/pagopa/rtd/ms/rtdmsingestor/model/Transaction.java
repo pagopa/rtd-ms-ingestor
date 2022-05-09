@@ -118,7 +118,7 @@ public class Transaction {
   @NotBlank
   @CsvBindByPosition(position = 13)
   @Pattern(regexp = "[0-9]{6}|[0-9]{8}",
-      message = "Correlation ID length must match [0-9]{6}|[0-9]{8}")
+      message = "BIN length must match [0-9]{6}|[0-9]{8}")
   String bin;
 
   @NotNull
