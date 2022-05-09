@@ -15,6 +15,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 
 /**
  * This class represents the object containing transaction fields as attributes. The format is based
@@ -58,6 +59,7 @@ public class Transaction {
   @NotNull
   @CsvBindByPosition(position = 4)
   @CsvDate(value = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   @JsonSerialize(using = OffsetDateTimeSerializer.class)
   OffsetDateTime trxDate;
 
