@@ -9,7 +9,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import it.gov.pagopa.rtd.ms.rtdmsingestor.event.EventHandler;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.event.EventHandlerIntegration;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.EventGridEvent;
@@ -42,7 +41,7 @@ import org.springframework.test.context.TestPropertySource;
 @EmbeddedKafka(topics = {"rtd-platform-events", "rtd-trx"}, partitions = 1,
     bootstrapServersProperty = "spring.embedded.kafka.brokers")
 @EnableAutoConfiguration(exclude = {TestSupportBinderAutoConfiguration.class})
-@ContextConfiguration(classes = {EventHandler.class, EventHandlerIntegration.class})
+@ContextConfiguration(classes = {EventHandler.class})
 @TestPropertySource(value = {"classpath:application-test.yml"}, inheritProperties = false)
 @DirtiesContext
 @ExtendWith(OutputCaptureExtension.class)
