@@ -128,8 +128,7 @@ public class Transaction {
   String mcc;
 
   @CsvBindByPosition(position = 15)
-  @Pattern(regexp = "[a-zA-Z0-9]{1,50}",
-      message = "Fiscal code length must be 5 alphanumeric char at max")
+  @CodiceFiscaleConstraint
   String fiscalCode;
 
   @CsvBindByPosition(position = 16)
