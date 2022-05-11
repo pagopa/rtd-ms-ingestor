@@ -24,7 +24,13 @@ public @interface CodiceFiscaleConstraint {
    */
   String message() default "Invalid fiscal code.";
 
+  /**
+   * Groups parameter.
+   */
   Class<?>[] groups() default {};
 
+  /**
+   * Payload.
+   */
   Class<? extends Payload>[] payload() default {};
 }
