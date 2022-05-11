@@ -51,8 +51,8 @@ public class Transaction {
   @NotNull
   @NotBlank
   @CsvBindByPosition(position = 3)
-  @Pattern(regexp = "[a-zA-Z0-9]{1,64}",
-      message = "HPAN length must be 64 alphanumeric alphanumeric char at max")
+  @Pattern(regexp = "[a-zA-Z0-9]{64}",
+      message = "HPAN length must be 64 alphanumeric char at max")
   String hpan;
 
   //ISO8601
