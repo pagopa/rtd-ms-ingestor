@@ -1,6 +1,5 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.model;
 
-import static it.gov.pagopa.rtd.ms.rtdmsingestor.model.FiscalCode.Response.EMPTY;
 import static it.gov.pagopa.rtd.ms.rtdmsingestor.model.FiscalCode.Response.INVALID_CHARACTERS;
 import static it.gov.pagopa.rtd.ms.rtdmsingestor.model.FiscalCode.Response.INVALID_CHECKSUM;
 import static it.gov.pagopa.rtd.ms.rtdmsingestor.model.FiscalCode.Response.INVALID_LENGTH;
@@ -47,12 +46,6 @@ public class FiscalCodeValidator implements
     if (checkedCodFis.equals(INVALID_CHECKSUM)) {
       hibernateContext.buildConstraintViolationWithTemplate(
               "Invalid checksum for Fiscal Code " + codiceFiscale)
-          .addConstraintViolation();
-      return false;
-    }
-    if (checkedCodFis.equals(EMPTY)) {
-      hibernateContext.buildConstraintViolationWithTemplate(
-              "Empty Fiscal Code " + codiceFiscale)
           .addConstraintViolation();
       return false;
     }
