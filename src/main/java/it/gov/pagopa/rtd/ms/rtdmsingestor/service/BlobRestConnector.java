@@ -139,7 +139,8 @@ public class BlobRestConnector {
           //Creates a string with all the malformed fields
           StringBuilder malformedFields = new StringBuilder();
           for (ConstraintViolation<Transaction> violation : violations) {
-            malformedFields.append(violation.getPropertyPath().toString()).append(" ");
+            malformedFields.append("(").append(violation.getPropertyPath().toString()).append(": ");
+            malformedFields.append(violation.getMessage()).append(") ");
           }
           log.error("Malformed fields extracted from {}: {}",
               blob.getBlob(), malformedFields);
