@@ -12,10 +12,10 @@ import javax.validation.Payload;
  * Interface for validate fiscal codes (in italian format).
  */
 @Documented
-@Constraint(validatedBy = CodiceFiscaleValidator.class)
+@Constraint(validatedBy = FiscalCodeValidator.class)
 @Target({ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface CodiceFiscaleConstraint {
+public @interface FiscalCodeConstraint {
 
   /**
    * Message in case of violated constraint.

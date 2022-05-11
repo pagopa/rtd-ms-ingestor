@@ -14,8 +14,8 @@ import org.hibernate.validator.constraintvalidation.HibernateConstraintValidator
  * This is the implementation of a custom validator. This validator checks the correctness of an
  * italian fiscal code.
  */
-public class CodiceFiscaleValidator implements
-    ConstraintValidator<CodiceFiscaleConstraint, String> {
+public class FiscalCodeValidator implements
+    ConstraintValidator<FiscalCodeConstraint, String> {
 
   @Override
   public boolean isValid(String codiceFiscale,

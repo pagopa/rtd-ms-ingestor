@@ -128,7 +128,7 @@ public class Transaction {
   String mcc;
 
   @CsvBindByPosition(position = 15)
-  @CodiceFiscaleConstraint
+  @FiscalCodeConstraint
   String fiscalCode;
 
   @CsvBindByPosition(position = 16)
