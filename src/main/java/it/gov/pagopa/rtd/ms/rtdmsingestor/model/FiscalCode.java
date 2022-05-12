@@ -66,6 +66,7 @@ public class FiscalCode {
     String evenMap = "BAFHJNPRTVCESULDGIMOQKWZYX";
     for (int i = 0; i < 15; i++) {
       int c = cf.charAt(i);
+
       if (i >= 12) {
         if (String.valueOf(cf.charAt(i)).matches("[LMN]")) {
           c = cf.charAt(i) - 'L' + '0';
@@ -76,7 +77,6 @@ public class FiscalCode {
           c = cf.charAt(i) - 'L' - 1 + '0';
           homocode[i - 12] = true;
         }
-
       }
 
       int n;
@@ -91,25 +91,11 @@ public class FiscalCode {
       s += n;
     }
 
-    //Check for the order of the omocodic substitution characters
-    if (homocode[0]) {
-      if (homocode[1]) {
-        if (!homocode[2]) {
-          return Response.INVALID_CHARACTERS;
-        }
-      } else {
-        return Response.INVALID_CHARACTERS;
-      }
-    }
-
-    if (homocode[1] && !homocode[2]) {
-      return Response.INVALID_CHARACTERS;
-    }
-
     if (s % 26 + 'A' != cf.charAt(15)) {
       return Response.INVALID_CHECKSUM;
     }
-    return Response.CORRECT_FISCAL_CODE;
+
+    return validHomocode(homocode);
   }
 
   /**
@@ -158,4 +144,21 @@ public class FiscalCode {
     }
   }
 
+  private static Response validHomocode(boolean[] homocode) {
+    //Check for the order of the omocodic substitution characters
+    if (homocode[0]) {
+      if (homocode[1]) {
+        if (!homocode[2]) {
+          return Response.INVALID_CHARACTERS;
+        }
+      } else {
+        return Response.INVALID_CHARACTERS;
+      }
+    }
+
+    if (homocode[1] && !homocode[2]) {
+      return Response.INVALID_CHARACTERS;
+    }
+    return Response.CORRECT_FISCAL_CODE;
+  }
 }
