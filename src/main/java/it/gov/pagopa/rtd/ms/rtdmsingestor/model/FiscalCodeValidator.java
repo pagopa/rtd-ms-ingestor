@@ -7,12 +7,13 @@ import static it.gov.pagopa.rtd.ms.rtdmsingestor.model.FiscalCode.Response.INVAL
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.FiscalCode.Response;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-import org.hibernate.validator.constraintvalidation.HibernateConstraintValidatorContext;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This is the implementation of a custom validator. This validator checks the correctness of an
  * italian fiscal code.
  */
+@Slf4j
 public class FiscalCodeValidator implements
     ConstraintValidator<FiscalCodeConstraint, String> {
 
@@ -22,32 +23,19 @@ public class FiscalCodeValidator implements
 
     //If codiceFiscale is null, then the validation is passed because it is not a mandatory field
     if (codiceFiscale == null || codiceFiscale.equals("")) {
-      return true;
+      log.warn("Empty Fiscal Code");
     }
-
-    HibernateConstraintValidatorContext hibernateContext =
-        context.unwrap(HibernateConstraintValidatorContext.class);
-    hibernateContext.disableDefaultConstraintViolation();
 
     Response checkedCodFis = FiscalCode.validate(codiceFiscale);
 
     if (checkedCodFis.equals(INVALID_CHARACTERS)) {
-      hibernateContext.buildConstraintViolationWithTemplate(
-              "Invalid character for Fiscal Code " + codiceFiscale)
-          .addConstraintViolation();
-      return false;
+      log.error("Invalid character for Fiscal Code " + codiceFiscale);
     }
     if (checkedCodFis.equals(INVALID_LENGTH)) {
-      hibernateContext.buildConstraintViolationWithTemplate(
-              "Invalid length for Fiscal Code " + codiceFiscale)
-          .addConstraintViolation();
-      return false;
+      log.error("Invalid length for Fiscal Code " + codiceFiscale);
     }
     if (checkedCodFis.equals(INVALID_CHECKSUM)) {
-      hibernateContext.buildConstraintViolationWithTemplate(
-              "Invalid checksum for Fiscal Code " + codiceFiscale)
-          .addConstraintViolation();
-      return false;
+      log.error("Invalid checksum for Fiscal Code " + codiceFiscale);
     }
     return true;
   }
