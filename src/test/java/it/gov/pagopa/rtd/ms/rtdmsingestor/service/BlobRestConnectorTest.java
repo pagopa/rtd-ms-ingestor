@@ -87,6 +87,11 @@ class BlobRestConnectorTest {
   private BlobApplicationAware fakeBlob = new BlobApplicationAware(
       "/blobServices/default/containers/" + container + "/blobs/" + blobName);
 
+  //This counter represents the number of fiscal codes that are malformed in the test file.
+  // The corresponding transactions are not discarded, instead an error is logged and the
+  // transaction is processed anyway.
+  int malformedBuyProcessedFiscalCodes = 3;
+
   @AfterEach
   void cleanTmpFiles() throws IOException {
     FileUtils.deleteDirectory(Path.of(tmpDirectory).toFile());
@@ -167,7 +172,6 @@ class BlobRestConnectorTest {
       assertThat(output.getOut(), containsString("Extracting transactions from:"));
       assertThat(output.getOut(), containsString("Missing blob file:"));
       assertThat(output.getOut(), not(containsString("Extracted")));
-      assertThat(output.getOut(), not(containsString("Received transaction:")));
       assertNotEquals(Status.PROCESSED, fakeBlob.getStatus());
     });
   }
@@ -192,8 +196,11 @@ class BlobRestConnectorTest {
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
       assertThat(output.getOut(), containsString("Extracting transactions from:"));
       assertThat(output.getOut(),
-          containsString("Extraction result: 0 well formed transactions out of"));
-      assertThat(output.getOut(), not(containsString("Received transaction:")));
+          containsString("Extraction result: " + malformedBuyProcessedFiscalCodes
+              + " well formed transactions out of"));
+      assertThat(output.getOut(), containsString("Invalid character for Fiscal Code "));
+      assertThat(output.getOut(), containsString("Invalid length for Fiscal Code "));
+      assertThat(output.getOut(), containsString("Invalid checksum for Fiscal Code "));
       assertEquals(Status.PROCESSED, fakeBlob.getStatus());
     });
   }
