@@ -134,7 +134,7 @@ public class BlobApplicationAware {
   public BlobApplicationAware localCleanup() {
 
     boolean failCleanup = false;
-
+    
     for (File f : Objects.requireNonNull(Path.of(this.targetDir).toFile().listFiles())) {
       //Delete every file in the temporary directory that starts with the name of the blob.
       if (f.getName().startsWith(blob)) {

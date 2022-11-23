@@ -122,7 +122,7 @@ public class BlobRestConnector {
       //Obtain the (only) Transaction object parsed from the csv line
       //Read in batch is possible but requires a change in the use of line iterator
       try {
-
+        
         Transaction t = new CsvToBeanBuilder<Transaction>(line).withSeparator(';')
             .withThrowExceptions(false)
             .withType(Transaction.class)
