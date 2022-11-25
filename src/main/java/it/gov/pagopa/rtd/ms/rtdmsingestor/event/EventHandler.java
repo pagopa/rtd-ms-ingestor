@@ -34,7 +34,8 @@ public class EventHandler {
   public Consumer<Message<List<EventGridEvent>>> blobStorageConsumer() {
     return message -> message.getPayload().stream()
         .filter(e -> "Microsoft.Storage.BlobCreated".equals(e.getEventType()))
-        .map(EventGridEvent::getSubject).map(BlobApplicationAware::new)
+        .map(EventGridEvent::getSubject)
+        .map(BlobApplicationAware::new)
         .filter(b -> Status.RECEIVED.equals(b.getStatus()))
         .map(blobRestConnector::get)
         .filter(b -> Status.DOWNLOADED.equals(b.getStatus()))
