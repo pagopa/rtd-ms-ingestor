@@ -59,7 +59,7 @@ public class FiscalCode {
     boolean[] homocode = new boolean[3];
 
     if (!cf.matches(
-        "^[A-Z]{6}[0-9]{2}[ABCDEHLMPRST]{1}[0-9]{2}[A-Z]{1}[0-9LMNPQRSTUV]{3}[A-Z]{1}$")) {
+        "^[A-Z]{6}\\d{2}[ABCDEHLMPRST]{1}\\d{2}[A-Z]{1}[0-9LMNPQRSTUV]{3}\\d{1}$")) {
       return Response.INVALID_CHARACTERS;
     }
     int s = 0;
@@ -105,7 +105,7 @@ public class FiscalCode {
    * @return Null if valid, or string describing why this CF must be rejected.
    */
   private static Response validateTemporary(String cf) {
-    if (!cf.matches("^[0-9]{11}$")) {
+    if (!cf.matches("^\\d{11}$")) {
       return Response.INVALID_CHARACTERS;
     }
     int s = 0;
