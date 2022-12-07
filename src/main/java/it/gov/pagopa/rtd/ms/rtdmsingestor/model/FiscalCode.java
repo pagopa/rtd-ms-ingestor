@@ -66,6 +66,7 @@ public class FiscalCode {
     String evenMap = "BAFHJNPRTVCESULDGIMOQKWZYX";
     for (int i = 0; i < 15; i++) {
       int c = cf.charAt(i);
+      int n;
 
       if (i >= 12) {
         if (String.valueOf(cf.charAt(i)).matches("[LMN]")) {
@@ -79,7 +80,6 @@ public class FiscalCode {
         }
       }
 
-      int n;
       if ('0' <= c && c <= '9') {
         n = c - '0';
       } else {
