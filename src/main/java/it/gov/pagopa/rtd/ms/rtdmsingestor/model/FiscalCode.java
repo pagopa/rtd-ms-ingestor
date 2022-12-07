@@ -59,7 +59,7 @@ public class FiscalCode {
     boolean[] homocode = new boolean[3];
 
     if (!cf.matches(
-        "^[A-Z]{6}\\d{2}[ABCDEHLMPRST]\\d{2}[A-Z][0-9LMNPQRSTUV]{3}\\d$")) {
+        "^[A-Z]{6}\\d{2}[ABCDEHLMPRST]\\d{2}[0-9A-Z]{4}[LMNPQRSTUV]$")) {
       return Response.INVALID_CHARACTERS;
     }
     int s = 0;
@@ -68,17 +68,16 @@ public class FiscalCode {
       int c = cf.charAt(i);
       int n;
 
-      if (i >= 12) {
-        if (String.valueOf(cf.charAt(i)).matches("[LMN]")) {
-          c = cf.charAt(i) - 'L' + '0';
-          homocode[i - 12] = true;
-        }
-        //The substitution characters skips the O
-        if (String.valueOf(cf.charAt(i)).matches("[PQRSTUV]")) {
-          c = cf.charAt(i) - 'L' - 1 + '0';
-          homocode[i - 12] = true;
-        }
+      if ((i >= 12) && String.valueOf(cf.charAt(i)).matches("[LMN]")) {
+        c = cf.charAt(i) - 'L' + '0';
+        homocode[i - 12] = true;
       }
+      //The substitution characters skips the O
+      if ((i >= 12) && String.valueOf(cf.charAt(i)).matches("[PQRSTUV]")) {
+        c = cf.charAt(i) - 'L' - 1 + '0';
+        homocode[i - 12] = true;
+      }
+
 
       if ('0' <= c && c <= '9') {
         n = c - '0';
