@@ -38,14 +38,14 @@ public class Transaction {
   @NotNull
   @NotBlank
   @CsvBindByPosition(position = 1)
-  @Pattern(regexp = "[0-9]{2}", message = "Operation type length must match [0-9]{2}")
+  @Pattern(regexp = "\\d{2}", message = "Operation type length must match \\d{2}")
   @JsonProperty(value = "operationType", required = true)
   String operationType;
 
   @NotNull
   @NotBlank
   @CsvBindByPosition(position = 2)
-  @Pattern(regexp = "[0-9]{2}", message = "Circuit type length must match [0-9]{2}")
+  @Pattern(regexp = "\\d{2}", message = "Circuit type length must match \\d{2}")
   String circuitType;
 
   @NotNull
@@ -117,8 +117,8 @@ public class Transaction {
   @NotNull
   @NotBlank
   @CsvBindByPosition(position = 13)
-  @Pattern(regexp = "[0-9]{6}|[0-9]{8}",
-      message = "BIN length must match [0-9]{6}|[0-9]{8}")
+  @Pattern(regexp = "\\d{6}|\\d{8}",
+      message = "BIN length must match \\d{6}|\\d{8}")
   String bin;
 
   @NotNull
@@ -139,7 +139,7 @@ public class Transaction {
   @NotNull
   @NotBlank
   @CsvBindByPosition(position = 17)
-  @Pattern(regexp = "[0-9]{2}", message = "Pos type must match [0-9]{2}")
+  @Pattern(regexp = "\\d{2}", message = "Pos type must match \\d{2}")
   String posType;
 
   @CsvBindByPosition(position = 18)

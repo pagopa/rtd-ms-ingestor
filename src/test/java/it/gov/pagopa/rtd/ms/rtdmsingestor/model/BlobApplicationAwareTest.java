@@ -105,7 +105,9 @@ class BlobApplicationAwareTest {
       "CSTAR..TRNLOG.20220228.203107.001.csv.pgp", "CSTAR.99910.TRNLO.20220228.203107.001.csv.pgp",
       "CSTAR.99910..20220228.203107.001.csv.pgp", "CSTAR.99910.TRNLOG.20220230.103107.001.csv.pgp",
       "CSTAR.99910.TRNLOG..103107.001.csv.pgp", "CSTAR.99910.TRNLOG.20220228.243107.001.csv.pgp",
-      "CSTAR.99910.TRNLOG.20220228..001.csv.pgp", "CSTAR.99910.TRNLOG.20220228.103107.1.csv.pgp",
+      "CSTAR.99910.TRNLOG.20220228..001.csv.pgp","CSTAR.99910.TRNLOG...001.csv.pgp",
+      "CSTAR.99910.TRNLOG.20220228.103107.1.csv.pgp","","CSTAR","CSTAR.99910",
+      "CSTAR.99910.TRNLOG","CSTAR.99910.TRNLOG.20220228","CSTAR.99910.TRNLOG.20220228.103107",
       "CSTAR.99910.TRNLOG.20220228.103107..csv.pgp"})
   void blobUriShouldFailRegex(String blobName, CapturedOutput output) {
     String blobUri = "/blobServices/default/containers/" + containerRtd + "/blobs/" + blobName;
