@@ -97,8 +97,9 @@ public class BlobApplicationAware {
     if( uriTokens.length < 6 ) {
       return false;
     }
+
     // Check for application name (add new services to the regex)
-    if ( !uriTokens[0].matches("(CSTAR)" )) {
+    if ( !uriTokens[0].matches("(CSTAR)") ) {
       return false;
     }
 
