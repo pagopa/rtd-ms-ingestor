@@ -42,7 +42,7 @@ spring:
                 stream:
                   kafka:
                     binder:
-                      auto-create-topics: false 
+                      auto-create-topics: false
                       brokers: ${KAFKA_BROKER}
                       configuration:
                         sasl:
@@ -71,13 +71,13 @@ spring:
                         security:
                           protocol: SASL_SSL
                       consumerProperties:
-                        key: 
+                        key:
                           deserializer: org.apache.kafka.common.serialization.StringDeserializer
                         value:
                           deserializer: org.apache.kafka.common.serialization.StringDeserializer
-  
+
 # ---
-# spring: 
+# spring:
 #   config:
 #     activate:
 #       on-profile: default
@@ -96,8 +96,8 @@ spring:
 #         blob-storage-consumer:
 #           type: kafka
 #           environment:
-#             auto-create-topics: false 
-#             brokers: ${KAFKA_BROKER}          
+#             auto-create-topics: false
+#             brokers: ${KAFKA_BROKER}
 #             configuration:
 #               sasl:
 #                 jaas:
@@ -106,7 +106,7 @@ spring:
 #               security:
 #                 protocol: SASL_SSL
 #             consumerProperties:
-#               key: 
+#               key:
 #                 deserializer: org.apache.kafka.common.serialization.StringDeserializer
 #               value:
 #                 deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -141,8 +141,8 @@ spring:
 #         rtd-trx-producer:
 #           type: kafka
 #           environment:
-#             auto-create-topics: false 
-#             brokers: ${KAFKA_BROKER}          
+#             auto-create-topics: false
+#             brokers: ${KAFKA_BROKER}
 #             configuration:
 #               sasl:
 #                 jaas:
@@ -151,7 +151,7 @@ spring:
 #               security:
 #                 protocol: SASL_SSL
 #             consumerProperties:
-#               # key: 
+#               # key:
 #               #   deserializer: org.apache.kafka.common.serialization.StringDeserializer
 #               # value:
 #               #   deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -183,4 +183,4 @@ spring:
 #               # partition:
 #               #   assignment:
 #               #     strategy: org.apache.kafka.clients.consumer.RangeAssignor
-          
+

@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -45,7 +46,7 @@ public class BlobApplicationAware {
   private String targetDir = "/tmp";
 
   private Pattern uriPattern = Pattern.compile(
-      "^.*containers/((rtd)-transactions-decrypted)/blobs/(.*)");
+          "^.*containers/((rtd)-transactions-decrypted)/blobs/(.*)");
 
   private static final String WRONG_FORMAT_NAME_WARNING_MSG = "Wrong name format:";
   private static final String EVENT_NOT_OF_INTEREST_WARNING_MSG = "Event not of interest:";
@@ -94,7 +95,7 @@ public class BlobApplicationAware {
   private boolean checkNameFormat(String[] uriTokens) {
 
     //Check if the tokens length is right
-    if(uriTokens.length < 6) {
+    if (uriTokens.length < 6) {
       return false;
     }
 
