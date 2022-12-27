@@ -94,23 +94,23 @@ public class BlobApplicationAware {
   private boolean checkNameFormat(String[] uriTokens) {
 
     //Check if the tokens length is right
-    if( uriTokens.length < 6 ) {
+    if(uriTokens.length < 6) {
       return false;
     }
 
     // Check for application name (add new services to the regex)
-    if ( !uriTokens[0].matches("(CSTAR)") ) {
+    if (!uriTokens[0].matches("(CSTAR)")) {
       return false;
     }
 
     // Check for sender ABI code
-    if ( !uriTokens[1].matches("[a-zA-Z0-9]{5}") ) {
+    if (!uriTokens[1].matches("[a-zA-Z0-9]{5}")) {
       return false;
     }
 
     // Check for filetype (fixed "TRNLOG" value)
     // Should ignore case?
-    if ( !uriTokens[2].equalsIgnoreCase("TRNLOG") ) {
+    if (!uriTokens[2].equalsIgnoreCase("TRNLOG")) {
       return false;
     }
 
