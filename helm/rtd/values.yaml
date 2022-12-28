@@ -24,6 +24,12 @@ microservice-chart:
   deployment:
     create: true
 
+  service:
+    create: false
+
+  ingress:
+    create: false
+
   serviceAccount:
     create: false
     annotations: {}
