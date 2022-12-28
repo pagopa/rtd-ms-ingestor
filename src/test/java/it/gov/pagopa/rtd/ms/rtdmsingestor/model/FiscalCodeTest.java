@@ -104,4 +104,3 @@ class FiscalCodeTest {
     assertEquals(Response.INVALID_CHECKSUM, validate(cf));
   }
 }
-

@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -45,7 +46,7 @@ public class BlobApplicationAware {
   private String targetDir = "/tmp";
 
   private Pattern uriPattern = Pattern.compile(
-      "^.*containers/((rtd)-transactions-decrypted)/blobs/(.*)");
+          "^.*containers/((rtd)-transactions-decrypted)/blobs/(.*)");
 
   private static final String WRONG_FORMAT_NAME_WARNING_MSG = "Wrong name format:";
   private static final String EVENT_NOT_OF_INTEREST_WARNING_MSG = "Event not of interest:";
@@ -94,23 +95,23 @@ public class BlobApplicationAware {
   private boolean checkNameFormat(String[] uriTokens) {
 
     //Check if the tokens length is right
-    if( uriTokens.length < 6 ) {
+    if (uriTokens.length < 6) {
       return false;
     }
 
     // Check for application name (add new services to the regex)
-    if ( !uriTokens[0].matches("(CSTAR)") ) {
+    if (!uriTokens[0].matches("(CSTAR)")) {
       return false;
     }
 
     // Check for sender ABI code
-    if ( !uriTokens[1].matches("[a-zA-Z0-9]{5}") ) {
+    if (!uriTokens[1].matches("[a-zA-Z0-9]{5}")) {
       return false;
     }
 
     // Check for filetype (fixed "TRNLOG" value)
     // Should ignore case?
-    if ( !uriTokens[2].equalsIgnoreCase("TRNLOG") ) {
+    if (!uriTokens[2].equalsIgnoreCase("TRNLOG")) {
       return false;
     }
 
