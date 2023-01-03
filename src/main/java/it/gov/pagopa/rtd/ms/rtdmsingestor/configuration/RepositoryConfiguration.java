@@ -16,4 +16,5 @@ public class RepositoryConfiguration {
     public IngestorRepository ingestorRepository(IngestorDAO ingestorDAO){
         return new IngestorRepositoryImpl(ingestorDAO);
     }
+
 }
