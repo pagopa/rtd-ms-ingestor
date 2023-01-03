@@ -10,6 +10,7 @@ repos:
       args: [--markdown-linebreak-ext=md]
       exclude_types: [sql]
     - id: check-yaml
+      args: [--allow-multiple-documents]
     - id: check-executables-have-shebangs
     # Cross platform
     - id: check-case-conflict

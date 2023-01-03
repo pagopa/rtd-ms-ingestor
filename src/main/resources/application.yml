@@ -29,6 +29,10 @@ spring:
   config:
     activate:
       on-profile: default
+  data:
+    mongodb:
+      uri: ${MONGODB_CONNECTION_URI:mongodb://localhost:27017}
+      database: ${MONGODB_NAME:rtd}
   cloud:
     stream:
       source: rtdTrxProducer
@@ -194,4 +198,3 @@ spring:
 #               # partition:
 #               #   assignment:
 #               #     strategy: org.apache.kafka.clients.consumer.RangeAssignor
-

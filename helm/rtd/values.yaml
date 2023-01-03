@@ -47,11 +47,13 @@ microservice-chart:
     KAFKA_SASL_JAAS_CONFIG_CONSUMER_BLOB_STORAGE_EVENTS: evh-rtd-platform-events-rtd-platform-events-sub-key
     KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_TRX: evh-rtd-trx-rtd-trx-producer-key
     INTERNAL_SERVICES_API_KEY: rtd-internal-api-product-subscription-key
+    MONGODB_CONNECTION_URI: mongo-db-connection-uri
 
   envConfigMapExternals:
     rtdingestor:
       JAVA_TOOL_OPTIONS: JAVA_TOOL_OPTIONS
-      CSV_INGESTOR_HOST: CSV_INGESTOR_HOST
+      CSV_INGESTOR_HOST:
+      MONGODB_NAME: MONGODB_NAME
 
     rtd-blob-storage-events:
       KAFKA_TOPIC_BLOB_STORAGE_EVENTS: KAFKA_TOPIC_BLOB_STORAGE_EVENTS
