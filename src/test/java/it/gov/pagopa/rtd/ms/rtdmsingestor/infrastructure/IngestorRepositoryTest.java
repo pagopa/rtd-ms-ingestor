@@ -6,12 +6,12 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.junit.Test;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.runner.RunWith;
 
 import it.gov.pagopa.rtd.ms.rtdmsingestor.TestUtils;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.configs.MongoDbTest;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.configuration.RepositoryConfiguration;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.PaymentInstrumentItem;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.repositories.IngestorDAO;
@@ -20,7 +20,6 @@ import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
 
 
 @RunWith(SpringRunner.class)
-@MongoDbTest
 @Import(RepositoryConfiguration.class)
 class  IngestorRepositoryTest {
 
@@ -45,6 +44,11 @@ class  IngestorRepositoryTest {
   @AfterEach
   void clean(@Autowired MongoTemplate mongoTemplate) {
     mongoTemplate.dropCollection(PaymentInstrumentItem.class);
+  }
+
+  @Test
+  void testTest(){
+
   }
 
 }

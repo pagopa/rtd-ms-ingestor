@@ -22,12 +22,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@SpringBootTest
+@ExtendWith(SpringExtension.class)
 @ExtendWith(OutputCaptureExtension.class)
 class BlobApplicationAwareTest {
 
@@ -39,6 +39,7 @@ class BlobApplicationAwareTest {
 
   @MockBean
   CloseableHttpClient closeableHttpClient;
+
 
   String containerRtd = "rtd-transactions-decrypted";
   String blobNameRtd = "CSTAR.99910.TRNLOG.20220316.164707.001.csv.pgp.decrypted";

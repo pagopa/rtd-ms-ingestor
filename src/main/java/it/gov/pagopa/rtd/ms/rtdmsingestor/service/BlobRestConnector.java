@@ -18,6 +18,7 @@ import javax.validation.ValidatorFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
+import org.apache.el.stream.Optional;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.ResponseHandler;
@@ -125,14 +126,13 @@ public class BlobRestConnector {
             .withType(Transaction.class)
             .build().parse().get(0);
 
-
         if (repository.findItemByHash(t.getHpan()).isPresent()) {
+
           t.setHpan(repository.findItemByHash(t.getHpan()).get().getHashPan());
 
           Set<ConstraintViolation<Transaction>> violations = validator.validate(t);
 
           if (violations.isEmpty()) {
-
             //If no field format violation has been found the transaction is sent
             sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
             log.info(t.toString());
