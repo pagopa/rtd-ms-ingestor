@@ -1,7 +1,7 @@
-package it.gov.pagopa.rtd.ms.rtdmsingestor.infrastracture.repositories;
+package it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.repositories;
 import java.util.Optional;
 
-import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastracture.mongo.PaymentInstrumentItem;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.PaymentInstrumentItem;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
 import lombok.extern.slf4j.Slf4j;
 

@@ -1,11 +1,11 @@
-package it.gov.pagopa.rtd.ms.rtdmsingestor.infrastracture.repositories;
+package it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.repositories;
 
 import java.util.Optional;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
-import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastracture.mongo.PaymentInstrumentItem;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.PaymentInstrumentItem;
 
 public interface IngestorDAO extends MongoRepository<PaymentInstrumentItem, String> {
 

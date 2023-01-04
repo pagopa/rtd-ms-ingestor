@@ -59,6 +59,7 @@ class RtdMsIngestorApplicationTests {
   @MockBean
   CloseableHttpClient client;
 
+
   private final String container = "rtd-transactions-decrypted";
   private final String blob = "CSTAR.99910.TRNLOG.20220316.103107.001.csv.pgp";
   private final String blobUri = "/blobServices/default/containers/" + container + "/blobs/" + blob;

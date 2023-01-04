@@ -4,8 +4,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
-import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastracture.repositories.IngestorDAO;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastracture.repositories.IngestorRepositoryImpl;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.repositories.IngestorDAO;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.repositories.IngestorRepositoryImpl;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
 
 @Configuration

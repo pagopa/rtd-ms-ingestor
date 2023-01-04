@@ -52,7 +52,7 @@ microservice-chart:
   envConfigMapExternals:
     rtdingestor:
       JAVA_TOOL_OPTIONS: JAVA_TOOL_OPTIONS
-      CSV_INGESTOR_HOST:
+      CSV_INGESTOR_HOST: CSV_INGESTOR_HOST
       MONGODB_NAME: MONGODB_NAME
 
     rtd-blob-storage-events:

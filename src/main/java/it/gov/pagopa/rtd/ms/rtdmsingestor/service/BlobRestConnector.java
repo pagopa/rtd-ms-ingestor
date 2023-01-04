@@ -32,12 +32,14 @@ import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * This class contains handling methods for blobs.
  */
 @Service
 @Slf4j
+@Validated
 public class BlobRestConnector {
 
   @Value("${ingestor.api.baseurl}")

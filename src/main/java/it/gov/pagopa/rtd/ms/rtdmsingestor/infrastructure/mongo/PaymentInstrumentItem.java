@@ -1,4 +1,4 @@
-package it.gov.pagopa.rtd.ms.rtdmsingestor.infrastracture.mongo;
+package it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo;
 
 import lombok.Data;
 import org.springframework.data.mongodb.core.index.Indexed;
