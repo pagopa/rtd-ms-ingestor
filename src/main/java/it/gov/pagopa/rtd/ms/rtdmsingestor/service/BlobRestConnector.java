@@ -18,7 +18,6 @@ import javax.validation.ValidatorFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
-import org.apache.el.stream.Optional;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.ResponseHandler;
@@ -61,6 +60,10 @@ public class BlobRestConnector {
   @Autowired
   IngestorRepository repository;
 
+  private int numNotEnrolledCards = 0;
+  private int numCorrectTrx = 0;
+  private int numTotalTrx = 0;
+
   /**
    * Method that allows the get of the blob from a remote storage.
    *
@@ -95,10 +98,12 @@ public class BlobRestConnector {
    * @param blob the blob of the transaction.
    */
   public BlobApplicationAware process(BlobApplicationAware blob) {
+
     log.info("Extracting transactions from:{}", blob.getBlobUri());
 
-    int numRows = 0;
-    int numTrx = 0;
+    numTotalTrx = 0;
+    numCorrectTrx = 0;
+    numNotEnrolledCards = 0;
 
     String blobPath = Path.of(blob.getTargetDir(), blob.getBlob()).toString();
 
@@ -107,6 +112,7 @@ public class BlobRestConnector {
     Validator validator = factory.getValidator();
 
     LineIterator it;
+
     try {
       it = FileUtils.lineIterator(Path.of(blobPath).toFile(), "UTF-8");
     } catch (IOException e) {
@@ -136,7 +142,7 @@ public class BlobRestConnector {
             //If no field format violation has been found the transaction is sent
             sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
             log.info(t.toString());
-            numTrx++;
+            numCorrectTrx++;
           } else {
             //Creates a string with all the malformed fields
             StringBuilder malformedFields = new StringBuilder();
@@ -148,7 +154,8 @@ public class BlobRestConnector {
                 blob.getBlob(), malformedFields);
           }
         }else{
-          log.error("Cards not enrolled from {}",
+          numNotEnrolledCards++;
+          log.info("Cards not enrolled from {}",
             blob.getBlob());
         }
 
@@ -158,7 +165,7 @@ public class BlobRestConnector {
                 + " at least non-ISO8601 date or non-numeric amount.",
             blob.getBlob());
       }
-      numRows++;
+      numTotalTrx++;
     }
 
     try {
@@ -167,12 +174,12 @@ public class BlobRestConnector {
       log.error("Error closing line iterator");
     }
 
-    if (numRows == numTrx) {
-      log.info("Extraction result: extracted all {} transactions from:{}", numTrx,
+    if (numTotalTrx == numCorrectTrx) {
+      log.info("Extraction result: extracted all {} transactions from:{}", numCorrectTrx,
           blob.getBlobUri());
     } else {
-      log.info("Extraction result: {} well formed transactions out of {} rows extracted from:{}",
-          numTrx, numRows,
+      log.info("Extraction result: {} well formed transactions and {} not enrolled cards out of {} rows extracted from:{}",
+      numCorrectTrx,numNotEnrolledCards, numTotalTrx,
           blob.getBlobUri());
     }
 
@@ -225,4 +232,17 @@ public class BlobRestConnector {
     }
 
   }
+
+  public int getNumNotEnrolledCards(){
+    return numNotEnrolledCards;
+  }
+
+  public int getNumTotalTrx(){
+    return numTotalTrx;
+  }
+
+  public int getNumCorrectTrx(){
+    return numCorrectTrx;
+  }
+
 }

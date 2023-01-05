@@ -155,7 +155,7 @@ class BlobRestConnectorTest {
     String transactions = "testTransactions.csv";
 
     when(repository.findItemByHash(any()))
-      .thenReturn(Optional.of(new PaymentInstrumentItem("c3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")));
+      .thenReturn(Optional.of(new PaymentInstrumentItem("b50245d5fee9fa11bead50e7d0afb6c269c77f59474a87442f867ba9643021fc")));
 
     //Create fake file to process
     File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
@@ -171,8 +171,9 @@ class BlobRestConnectorTest {
     blobRestConnector.process(fakeBlob);
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
       assertThat(output.getOut(), containsString("Extracting transactions from:"));
-      assertThat(output.getOut(),
-          containsString("Extraction result: extracted all 5 transactions from:"));
+      assertEquals(blobRestConnector.getNumTotalTrx(),blobRestConnector.getNumCorrectTrx());
+      assertEquals(5,blobRestConnector.getNumTotalTrx());
+      assertEquals(5,blobRestConnector.getNumCorrectTrx());
       assertEquals(Status.PROCESSED, fakeBlob.getStatus());
     });
   }
@@ -217,7 +218,11 @@ class BlobRestConnectorTest {
       assertThat(output.getOut(), containsString("Extracting transactions from:"));
       assertThat(output.getOut(),
           containsString("Extraction result: " + malformedBuyProcessedFiscalCodes
-              + " well formed transactions out of"));
+              + " well formed transactions and"));
+      assertEquals(3,blobRestConnector.getNumCorrectTrx());
+      assertEquals(0, blobRestConnector.getNumNotEnrolledCards());
+      assertEquals(52, blobRestConnector.getNumTotalTrx());
+
       assertThat(output.getOut(), containsString("Invalid character for Fiscal Code "));
       assertThat(output.getOut(), containsString("Invalid length for Fiscal Code "));
       assertThat(output.getOut(), containsString("Invalid checksum for Fiscal Code "));
@@ -247,6 +252,9 @@ class BlobRestConnectorTest {
     blobRestConnector.process(fakeBlob);
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
       assertThat(output.getOut(), containsString("Extracting transactions from:"));
+      assertEquals(0, blobRestConnector.getNumCorrectTrx());
+      assertEquals(0, blobRestConnector.getNumNotEnrolledCards());
+      assertEquals(1, blobRestConnector.getNumTotalTrx());
       assertEquals(Status.PROCESSED, fakeBlob.getStatus());
     });
   }
@@ -272,6 +280,9 @@ class BlobRestConnectorTest {
     blobRestConnector.process(fakeBlob);
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
       assertThat(output.getOut(), containsString("Extracting transactions from:"));
+      assertEquals(0, blobRestConnector.getNumCorrectTrx());
+      assertEquals(0, blobRestConnector.getNumNotEnrolledCards());
+      assertEquals(1, blobRestConnector.getNumTotalTrx());
       assertEquals(Status.PROCESSED, fakeBlob.getStatus());
     });
   }
@@ -298,6 +309,9 @@ class BlobRestConnectorTest {
     blobRestConnector.process(fakeBlob);
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
       assertThat(output.getOut(), containsString("Extracting transactions from:"));
+      assertEquals(0, blobRestConnector.getNumCorrectTrx());
+      assertEquals(0, blobRestConnector.getNumNotEnrolledCards());
+      assertEquals(1, blobRestConnector.getNumTotalTrx());
       assertEquals(Status.PROCESSED, fakeBlob.getStatus());
     });
   }
@@ -324,6 +338,9 @@ class BlobRestConnectorTest {
     blobRestConnector.process(fakeBlob);
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
       assertThat(output.getOut(), containsString("Extracting transactions from:"));
+      assertEquals(0, blobRestConnector.getNumCorrectTrx());
+      assertEquals(0, blobRestConnector.getNumNotEnrolledCards());
+      assertEquals(1, blobRestConnector.getNumTotalTrx());
       assertEquals(Status.PROCESSED, fakeBlob.getStatus());
     });
   }
