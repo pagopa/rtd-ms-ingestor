@@ -18,23 +18,20 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
-import org.springframework.boot.test.system.CapturedOutput;
-import org.springframework.boot.test.system.OutputCaptureExtension;
-import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.cloud.stream.test.binder.TestSupportBinderAutoConfiguration;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
@@ -50,7 +47,6 @@ import org.springframework.test.context.TestPropertySource;
 @EnableAutoConfiguration(exclude = {TestSupportBinderAutoConfiguration.class, EmbeddedMongoAutoConfiguration.class})
 @TestPropertySource(value = {"classpath:application-test.yml"}, inheritProperties = false)
 @DirtiesContext
-@ExtendWith(OutputCaptureExtension.class)
 @ContextConfiguration(classes = {EventHandler.class})
 class IngestorRepositoryTest {
 
@@ -59,9 +55,6 @@ class IngestorRepositoryTest {
 
   @Value("${ingestor.resources.base.path}/tmp")
   String tmpDirectory;
-
-  @Autowired
-  private StreamBridge stream;
 
   @SpyBean
   private BlobApplicationAware blobApplicationAware;
@@ -77,6 +70,21 @@ class IngestorRepositoryTest {
 
   private final String container = "rtd-transactions-decrypted";
   private final String blobName = "CSTAR.99910.TRNLOG.20220228.103107.001.csv.pgp.0.decrypted";
+  final PaymentInstrumentItem paymentInstrumentItem = PaymentInstrumentItem
+    .builder()
+    .id("")
+    .hashPan("c3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")
+    .par("par")
+    .state("READY")
+    .apps(List.of("IDPAY"))
+    .network("")
+    .issuer("")
+    .insertAt(LocalDateTime.now())
+    .updatedAt(LocalDateTime.now())
+    .insertUser("enrolled_payment_instrument")
+    .updateUser("enrolled_payment_instrument")
+    .version(1)
+    .build();
 
   private BlobApplicationAware fakeBlob = new BlobApplicationAware(
       "/blobServices/default/containers/" + container + "/blobs/" + blobName);
@@ -88,11 +96,11 @@ class IngestorRepositoryTest {
   }
 
   @Test
-  void testHashReplacement(CapturedOutput output) throws IOException{
+  void testHashReplacement() throws IOException{
 
     String transactions = "testHashReplacement.csv";
     when(repository.findItemByHash(any()))
-      .thenReturn(Optional.of(new PaymentInstrumentItem("c3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")));
+      .thenReturn(Optional.of(paymentInstrumentItem));
 
     //Create fake file to process
     File decryptedFile = Path.of(tmpDirectory, blobName).toFile();

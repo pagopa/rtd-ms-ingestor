@@ -9,7 +9,7 @@ import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.PaymentInstrument
 
 public interface IngestorDAO extends MongoRepository<PaymentInstrumentItem, String> {
 
-    @Query(value = "{ $or :[{'hashPan' : ?0 },{ 'hashPanChildren': ?0 }] , 'state':READY}}", fields = "{ hashPan : 1 }")
+    @Query(value = "{ $or :[{'hashPan' : ?0 },{ 'hashPanChildren': ?0 }] , 'state':READY}}")
     Optional<PaymentInstrumentItem> findItemByHash(String hash);
 
 }

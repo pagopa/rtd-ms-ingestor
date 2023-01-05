@@ -27,6 +27,8 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.io.FileUtils;
@@ -155,7 +157,21 @@ class BlobRestConnectorTest {
     String transactions = "testTransactions.csv";
 
     when(repository.findItemByHash(any()))
-      .thenReturn(Optional.of(new PaymentInstrumentItem("b50245d5fee9fa11bead50e7d0afb6c269c77f59474a87442f867ba9643021fc")));
+      .thenReturn(Optional.of( PaymentInstrumentItem
+        .builder()
+        .id("")
+        .hashPan("b50245d5fee9fa11bead50e7d0afb6c269c77f59474a87442f867ba9643021fc")
+        .par("par")
+        .state("READY")
+        .apps(List.of("IDPAY"))
+        .network("")
+        .issuer("")
+        .insertAt(LocalDateTime.now())
+        .updatedAt(LocalDateTime.now())
+        .insertUser("enrolled_payment_instrument")
+        .updateUser("enrolled_payment_instrument")
+        .version(1)
+        .build()));
 
     //Create fake file to process
     File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
@@ -201,7 +217,21 @@ class BlobRestConnectorTest {
     String transactions = "testMalformedTransactions.csv";
 
     when(repository.findItemByHash(any()))
-      .thenReturn(Optional.of(new PaymentInstrumentItem("c3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")));
+      .thenReturn(Optional.of( PaymentInstrumentItem
+        .builder()
+        .id("")
+        .hashPan("c3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")
+        .par("par")
+        .state("READY")
+        .apps(List.of("IDPAY"))
+        .network("")
+        .issuer("")
+        .insertAt(LocalDateTime.now())
+        .updatedAt(LocalDateTime.now())
+        .insertUser("enrolled_payment_instrument")
+        .updateUser("enrolled_payment_instrument")
+        .version(1)
+        .build()));
 
     //Create fake file to process
     File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
@@ -237,7 +267,7 @@ class BlobRestConnectorTest {
     String transactions = "testMalformedTransactionHash.csv";
 
     when(repository.findItemByHash(any()))
-      .thenReturn(Optional.of(new PaymentInstrumentItem("")));
+      .thenReturn(Optional.empty());
 
     //Create fake file to process
     File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
@@ -253,7 +283,7 @@ class BlobRestConnectorTest {
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
       assertThat(output.getOut(), containsString("Extracting transactions from:"));
       assertEquals(0, blobRestConnector.getNumCorrectTrx());
-      assertEquals(0, blobRestConnector.getNumNotEnrolledCards());
+      assertEquals(1, blobRestConnector.getNumNotEnrolledCards());
       assertEquals(1, blobRestConnector.getNumTotalTrx());
       assertEquals(Status.PROCESSED, fakeBlob.getStatus());
     });
@@ -265,7 +295,21 @@ class BlobRestConnectorTest {
     String transactions = "testMalformedTransactionHash_2.csv";
 
     when(repository.findItemByHash(any()))
-      .thenReturn(Optional.of(new PaymentInstrumentItem("3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")));
+      .thenReturn(Optional.of( PaymentInstrumentItem
+        .builder()
+        .id("")
+        .hashPan("3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")
+        .par("par")
+        .state("READY")
+        .apps(List.of("IDPAY"))
+        .network("")
+        .issuer("")
+        .insertAt(LocalDateTime.now())
+        .updatedAt(LocalDateTime.now())
+        .insertUser("enrolled_payment_instrument")
+        .updateUser("enrolled_payment_instrument")
+        .version(1)
+        .build()));
 
     //Create fake file to process
     File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
@@ -294,7 +338,21 @@ class BlobRestConnectorTest {
     String transactions = "testMalformedTransactionHash_3.csv";
 
     when(repository.findItemByHash(any()))
-      .thenReturn(Optional.of(new PaymentInstrumentItem("ac3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")));
+      .thenReturn(Optional.of( PaymentInstrumentItem
+        .builder()
+        .id("")
+        .hashPan("ac3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")
+        .par("par")
+        .state("READY")
+        .apps(List.of("IDPAY"))
+        .network("")
+        .issuer("")
+        .insertAt(LocalDateTime.now())
+        .updatedAt(LocalDateTime.now())
+        .insertUser("enrolled_payment_instrument")
+        .updateUser("enrolled_payment_instrument")
+        .version(1)
+        .build()));
 
     //Create fake file to process
     File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
@@ -323,7 +381,21 @@ class BlobRestConnectorTest {
     String transactions = "testMalformedTransactionHash_4.csv";
 
     when(repository.findItemByHash(any()))
-      .thenReturn(Optional.of(new PaymentInstrumentItem("+3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")));
+      .thenReturn(Optional.of( PaymentInstrumentItem
+        .builder()
+        .id("")
+        .hashPan("+3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")
+        .par("par")
+        .state("READY")
+        .apps(List.of("IDPAY"))
+        .network("")
+        .issuer("")
+        .insertAt(LocalDateTime.now())
+        .updatedAt(LocalDateTime.now())
+        .insertUser("enrolled_payment_instrument")
+        .updateUser("enrolled_payment_instrument")
+        .version(1)
+        .build()));
 
     //Create fake file to process
     File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
