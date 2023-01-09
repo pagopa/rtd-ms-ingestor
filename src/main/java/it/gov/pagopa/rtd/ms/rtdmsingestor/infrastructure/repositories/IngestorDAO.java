@@ -9,7 +9,6 @@ import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
 
 public interface IngestorDAO extends MongoRepository<EPIItem, String> {
 
-    //@Query(value = "{ $or :[{'hashPan' : ?0 },{ 'hashPanChildren': ?0 }] , 'state':READY}}")
     @Query(value = "{ $or :[{'hashPan' : ?0 },{ 'hashPanChildren': ?0 }] , 'state':READY}}", fields = "{ hashPan : 1 }")
     Optional<EPIItem> findItemByHash(String hash);
 
