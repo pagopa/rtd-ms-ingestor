@@ -1,10 +1,7 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,7 +21,7 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 @Document("enrolled_payment_instrument")
 @Builder(toBuilder = true)
 @Data
-public class PaymentInstrumentItem {
+public class EPIEntity {
 
   @Id
   private String id;

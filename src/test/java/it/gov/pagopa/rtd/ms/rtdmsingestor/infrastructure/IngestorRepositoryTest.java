@@ -6,7 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import it.gov.pagopa.rtd.ms.rtdmsingestor.event.EventHandler;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.PaymentInstrumentItem;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
@@ -18,8 +18,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.io.FileUtils;
@@ -70,20 +68,9 @@ class IngestorRepositoryTest {
 
   private final String container = "rtd-transactions-decrypted";
   private final String blobName = "CSTAR.99910.TRNLOG.20220228.103107.001.csv.pgp.0.decrypted";
-  final PaymentInstrumentItem paymentInstrumentItem = PaymentInstrumentItem
+  final EPIItem  paymentInstrumentItem = EPIItem
     .builder()
-    .id("")
     .hashPan("c3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")
-    .par("par")
-    .state("READY")
-    .apps(List.of("IDPAY"))
-    .network("")
-    .issuer("")
-    .insertAt(LocalDateTime.now())
-    .updatedAt(LocalDateTime.now())
-    .insertUser("enrolled_payment_instrument")
-    .updateUser("enrolled_payment_instrument")
-    .version(1)
     .build();
 
   private BlobApplicationAware fakeBlob = new BlobApplicationAware(

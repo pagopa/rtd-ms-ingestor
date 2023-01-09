@@ -1,7 +1,7 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.repositories;
 import java.util.Optional;
 
-import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.PaymentInstrumentItem;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,7 +16,7 @@ public class IngestorRepositoryImpl implements IngestorRepository{
     }
 
     @Override
-    public Optional<PaymentInstrumentItem> findItemByHash(String hash) {
+    public Optional<EPIItem> findItemByHash(String hash) {
         return dao.findItemByHash(hash);
     }
 

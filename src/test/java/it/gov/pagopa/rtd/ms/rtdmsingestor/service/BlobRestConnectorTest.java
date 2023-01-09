@@ -15,7 +15,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import it.gov.pagopa.rtd.ms.rtdmsingestor.event.EventHandler;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.PaymentInstrumentItem;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
@@ -27,8 +27,6 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.io.FileUtils;
@@ -79,9 +77,6 @@ class BlobRestConnectorTest {
 
   @Value("${ingestor.resources.base.path}/tmp")
   String tmpDirectory;
-
-  @Autowired
-  private StreamBridge stream;
 
   @SpyBean
   private BlobApplicationAware blobApplicationAware;
@@ -157,20 +152,9 @@ class BlobRestConnectorTest {
     String transactions = "testTransactions.csv";
 
     when(repository.findItemByHash(any()))
-      .thenReturn(Optional.of( PaymentInstrumentItem
+      .thenReturn(Optional.of( EPIItem
         .builder()
-        .id("")
         .hashPan("b50245d5fee9fa11bead50e7d0afb6c269c77f59474a87442f867ba9643021fc")
-        .par("par")
-        .state("READY")
-        .apps(List.of("IDPAY"))
-        .network("")
-        .issuer("")
-        .insertAt(LocalDateTime.now())
-        .updatedAt(LocalDateTime.now())
-        .insertUser("enrolled_payment_instrument")
-        .updateUser("enrolled_payment_instrument")
-        .version(1)
         .build()));
 
     //Create fake file to process
@@ -217,20 +201,9 @@ class BlobRestConnectorTest {
     String transactions = "testMalformedTransactions.csv";
 
     when(repository.findItemByHash(any()))
-      .thenReturn(Optional.of( PaymentInstrumentItem
+      .thenReturn(Optional.of( EPIItem
         .builder()
-        .id("")
         .hashPan("c3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")
-        .par("par")
-        .state("READY")
-        .apps(List.of("IDPAY"))
-        .network("")
-        .issuer("")
-        .insertAt(LocalDateTime.now())
-        .updatedAt(LocalDateTime.now())
-        .insertUser("enrolled_payment_instrument")
-        .updateUser("enrolled_payment_instrument")
-        .version(1)
         .build()));
 
     //Create fake file to process
@@ -295,20 +268,9 @@ class BlobRestConnectorTest {
     String transactions = "testMalformedTransactionHash_2.csv";
 
     when(repository.findItemByHash(any()))
-      .thenReturn(Optional.of( PaymentInstrumentItem
+      .thenReturn(Optional.of( EPIItem
         .builder()
-        .id("")
         .hashPan("3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")
-        .par("par")
-        .state("READY")
-        .apps(List.of("IDPAY"))
-        .network("")
-        .issuer("")
-        .insertAt(LocalDateTime.now())
-        .updatedAt(LocalDateTime.now())
-        .insertUser("enrolled_payment_instrument")
-        .updateUser("enrolled_payment_instrument")
-        .version(1)
         .build()));
 
     //Create fake file to process
@@ -338,20 +300,9 @@ class BlobRestConnectorTest {
     String transactions = "testMalformedTransactionHash_3.csv";
 
     when(repository.findItemByHash(any()))
-      .thenReturn(Optional.of( PaymentInstrumentItem
+      .thenReturn(Optional.of( EPIItem
         .builder()
-        .id("")
         .hashPan("ac3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")
-        .par("par")
-        .state("READY")
-        .apps(List.of("IDPAY"))
-        .network("")
-        .issuer("")
-        .insertAt(LocalDateTime.now())
-        .updatedAt(LocalDateTime.now())
-        .insertUser("enrolled_payment_instrument")
-        .updateUser("enrolled_payment_instrument")
-        .version(1)
         .build()));
 
     //Create fake file to process
@@ -381,20 +332,9 @@ class BlobRestConnectorTest {
     String transactions = "testMalformedTransactionHash_4.csv";
 
     when(repository.findItemByHash(any()))
-      .thenReturn(Optional.of( PaymentInstrumentItem
+      .thenReturn(Optional.of( EPIItem
         .builder()
-        .id("")
         .hashPan("+3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")
-        .par("par")
-        .state("READY")
-        .apps(List.of("IDPAY"))
-        .network("")
-        .issuer("")
-        .insertAt(LocalDateTime.now())
-        .updatedAt(LocalDateTime.now())
-        .insertUser("enrolled_payment_instrument")
-        .updateUser("enrolled_payment_instrument")
-        .version(1)
         .build()));
 
     //Create fake file to process
