@@ -15,16 +15,13 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.invoke.VolatileCallSite;
 import java.nio.file.Path;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-
 import lombok.extern.slf4j.Slf4j;
-
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -72,8 +69,6 @@ public class BlobRestConnector {
   private int numNotEnrolledCards = 0;
   private int numCorrectTrx = 0;
   private int numTotalTrx = 0;
-  private int numViolation = 0;
-
   /**
    * Method that allows the get of the blob from a remote storage.
    *
@@ -149,10 +144,7 @@ public class BlobRestConnector {
 
     List<CsvException> violations = csvToBean.getCapturedExceptions();
 
-    numViolation = violations.size();
-    log.info("violations {}"+numViolation);
     numTotalTrx = numTotalTrx + violations.size();
-    //numCorrectTrx = numTotalTrx - numViolation - numNotEnrolledCards;
 
     if (!violations.isEmpty()) {
       for (CsvException e : violations) {
