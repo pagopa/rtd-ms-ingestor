@@ -224,7 +224,7 @@ class BlobRestConnectorTest {
               + " well formed transactions and"));
       assertEquals(3,blobRestConnector.getNumCorrectTrx());
       assertEquals(0, blobRestConnector.getNumNotEnrolledCards());
-      assertEquals(52, blobRestConnector.getNumTotalTrx());
+      assertEquals(53, blobRestConnector.getNumTotalTrx());
 
       assertThat(output.getOut(), containsString("Invalid character for Fiscal Code "));
       assertThat(output.getOut(), containsString("Invalid length for Fiscal Code "));

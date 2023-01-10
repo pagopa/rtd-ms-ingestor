@@ -5,6 +5,7 @@ import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.exceptions.CsvException;
 
+import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
@@ -19,6 +20,7 @@ import java.nio.file.Path;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
@@ -131,8 +133,9 @@ public class BlobRestConnector {
     Stream<Transaction> readTransaction = csvToBean.stream();
 
     readTransaction.forEach(t -> {
-      if (repository.findItemByHash(t.getHpan()).isPresent()) {
-        t.setHpan(repository.findItemByHash(t.getHpan()).get().getHashPan());
+      Optional<EPIItem> dbResponse = repository.findItemByHash(t.getHpan());
+      if (dbResponse.isPresent()) {
+        t.setHpan(dbResponse.get().getHashPan());
         sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
         log.info(t.toString());
         numCorrectTrx++;
