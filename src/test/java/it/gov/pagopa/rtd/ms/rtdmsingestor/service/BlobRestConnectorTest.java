@@ -256,8 +256,8 @@ class BlobRestConnectorTest {
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
       assertThat(output.getOut(), containsString("Extracting transactions from:"));
       assertEquals(0, blobRestConnector.getNumCorrectTrx());
-      assertEquals(1, blobRestConnector.getNumNotEnrolledCards());
       assertEquals(1, blobRestConnector.getNumTotalTrx());
+      assertEquals(0, blobRestConnector.getNumNotEnrolledCards());
       assertEquals(Status.PROCESSED, fakeBlob.getStatus());
     });
   }
