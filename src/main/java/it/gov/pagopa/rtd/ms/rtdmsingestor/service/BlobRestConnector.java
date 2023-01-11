@@ -1,5 +1,6 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.service;
 
+import com.mongodb.MongoException;
 import com.opencsv.bean.BeanVerifier;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
@@ -71,6 +72,8 @@ public class BlobRestConnector {
   private int numNotEnrolledCards = 0;
   private int numCorrectTrx = 0;
   private int numTotalTrx = 0;
+  private static final int MAX_RETRIES = 4;
+
   /**
    * Method that allows the get of the blob from a remote storage.
    *
@@ -133,16 +136,26 @@ public class BlobRestConnector {
     Stream<Transaction> readTransaction = csvToBean.stream();
 
     readTransaction.forEach(t -> {
-      Optional<EPIItem> dbResponse = repository.findItemByHash(t.getHpan());
-      if (dbResponse.isPresent()) {
-        t.setHpan(dbResponse.get().getHashPan());
-        sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
-        log.info(t.toString());
-        numCorrectTrx++;
-      }else{
-        numNotEnrolledCards++;
+        for( int i = 0; i < MAX_RETRIES; i++){
+          try{
+            Optional<EPIItem> dbResponse = repository.findItemByHash(t.getHpan());
+            if (dbResponse.isPresent()) {
+              t.setHpan(dbResponse.get().getHashPan());
+              sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
+              log.info(t.toString());
+              numCorrectTrx++;
+            }else{
+              numNotEnrolledCards++;
+            }
+            numTotalTrx++;
+            break;
+          }catch(MongoException ex){
+            log.error("Error getting records : {}"+ex);
+            if (i == MAX_RETRIES){
+              throw ex;
+            }
+          }
       }
-      numTotalTrx++;
     });
 
     List<CsvException> violations = csvToBean.getCapturedExceptions();
