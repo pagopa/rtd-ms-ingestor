@@ -5,7 +5,7 @@ COPY . .
 
 RUN mvn clean package
 
-FROM amazoncorretto:11:alpine-jre as runtime
+FROM amazoncorretto:11 as runtime
 
 VOLUME /tmp
 WORKDIR /app
