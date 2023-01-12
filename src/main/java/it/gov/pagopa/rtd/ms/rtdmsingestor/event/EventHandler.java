@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,7 +16,6 @@ import org.springframework.messaging.Message;
 /**
  * Component defining the processing steps in response to storage events.
  */
-@Slf4j
 @Configuration
 @Getter
 public class EventHandler {
