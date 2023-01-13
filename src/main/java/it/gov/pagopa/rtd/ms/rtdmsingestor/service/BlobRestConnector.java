@@ -72,7 +72,6 @@ public class BlobRestConnector {
   private int numNotEnrolledCards = 0;
   private int numCorrectTrx = 0;
   private int numTotalTrx = 0;
-  private static final int MAX_RETRIES = 4;
 
   /**
    * Method that allows the get of the blob from a remote storage.
@@ -136,26 +135,20 @@ public class BlobRestConnector {
     Stream<Transaction> readTransaction = csvToBean.stream();
 
     readTransaction.forEach(t -> {
-        for( int i = 0; i < MAX_RETRIES; i++){
-          try{
-            Optional<EPIItem> dbResponse = repository.findItemByHash(t.getHpan());
-            if (dbResponse.isPresent()) {
-              t.setHpan(dbResponse.get().getHashPan());
-              sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
-              log.info(t.toString());
-              numCorrectTrx++;
-            }else{
-              numNotEnrolledCards++;
-            }
-            numTotalTrx++;
-            break;
-          }catch(MongoException ex){
-            log.error("Error getting records : {}"+ex);
-            if (i == MAX_RETRIES){
-              throw ex;
-            }
+        try{
+          Optional<EPIItem> dbResponse = repository.findItemByHash(t.getHpan());
+          if (dbResponse.isPresent()) {
+            t.setHpan(dbResponse.get().getHashPan());
+            sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
+            log.info(t.toString());
+            numCorrectTrx++;
+          }else{
+            numNotEnrolledCards++;
           }
-      }
+          numTotalTrx++;
+        }catch(MongoException ex){
+          log.error("Error getting records : {}"+ex);
+        }
     });
 
     List<CsvException> violations = csvToBean.getCapturedExceptions();
