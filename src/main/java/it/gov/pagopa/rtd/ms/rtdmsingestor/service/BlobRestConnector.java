@@ -222,15 +222,15 @@ public class BlobRestConnector {
 
   }
 
-  public int getNumNotEnrolledCards(){
+  protected int getNumNotEnrolledCards(){
     return numNotEnrolledCards;
   }
 
-  public int getNumTotalTrx(){
+  protected int getNumTotalTrx(){
     return numTotalTrx;
   }
 
-  public int getNumCorrectTrx(){
+  protected int getNumCorrectTrx(){
     return numCorrectTrx;
   }
 

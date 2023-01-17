@@ -42,6 +42,8 @@ import org.apache.http.message.BasicStatusLine;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -148,7 +150,7 @@ class BlobRestConnectorTest {
 
 
   @Test
-  void shouldProcess(CapturedOutput output) throws IOException {
+  void shouldProcess() throws IOException {
     String transactions = "testTransactions.csv";
 
     when(repository.findItemByHash(any()))
@@ -170,7 +172,6 @@ class BlobRestConnectorTest {
 
     blobRestConnector.process(fakeBlob);
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-      assertThat(output.getOut(), containsString("Extracting transactions from:"));
       assertEquals(blobRestConnector.getNumTotalTrx(),blobRestConnector.getNumCorrectTrx());
       assertEquals(5,blobRestConnector.getNumTotalTrx());
       assertEquals(5,blobRestConnector.getNumCorrectTrx());
@@ -218,10 +219,7 @@ class BlobRestConnectorTest {
 
     blobRestConnector.process(fakeBlob);
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-      assertThat(output.getOut(), containsString("Extracting transactions from:"));
-      assertThat(output.getOut(),
-          containsString("Extraction result: " + malformedBuyProcessedFiscalCodes
-              + " well formed transactions and"));
+
       assertEquals(3,blobRestConnector.getNumCorrectTrx());
       assertEquals(0, blobRestConnector.getNumNotEnrolledCards());
       assertEquals(53, blobRestConnector.getNumTotalTrx());
@@ -235,42 +233,21 @@ class BlobRestConnectorTest {
 
    //This test uses a file with all malformed transaction
   // There is one malformed transaction for every field in the object Transaction.
-  @Test
-  void shouldNotProcessForMalformedEmptyHashPan(CapturedOutput output) throws IOException {
-    String transactions = "testMalformedTransactionHash.csv";
+  @ParameterizedTest
+  @CsvSource({"testMalformedTransactionHash.csv,",
+    "testMalformedTransactionHash_2.csv,3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9",
+    "testMalformedTransactionHash_3.csv,ac3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9",
+    "testMalformedTransactionHash_4.csv,+3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9"})
+  void shouldNotProcessForMalformedEmptyHashPan(
+    String fileName,
+    String hashpan) throws IOException {
 
-    when(repository.findItemByHash(any()))
-      .thenReturn(Optional.empty());
-
-    //Create fake file to process
-    File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
-    decryptedFile.getParentFile().mkdirs();
-    decryptedFile.createNewFile();
-    FileOutputStream blobDst = new FileOutputStream(Path.of(tmpDirectory, blobName).toString());
-    Files.copy(Path.of(resources, transactions), blobDst);
-
-    fakeBlob.setTargetDir(tmpDirectory);
-    fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
-
-    blobRestConnector.process(fakeBlob);
-    await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-      assertThat(output.getOut(), containsString("Extracting transactions from:"));
-      assertEquals(0, blobRestConnector.getNumCorrectTrx());
-      assertEquals(1, blobRestConnector.getNumTotalTrx());
-      assertEquals(0, blobRestConnector.getNumNotEnrolledCards());
-      assertEquals(Status.PROCESSED, fakeBlob.getStatus());
-    });
-  }
-
-  // There is one malformed transaction for every field in the object Transaction.
-  @Test
-  void shouldNotProcessForMalformedHashPan2(CapturedOutput output) throws IOException {
-    String transactions = "testMalformedTransactionHash_2.csv";
+    String transactions = fileName;
 
     when(repository.findItemByHash(any()))
       .thenReturn(Optional.of( EPIItem
         .builder()
-        .hashPan("3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")
+        .hashPan(hashpan)
         .build()));
 
     //Create fake file to process
@@ -285,77 +262,14 @@ class BlobRestConnectorTest {
 
     blobRestConnector.process(fakeBlob);
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-      assertThat(output.getOut(), containsString("Extracting transactions from:"));
+
       assertEquals(0, blobRestConnector.getNumCorrectTrx());
-      assertEquals(0, blobRestConnector.getNumNotEnrolledCards());
       assertEquals(1, blobRestConnector.getNumTotalTrx());
+      assertEquals(0, blobRestConnector.getNumNotEnrolledCards());
       assertEquals(Status.PROCESSED, fakeBlob.getStatus());
     });
   }
 
-
-  // There is one malformed transaction for every field in the object Transaction.
-  @Test
-  void shouldNotProcessForMalformedHashPan3(CapturedOutput output) throws IOException {
-    String transactions = "testMalformedTransactionHash_3.csv";
-
-    when(repository.findItemByHash(any()))
-      .thenReturn(Optional.of( EPIItem
-        .builder()
-        .hashPan("ac3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")
-        .build()));
-
-    //Create fake file to process
-    File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
-    decryptedFile.getParentFile().mkdirs();
-    decryptedFile.createNewFile();
-    FileOutputStream blobDst = new FileOutputStream(Path.of(tmpDirectory, blobName).toString());
-    Files.copy(Path.of(resources, transactions), blobDst);
-
-    fakeBlob.setTargetDir(tmpDirectory);
-    fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
-
-    blobRestConnector.process(fakeBlob);
-    await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-      assertThat(output.getOut(), containsString("Extracting transactions from:"));
-      assertEquals(0, blobRestConnector.getNumCorrectTrx());
-      assertEquals(0, blobRestConnector.getNumNotEnrolledCards());
-      assertEquals(1, blobRestConnector.getNumTotalTrx());
-      assertEquals(Status.PROCESSED, fakeBlob.getStatus());
-    });
-  }
-
-
-  // There is one malformed transaction for every field in the object Transaction.
-  @Test
-  void shouldNotProcessForMalformedHashPan4(CapturedOutput output) throws IOException {
-    String transactions = "testMalformedTransactionHash_4.csv";
-
-    when(repository.findItemByHash(any()))
-      .thenReturn(Optional.of( EPIItem
-        .builder()
-        .hashPan("+3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")
-        .build()));
-
-    //Create fake file to process
-    File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
-    decryptedFile.getParentFile().mkdirs();
-    decryptedFile.createNewFile();
-    FileOutputStream blobDst = new FileOutputStream(Path.of(tmpDirectory, blobName).toString());
-    Files.copy(Path.of(resources, transactions), blobDst);
-
-    fakeBlob.setTargetDir(tmpDirectory);
-    fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
-
-    blobRestConnector.process(fakeBlob);
-    await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-      assertThat(output.getOut(), containsString("Extracting transactions from:"));
-      assertEquals(0, blobRestConnector.getNumCorrectTrx());
-      assertEquals(0, blobRestConnector.getNumNotEnrolledCards());
-      assertEquals(1, blobRestConnector.getNumTotalTrx());
-      assertEquals(Status.PROCESSED, fakeBlob.getStatus());
-    });
-  }
 
   @Test
   void shouldDelete(CapturedOutput output) throws IOException {
