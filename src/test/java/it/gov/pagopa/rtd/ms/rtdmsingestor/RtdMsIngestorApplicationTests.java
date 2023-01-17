@@ -9,8 +9,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import it.gov.pagopa.rtd.ms.rtdmsingestor.event.EventHandler;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.repositories.IngestorDAO;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.EventGridEvent;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.service.BlobRestConnector;
 import java.time.Duration;
@@ -22,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -40,7 +43,7 @@ import org.springframework.test.context.TestPropertySource;
 @ActiveProfiles("test")
 @EmbeddedKafka(topics = {"rtd-platform-events", "rtd-trx"}, partitions = 1,
     bootstrapServersProperty = "spring.embedded.kafka.brokers")
-@EnableAutoConfiguration(exclude = {TestSupportBinderAutoConfiguration.class})
+@EnableAutoConfiguration(exclude = {TestSupportBinderAutoConfiguration.class, EmbeddedMongoAutoConfiguration.class})
 @ContextConfiguration(classes = {EventHandler.class})
 @TestPropertySource(value = {"classpath:application-test.yml"}, inheritProperties = false)
 @DirtiesContext
@@ -58,6 +61,13 @@ class RtdMsIngestorApplicationTests {
 
   @MockBean
   CloseableHttpClient client;
+
+  @MockBean
+  IngestorRepository repository;
+
+  @MockBean
+  IngestorDAO ingestorDAO;
+
 
   private final String container = "rtd-transactions-decrypted";
   private final String blob = "CSTAR.99910.TRNLOG.20220316.103107.001.csv.pgp";

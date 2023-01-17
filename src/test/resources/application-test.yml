@@ -70,6 +70,11 @@ spring:
                           deserializer: org.apache.kafka.common.serialization.StringDeserializer
                         value:
                           deserializer: org.apache.kafka.common.serialization.StringDeserializer
+---
+spring:
+  config:
+    activate:
+      on-profile: mongo-integration-test
 
 # ---
 # spring:
@@ -178,4 +183,3 @@ spring:
 #               # partition:
 #               #   assignment:
 #               #     strategy: org.apache.kafka.clients.consumer.RangeAssignor
-

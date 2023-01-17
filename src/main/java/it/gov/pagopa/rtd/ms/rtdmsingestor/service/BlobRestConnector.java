@@ -1,23 +1,32 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.service;
 
+import com.mongodb.MongoException;
+import com.opencsv.bean.BeanVerifier;
+import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
+import com.opencsv.exceptions.CsvException;
+
+import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
+
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Path;
+import java.util.List;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.util.Objects;
-import java.util.Set;
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
+import java.util.Optional;
+import java.util.stream.Stream;
+
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.LineIterator;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.ResponseHandler;
@@ -26,18 +35,21 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicHeader;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * This class contains handling methods for blobs.
  */
 @Service
 @Slf4j
+@Validated
 public class BlobRestConnector {
 
   @Value("${ingestor.api.baseurl}")
@@ -54,6 +66,13 @@ public class BlobRestConnector {
 
   @Autowired
   StreamBridge sb;
+
+  @Autowired
+  IngestorRepository repository;
+
+  private int numNotEnrolledCards = 0;
+  private int numCorrectTrx = 0;
+  private int numTotalTrx = 0;
 
   /**
    * Method that allows the get of the blob from a remote storage.
@@ -89,75 +108,68 @@ public class BlobRestConnector {
    * @param blob the blob of the transaction.
    */
   public BlobApplicationAware process(BlobApplicationAware blob) {
+
     log.info("Extracting transactions from:{}", blob.getBlobUri());
 
-    int numRows = 0;
-    int numTrx = 0;
+    FileReader fileReader;
 
-    String blobPath = Path.of(blob.getTargetDir(), blob.getBlob()).toString();
+    numTotalTrx = 0;
+    numCorrectTrx = 0;
+    numNotEnrolledCards = 0;
 
-    //Validator for checking transaction fields' correctness
-    ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-    Validator validator = factory.getValidator();
-
-    LineIterator it;
     try {
-      it = FileUtils.lineIterator(Path.of(blobPath).toFile(), "UTF-8");
-    } catch (IOException e) {
-      log.error("Missing blob file:{}", blobPath);
+      fileReader = new FileReader(Path.of(blob.getTargetDir(), blob.getBlob()).toFile());
+    } catch (FileNotFoundException e) {
+      log.error("Missing blob file: {}", blob.getBlob());
       return blob;
     }
 
-    while (it.hasNext()) {
-      //Get a StringReader from the next line of the blob
-      StringReader line = new StringReader(it.nextLine());
-      //Obtain the (only) Transaction object parsed from the csv line
-      //Read in batch is possible but requires a change in the use of line iterator
-      try {
+    BeanVerifier<Transaction> verifier = new TransactionVerifier();
 
-        Transaction t = new CsvToBeanBuilder<Transaction>(line).withSeparator(';')
-            .withThrowExceptions(false)
-            .withType(Transaction.class)
-            .build().parse().get(0);
+    CsvToBeanBuilder<Transaction> builder = new CsvToBeanBuilder<Transaction>(fileReader)
+        .withType(Transaction.class)
+        .withSeparator(';')
+        .withVerifier(verifier)
+        .withThrowExceptions(false);
 
-        Set<ConstraintViolation<Transaction>> violations = validator.validate(t);
-        if (violations.isEmpty()) {
+    CsvToBean<Transaction> csvToBean = builder.build();
+    Stream<Transaction> readTransaction = csvToBean.stream();
 
-          //If no field format violation has been found the transaction is sent
-          sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
-          log.info(t.toString());
-          numTrx++;
-        } else {
-          //Creates a string with all the malformed fields
-          StringBuilder malformedFields = new StringBuilder();
-          for (ConstraintViolation<Transaction> violation : violations) {
-            malformedFields.append("(").append(violation.getPropertyPath().toString()).append(": ");
-            malformedFields.append(violation.getMessage()).append(") ");
+    readTransaction.forEach(t -> {
+        try{
+          Optional<EPIItem> dbResponse = repository.findItemByHash(t.getHpan());
+          if (dbResponse.isPresent()) {
+            t.setHpan(dbResponse.get().getHashPan());
+            sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
+            log.info(t.toString());
+            numCorrectTrx++;
+          }else{
+            numNotEnrolledCards++;
           }
-          log.error("Malformed fields extracted from {}: {}",
-              blob.getBlob(), malformedFields);
+          numTotalTrx++;
+        }catch(MongoException ex){
+          log.error("Error getting records : {}"+ex);
         }
-      } catch (RuntimeException e) {
-        log.error(
-            "Malformed fields extracted from {}:"
-                + " at least non-ISO8601 date or non-numeric amount.",
-            blob.getBlob());
+    });
+
+    List<CsvException> violations = csvToBean.getCapturedExceptions();
+
+    numTotalTrx = numTotalTrx + violations.size();
+
+    if (!violations.isEmpty()) {
+      for (CsvException e : violations) {
+        log.error("Validation error at line " + e.getLineNumber() + " : " + e.getMessage());
       }
-      numRows++;
+    } else if (numTotalTrx == 0) {
+      log.error("No records found in file {}", blob.getBlob());
     }
 
-    try {
-      it.close();
-    } catch (IOException e) {
-      log.error("Error closing line iterator");
-    }
-
-    if (numRows == numTrx) {
-      log.info("Extraction result: extracted all {} transactions from:{}", numTrx,
+    if (numTotalTrx == numCorrectTrx) {
+      log.info("Extraction result: extracted all {} transactions from:{}", numCorrectTrx,
           blob.getBlobUri());
     } else {
-      log.info("Extraction result: {} well formed transactions out of {} rows extracted from:{}",
-          numTrx, numRows,
+      log.info("Extraction result: {} well formed transactions and {} not enrolled cards out of {} rows extracted from:{}",
+      numCorrectTrx,numNotEnrolledCards, numTotalTrx,
           blob.getBlobUri());
     }
 
@@ -210,4 +222,17 @@ public class BlobRestConnector {
     }
 
   }
+
+  protected int getNumNotEnrolledCards(){
+    return numNotEnrolledCards;
+  }
+
+  protected int getNumTotalTrx(){
+    return numTotalTrx;
+  }
+
+  protected int getNumCorrectTrx(){
+    return numCorrectTrx;
+  }
+
 }
