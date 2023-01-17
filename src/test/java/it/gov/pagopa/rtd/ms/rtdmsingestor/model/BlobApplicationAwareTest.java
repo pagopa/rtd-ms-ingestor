@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -53,8 +52,6 @@ class BlobApplicationAwareTest {
     blobFile.getParentFile().mkdirs();
     blobFile.createNewFile();
 
-    FileOutputStream blobStream = new FileOutputStream(
-        Path.of(tmpDirectory, blobNameRtd).toString());
 
     //Instantiate a fake blob with empty content
     fakeBlob = new BlobApplicationAware(
