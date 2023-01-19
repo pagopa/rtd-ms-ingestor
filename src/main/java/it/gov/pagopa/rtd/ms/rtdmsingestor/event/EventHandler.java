@@ -1,6 +1,7 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.event;
 
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.model.EventDeadLetterQueueEvent;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.EventGridEvent;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.service.BlobRestConnector;
@@ -46,6 +47,12 @@ public class EventHandler {
         .collect(Collectors.toList());
   }
 
+
+  @Bean
+  public Consumer<Message<List<EventDeadLetterQueueEvent>>> rtdDlqTrxConsumer() {
+    return message -> message.getPayload().stream()
+      .map(e -> e.getTransaction());
+  }
 
 
 }

@@ -8,6 +8,7 @@ import com.opencsv.exceptions.CsvException;
 
 import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.model.EventDeadLetterQueueEvent;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
@@ -19,8 +20,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.List;
-import java.io.StringReader;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -148,6 +147,8 @@ public class BlobRestConnector {
           }
           numTotalTrx++;
         }catch(MongoException ex){
+          EventDeadLetterQueueEvent edlq = new EventDeadLetterQueueEvent(t,ex);
+          sb.send("rtdDlqTrxProducer-out-0", MessageBuilder.withPayload(edlq).build());
           log.error("Error getting records : {}"+ex);
         }
     });
