@@ -45,4 +45,7 @@ public class EventHandler {
         .filter(b -> Status.LOCALLY_DELETED.equals(b.getStatus()))
         .collect(Collectors.toList());
   }
+
+
+
 }
