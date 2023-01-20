@@ -17,9 +17,15 @@ import lombok.Setter;
 @Setter
 public class EventDeadLetterQueueEvent {
 
+    /**
+    * The transaction data
+    */
     @JsonProperty(value = "transaction", required = true)
     private Transaction transaction;
 
+    /**
+    * The mongo db exception triggered previewsly for this transaction.
+    */
     @JsonProperty(value = "mongo_exception",required = true)
     private MongoException ex;
 

@@ -1,0 +1,52 @@
+package it.gov.pagopa.rtd.ms.rtdmsingestor.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.messaging.support.MessageBuilder;
+
+import com.mongodb.MongoException;
+
+import lombok.extern.slf4j.Slf4j;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.model.EventDeadLetterQueueEvent;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
+
+
+@Slf4j
+public class DeadLetterQueueProcessor implements TransactionCheck{
+
+    @Autowired
+    StreamBridge sb;
+
+    @Autowired
+    IngestorRepository repository;
+
+    @Override
+    public void TransactionCheckProcess(Stream<Transaction> readTransaction) {
+        readTransaction.forEach(t -> {
+            try{
+                TimeUnit.SECONDS.sleep(10);
+                Optional<EPIItem> dbResponse = repository.findItemByHash(t.getHpan());
+                if (dbResponse.isPresent()) {
+                    t.setHpan(dbResponse.get().getHashPan());
+                    sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
+                    log.info(t.toString());
+                }
+            }catch(MongoException ex){
+                EventDeadLetterQueueEvent edlq = new EventDeadLetterQueueEvent(t,ex);
+                sb.send("rtdDlqTrxProducer-out-0", MessageBuilder.withPayload(edlq).build());
+                log.error("Error getting records : {}", ex.getMessage());
+            }catch(InterruptedException ie){
+                log.error("Error setting sleeping time : {}", ie.getMessage());
+                MongoException customME = new MongoException("Error setting sleeping time");
+                EventDeadLetterQueueEvent edlq = new EventDeadLetterQueueEvent(t,customME);
+                sb.send("rtdDlqTrxProducer-out-0", MessageBuilder.withPayload(edlq).build());
+            }
+        });
+    }
+
+}

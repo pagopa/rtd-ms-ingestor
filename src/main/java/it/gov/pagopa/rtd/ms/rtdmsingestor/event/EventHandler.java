@@ -5,9 +5,13 @@ import it.gov.pagopa.rtd.ms.rtdmsingestor.model.EventDeadLetterQueueEvent;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.EventGridEvent;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.service.BlobRestConnector;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.service.DeadLetterQueueProcessor;
+
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -23,6 +27,9 @@ public class EventHandler {
 
   @Autowired
   BlobRestConnector blobRestConnector;
+
+  @Autowired
+  DeadLetterQueueProcessor deadLetterQueueProcessor;
 
   /**
    * Constructor.
@@ -47,12 +54,15 @@ public class EventHandler {
         .collect(Collectors.toList());
   }
 
-
   @Bean
   public Consumer<Message<List<EventDeadLetterQueueEvent>>> rtdDlqTrxConsumer() {
     return message -> message.getPayload().stream()
-      .map(e -> e.getTransaction());
-  }
+      .map(e -> Stream.of(e.getTransaction()))
+      .map(e -> {
+        deadLetterQueueProcessor.TransactionCheckProcess(e);
+        return e;
+      }).collect(Collectors.toList());
+    }
 
 
 }
