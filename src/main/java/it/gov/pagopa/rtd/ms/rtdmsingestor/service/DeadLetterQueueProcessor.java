@@ -3,6 +3,7 @@ package it.gov.pagopa.rtd.ms.rtdmsingestor.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.stereotype.Service;
 
 import com.mongodb.MongoException;
 
@@ -17,6 +18,7 @@ import java.util.stream.Stream;
 
 
 @Slf4j
+@Service
 public class DeadLetterQueueProcessor implements TransactionCheck{
 
     @Autowired
@@ -29,7 +31,7 @@ public class DeadLetterQueueProcessor implements TransactionCheck{
     public void TransactionCheckProcess(Stream<Transaction> readTransaction) {
         readTransaction.forEach(t -> {
             try{
-                TimeUnit.SECONDS.sleep(10);
+                TimeUnit.SECONDS.sleep(5);
                 Optional<EPIItem> dbResponse = repository.findItemByHash(t.getHpan());
                 if (dbResponse.isPresent()) {
                     t.setHpan(dbResponse.get().getHashPan());
@@ -42,7 +44,7 @@ public class DeadLetterQueueProcessor implements TransactionCheck{
                 log.error("Error getting records : {}", ex.getMessage());
             }catch(InterruptedException ie){
                 log.error("Error setting sleeping time : {}", ie.getMessage());
-                MongoException customME = new MongoException("Error setting sleeping time");
+                MongoException customME = new MongoException("Error setting sleeping time.");
                 EventDeadLetterQueueEvent edlq = new EventDeadLetterQueueEvent(t,customME);
                 sb.send("rtdDlqTrxProducer-out-0", MessageBuilder.withPayload(edlq).build());
             }
