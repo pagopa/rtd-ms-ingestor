@@ -15,6 +15,8 @@ import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.EventGridEvent;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.service.BlobRestConnector;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.service.DeadLetterQueueProcessor;
+
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,6 +60,9 @@ class RtdMsIngestorApplicationTests {
 
   @SpyBean
   private BlobRestConnector blobRestConnector;
+
+  @SpyBean
+  private DeadLetterQueueProcessor deadLetterQueueProcessor;
 
   @MockBean
   CloseableHttpClient client;
