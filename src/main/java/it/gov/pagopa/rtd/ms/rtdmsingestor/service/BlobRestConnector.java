@@ -148,7 +148,7 @@ public class BlobRestConnector {
           }
           numTotalTrx++;
         }catch(MongoException ex){
-          log.error("Error getting records : {}"+ex);
+          log.error("Error getting records : {}",ex.getMessage());
         }
     });
 
