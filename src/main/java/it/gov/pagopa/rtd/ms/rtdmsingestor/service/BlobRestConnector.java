@@ -8,6 +8,7 @@ import com.opencsv.exceptions.CsvException;
 
 import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.model.EventDeadLetterQueueEvent;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
@@ -137,19 +138,21 @@ public class BlobRestConnector {
     Stream<Transaction> readTransaction = csvToBean.stream();
 
     readTransaction.forEach(t -> {
-      try {
-        Optional<EPIItem> dbResponse = repository.findItemByHash(t.getHpan());
-        if (dbResponse.isPresent()) {
-          t.setHpan(dbResponse.get().getHashPan());
-          sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
-          log.info(t.toString());
-          numCorrectTrx++;
-        } else {
-          numNotEnrolledCards++;
-        }
-        numTotalTrx++;
-      } catch (MongoException ex) {
-        log.error("Error getting records : {}", ex.getMessage());
+        try{
+          Optional<EPIItem> dbResponse = repository.findItemByHash(t.getHpan());
+          if (dbResponse.isPresent()) {
+            t.setHpan(dbResponse.get().getHashPan());
+            sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
+            log.info(t.toString());
+            numCorrectTrx++;
+          }else{
+            numNotEnrolledCards++;
+          }
+          numTotalTrx++;
+        }catch(MongoException ex){
+          EventDeadLetterQueueEvent edlq = new EventDeadLetterQueueEvent(t,ex);
+          sb.send("rtdDlqTrxProducer-out-0", MessageBuilder.withPayload(edlq).build());
+         log.error("Error getting records : {}", ex.getMessage());
       }
     });
 
