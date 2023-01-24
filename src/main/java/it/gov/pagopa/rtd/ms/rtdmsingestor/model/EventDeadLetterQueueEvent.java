@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Properties of an event published to an Event Grid topic. https://docs.microsoft.com/en-us/azure/event-grid/event-schema
+ * Properties of an event published to an Event Grid topic.
+ * https://docs.microsoft.com/en-us/azure/event-grid/event-schema
  */
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,7 +21,7 @@ public class EventDeadLetterQueueEvent {
     @JsonProperty(value = "transaction", required = true)
     private Transaction transaction;
 
-    @JsonProperty(value = "mongo_exception",required = true)
+    @JsonProperty(value = "mongo_exception", required = true)
     private String mongoException;
 
 }

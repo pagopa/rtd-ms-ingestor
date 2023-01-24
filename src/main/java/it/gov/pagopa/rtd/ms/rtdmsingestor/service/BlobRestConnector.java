@@ -138,21 +138,21 @@ public class BlobRestConnector {
     Stream<Transaction> readTransaction = csvToBean.stream();
 
     readTransaction.forEach(t -> {
-        try{
-          Optional<EPIItem> dbResponse = repository.findItemByHash(t.getHpan());
-          if (dbResponse.isPresent()) {
-            t.setHpan(dbResponse.get().getHashPan());
-            sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
-            log.info(t.toString());
-            numCorrectTrx++;
-          }else{
-            numNotEnrolledCards++;
-          }
-          numTotalTrx++;
-        }catch(MongoException ex){
-          EventDeadLetterQueueEvent edlq = new EventDeadLetterQueueEvent(t,ex.getMessage());
-          sb.send("rtdDlqTrxProducer-out-0", MessageBuilder.withPayload(edlq).build());
-         log.error("Error getting records : {}", ex.getMessage());
+      try {
+        Optional<EPIItem> dbResponse = repository.findItemByHash(t.getHpan());
+        if (dbResponse.isPresent()) {
+          t.setHpan(dbResponse.get().getHashPan());
+          sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
+          log.info(t.toString());
+          numCorrectTrx++;
+        } else {
+          numNotEnrolledCards++;
+        }
+        numTotalTrx++;
+      } catch (MongoException ex) {
+        EventDeadLetterQueueEvent edlq = new EventDeadLetterQueueEvent(t, ex.getMessage());
+        sb.send("rtdDlqTrxProducer-out-0", MessageBuilder.withPayload(edlq).build());
+        log.error("Error getting records : {}", ex.getMessage());
       }
     });
 
