@@ -55,13 +55,9 @@ public class EventHandler {
   }
 
   @Bean
-  public Consumer<Message<List<EventDeadLetterQueueEvent>>> rtdDlqTrxConsumer() {
-    return message -> message.getPayload().stream()
-      .map(e -> Stream.of(e.getTransaction()))
-      .forEach(e -> {
-        deadLetterQueueProcessor.TransactionCheckProcess(e);
-      });
-    }
-
+  public Consumer<Message<EventDeadLetterQueueEvent>> rtdDlqTrxConsumer() {
+    return message -> deadLetterQueueProcessor
+    .TransactionCheckProcess(Stream.of(message.getPayload().getTransaction()));
+  }
 
 }
