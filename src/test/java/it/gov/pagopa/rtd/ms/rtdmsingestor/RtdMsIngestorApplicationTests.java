@@ -41,11 +41,11 @@ import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("test")
-@EmbeddedKafka(topics = {"rtd-platform-events", "rtd-trx"}, partitions = 1,
-    bootstrapServersProperty = "spring.embedded.kafka.brokers")
-@EnableAutoConfiguration(exclude = {TestSupportBinderAutoConfiguration.class, EmbeddedMongoAutoConfiguration.class})
-@ContextConfiguration(classes = {EventHandler.class})
-@TestPropertySource(value = {"classpath:application-test.yml"}, inheritProperties = false)
+@EmbeddedKafka(topics = { "rtd-platform-events",
+    "rtd-trx" }, partitions = 1, bootstrapServersProperty = "spring.embedded.kafka.brokers")
+@EnableAutoConfiguration(exclude = { TestSupportBinderAutoConfiguration.class, EmbeddedMongoAutoConfiguration.class })
+@ContextConfiguration(classes = { EventHandler.class })
+@TestPropertySource(value = { "classpath:application-test.yml" }, inheritProperties = false)
 @DirtiesContext
 @ExtendWith(OutputCaptureExtension.class)
 class RtdMsIngestorApplicationTests {
@@ -67,7 +67,6 @@ class RtdMsIngestorApplicationTests {
 
   @MockBean
   IngestorDAO ingestorDAO;
-
 
   private final String container = "rtd-transactions-decrypted";
   private final String blob = "CSTAR.99910.TRNLOG.20220316.103107.001.csv.pgp";
@@ -109,13 +108,13 @@ class RtdMsIngestorApplicationTests {
   @Test
   void shouldConsumeMessage() {
 
-    //Mock every step of the message handling
+    // Mock every step of the message handling
     doReturn(blobDownloaded).when(blobRestConnector).get(any(BlobApplicationAware.class));
     doReturn(blobProcessed).when(blobRestConnector).process(any(BlobApplicationAware.class));
     doReturn(blobApplicationAware).when(blobRestConnector)
         .deleteRemote(any(BlobApplicationAware.class));
 
-    //Mock of the interested blob's methods
+    // Mock of the interested blob's methods
     doReturn(blobLocallyDeleted).when(blobApplicationAware).localCleanup();
     doReturn(Status.REMOTELY_DELETED).when(blobApplicationAware).getStatus();
 
@@ -130,11 +129,10 @@ class RtdMsIngestorApplicationTests {
     });
   }
 
-
   @Test
   void shouldFilterMessageForWrongService(CapturedOutput output) {
 
-    //Set wrong blob name
+    // Set wrong blob name
     myEvent.setSubject("/blobServices/default/containers/" + container
         + "/blobs/ADE.99910.TRNLOG.20220228.103107.001.csv.pgp");
 
@@ -153,7 +151,7 @@ class RtdMsIngestorApplicationTests {
   @Test
   void shouldFilterMessageForFailedDownload() {
 
-    //Mock the get step of the message handling
+    // Mock the get step of the message handling
     doReturn(blobReceived).when(blobRestConnector).get(any(BlobApplicationAware.class));
 
     assertThat("Should Send",
@@ -170,7 +168,7 @@ class RtdMsIngestorApplicationTests {
   @Test
   void shouldFilterMessageForFailedProcess() {
 
-    //Mock the get step of the message handling
+    // Mock the get step of the message handling
     doReturn(blobDownloaded).when(blobRestConnector).get(any(BlobApplicationAware.class));
     doReturn(blobDownloaded).when(blobRestConnector).process(any(BlobApplicationAware.class));
 
@@ -188,7 +186,7 @@ class RtdMsIngestorApplicationTests {
   @Test
   void shouldFilterMessageForFailedRemoteDelete() {
 
-    //Mock the get step of the message handling
+    // Mock the get step of the message handling
     doReturn(blobDownloaded).when(blobRestConnector).get(any(BlobApplicationAware.class));
     doReturn(blobProcessed).when(blobRestConnector).process(any(BlobApplicationAware.class));
     doReturn(blobProcessed).when(blobRestConnector).deleteRemote(any(BlobApplicationAware.class));

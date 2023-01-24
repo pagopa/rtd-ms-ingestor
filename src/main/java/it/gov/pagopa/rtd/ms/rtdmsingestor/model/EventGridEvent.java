@@ -10,9 +10,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-
 /**
- * Properties of an event published to an Event Grid topic. https://docs.microsoft.com/en-us/azure/event-grid/event-schema
+ * Properties of an event published to an Event Grid topic.
+ * https://docs.microsoft.com/en-us/azure/event-grid/event-schema
  */
 @NoArgsConstructor
 @Getter
@@ -52,7 +52,7 @@ public class EventGridEvent {
   /**
    * The time (in UTC) the event was generated.
    */
-  //@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  // @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   @JsonSerialize(using = LocalDateTimeSerializer.class)
   @JsonDeserialize(using = LocalDateTimeDeserializer.class)
 

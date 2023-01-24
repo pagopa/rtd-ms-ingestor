@@ -7,7 +7,6 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import lombok.Builder;
 import lombok.Data;
 
-
 @Document("enrolled_payment_instrument")
 @Builder(toBuilder = true)
 @Data

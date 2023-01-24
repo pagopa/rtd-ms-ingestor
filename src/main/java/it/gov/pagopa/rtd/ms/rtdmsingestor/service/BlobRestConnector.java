@@ -76,7 +76,8 @@ public class BlobRestConnector {
   /**
    * Method that allows the get of the blob from a remote storage.
    *
-   * @param blob a blob that has been received from the event hub but not downloaded.
+   * @param blob a blob that has been received from the event hub but not
+   *             downloaded.
    * @return a locally available blob
    */
   public BlobApplicationAware get(BlobApplicationAware blob) {
@@ -101,8 +102,10 @@ public class BlobRestConnector {
   }
 
   /**
-   * Method that maps transaction fields taken them from csv into Transaction object, then send it
-   * on the output queue. This is done for each transaction inside the blob received.
+   * Method that maps transaction fields taken them from csv into Transaction
+   * object, then send it
+   * on the output queue. This is done for each transaction inside the blob
+   * received.
    *
    * @param blob the blob of the transaction.
    */
@@ -149,8 +152,8 @@ public class BlobRestConnector {
         }catch(MongoException ex){
           EventDeadLetterQueueEvent edlq = new EventDeadLetterQueueEvent(t,ex);
           sb.send("rtdDlqTrxProducer-out-0", MessageBuilder.withPayload(edlq).build());
-          log.error("Error getting records : {}"+ex);
-        }
+         log.error("Error getting records : {}", ex.getMessage());
+      }
     });
 
     List<CsvException> violations = csvToBean.getCapturedExceptions();
@@ -169,8 +172,9 @@ public class BlobRestConnector {
       log.info("Extraction result: extracted all {} transactions from:{}", numCorrectTrx,
           blob.getBlobUri());
     } else {
-      log.info("Extraction result: {} well formed transactions and {} not enrolled cards out of {} rows extracted from:{}",
-      numCorrectTrx,numNotEnrolledCards, numTotalTrx,
+      log.info(
+          "Extraction result: {} well formed transactions and {} not enrolled cards out of {} rows extracted from:{}",
+          numCorrectTrx, numNotEnrolledCards, numTotalTrx,
           blob.getBlobUri());
     }
 
@@ -181,7 +185,8 @@ public class BlobRestConnector {
   /**
    * Method that allows the deletion of the blob from a remote storage.
    *
-   * @param blob a blob that has been processed and have to be removed both remotely ad locally.
+   * @param blob a blob that has been processed and have to be removed both
+   *             remotely ad locally.
    * @return a remotely deleted blob with REMOTELY_DELETED status.
    */
   public BlobApplicationAware deleteRemote(BlobApplicationAware blob) {
@@ -224,15 +229,15 @@ public class BlobRestConnector {
 
   }
 
-  protected int getNumNotEnrolledCards(){
+  protected int getNumNotEnrolledCards() {
     return numNotEnrolledCards;
   }
 
-  protected int getNumTotalTrx(){
+  protected int getNumTotalTrx() {
     return numTotalTrx;
   }
 
-  protected int getNumCorrectTrx(){
+  protected int getNumCorrectTrx() {
     return numCorrectTrx;
   }
 
