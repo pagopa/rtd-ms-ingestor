@@ -13,7 +13,7 @@ import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
 public class RepositoryConfiguration {
 
     @Bean
-    public IngestorRepository ingestorRepository(IngestorDAO ingestorDAO){
+    public IngestorRepository ingestorRepository(IngestorDAO ingestorDAO) {
         return new IngestorRepositoryImpl(ingestorDAO);
     }
 

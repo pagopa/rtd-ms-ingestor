@@ -39,7 +39,6 @@ class BlobApplicationAwareTest {
   @MockBean
   CloseableHttpClient closeableHttpClient;
 
-
   String containerRtd = "rtd-transactions-decrypted";
   String blobNameRtd = "CSTAR.99910.TRNLOG.20220316.164707.001.csv.pgp.decrypted";
 
@@ -47,13 +46,12 @@ class BlobApplicationAwareTest {
 
   @BeforeEach
   void setUp() throws IOException {
-    //Create dummy files to be deleted
+    // Create dummy files to be deleted
     File blobFile = Path.of(tmpDirectory, blobNameRtd).toFile();
     blobFile.getParentFile().mkdirs();
     blobFile.createNewFile();
 
-
-    //Instantiate a fake blob with empty content
+    // Instantiate a fake blob with empty content
     fakeBlob = new BlobApplicationAware(
         "/blobServices/default/containers/" + containerRtd + "/blobs/" + blobNameRtd);
     fakeBlob.setTargetDir(tmpDirectory);
@@ -63,7 +61,6 @@ class BlobApplicationAwareTest {
   void cleanTmpFiles() throws IOException {
     FileUtils.deleteDirectory(Path.of(tmpDirectory).toFile());
   }
-
 
   @Test
   void shouldMatchRegexRtd() {
@@ -80,7 +77,7 @@ class BlobApplicationAwareTest {
     assertThat(output.getOut(), containsString("Event not of interest:"));
   }
 
-  //Ingestor do not accept ADE files
+  // Ingestor do not accept ADE files
   @Test
   void shouldNotMatchRegexWrogName(CapturedOutput output) {
     String blobAde = "ADE.99910.TRNLOG.20220228.203107.001.csv.pgp";
@@ -90,23 +87,27 @@ class BlobApplicationAwareTest {
     assertThat(output.getOut(), containsString("Wrong name format:"));
   }
 
-  //The test parameters reproduce the following scenarios: blobUriShouldFailWrongService,
-  // blobUriShouldFailNoService, blobUriShouldFailShortABI, blobUriShouldFailLongABI,
-  // blobUriShouldFailNoABI, blobUriShouldFailWrongFiletype, blobUriShouldFailNoFiletype,
-  // blobUriShouldFailWrongDate, blobUriShouldFailNoDate, blobUriShouldFailWrongTime,
+  // The test parameters reproduce the following scenarios:
+  // blobUriShouldFailWrongService,
+  // blobUriShouldFailNoService, blobUriShouldFailShortABI,
+  // blobUriShouldFailLongABI,
+  // blobUriShouldFailNoABI, blobUriShouldFailWrongFiletype,
+  // blobUriShouldFailNoFiletype,
+  // blobUriShouldFailWrongDate, blobUriShouldFailNoDate,
+  // blobUriShouldFailWrongTime,
   // blobUriShouldFailNoTime, blobUriShouldFailWrongProgressive,
   // blobUriShouldFailNoProgressive
   @ParameterizedTest
-  @ValueSource(strings = {"CSTA.99910.TRNLOG.20220228.203107.001.csv.pgp",
+  @ValueSource(strings = { "CSTA.99910.TRNLOG.20220228.203107.001.csv.pgp",
       ".99910.TRNLOG.20220228.203107.001.csv.pgp", "CSTAR.9991.TRNLOG.20220228.203107.001.csv.pgp",
       "CSTAR.999100.TRNLOG.20220228.203107.999.csv.pgp",
       "CSTAR..TRNLOG.20220228.203107.001.csv.pgp", "CSTAR.99910.TRNLO.20220228.203107.001.csv.pgp",
       "CSTAR.99910..20220228.203107.001.csv.pgp", "CSTAR.99910.TRNLOG.20220230.103107.001.csv.pgp",
       "CSTAR.99910.TRNLOG..103107.001.csv.pgp", "CSTAR.99910.TRNLOG.20220228.243107.001.csv.pgp",
-      "CSTAR.99910.TRNLOG.20220228..001.csv.pgp","CSTAR.99910.TRNLOG...001.csv.pgp",
-      "CSTAR.99910.TRNLOG.20220228.103107.1.csv.pgp","","CSTAR","CSTAR.99910",
-      "CSTAR.99910.TRNLOG","CSTAR.99910.TRNLOG.20220228","CSTAR.99910.TRNLOG.20220228.103107",
-      "CSTAR.99910.TRNLOG.20220228.103107..csv.pgp"})
+      "CSTAR.99910.TRNLOG.20220228..001.csv.pgp", "CSTAR.99910.TRNLOG...001.csv.pgp",
+      "CSTAR.99910.TRNLOG.20220228.103107.1.csv.pgp", "", "CSTAR", "CSTAR.99910",
+      "CSTAR.99910.TRNLOG", "CSTAR.99910.TRNLOG.20220228", "CSTAR.99910.TRNLOG.20220228.103107",
+      "CSTAR.99910.TRNLOG.20220228.103107..csv.pgp" })
   void blobUriShouldFailRegex(String blobName, CapturedOutput output) {
     String blobUri = "/blobServices/default/containers/" + containerRtd + "/blobs/" + blobName;
     BlobApplicationAware myBlob = new BlobApplicationAware(blobUri);
@@ -119,8 +120,9 @@ class BlobApplicationAwareTest {
     assertFalse(Files.exists(Path.of(tmpDirectory, fakeBlob.getBlob())));
   }
 
-  //This test simulates the following scenario:
-  // In the temporary folder there is a folder (containing a dummy file) with the name that
+  // This test simulates the following scenario:
+  // In the temporary folder there is a folder (containing a dummy file) with the
+  // name that
   // starts as the blob to be deleted.
   // This is done in order to trigger the catch clause in the localCleanup method.
   @Test

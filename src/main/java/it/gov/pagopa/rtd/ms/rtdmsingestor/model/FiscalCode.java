@@ -1,11 +1,14 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.model;
 
-
 /**
- * Italian Codice Fiscale normalization, formatting and validation routines. A <u>regular CF</u> is
- * composed by 16 among letters and digits; the last character is always a letter representing the
- * control code. A <u>temporary CF</u> could also be assigned; a temporary CF is composed of 11
- * digits, the last digit being the control code. Examples: MRORSS00A00A000U, 12345678903.
+ * Italian Codice Fiscale normalization, formatting and validation routines. A
+ * <u>regular CF</u> is
+ * composed by 16 among letters and digits; the last character is always a
+ * letter representing the
+ * control code. A <u>temporary CF</u> could also be assigned; a temporary CF is
+ * composed of 11
+ * digits, the last digit being the control code. Examples: MRORSS00A00A000U,
+ * 12345678903.
  *
  * @author Umberto Salsi salsi@icosaedro.it.
  * @version 2020-01-24
@@ -24,7 +27,8 @@ public class FiscalCode {
   }
 
   /**
-   * Normalizes a CF by removing white spaces and converting to upper-case. Useful to clean-up
+   * Normalizes a CF by removing white spaces and converting to upper-case. Useful
+   * to clean-up
    * user's input and to save the result in the DB.
    *
    * @param cf Raw CF, possibly with spaces.
@@ -54,7 +58,8 @@ public class FiscalCode {
    */
   private static Response validateRegular(String cf) {
 
-    //This array stores the presence of substitution codes in the last 3 digits in case of homocody.
+    // This array stores the presence of substitution codes in the last 3 digits in
+    // case of homocody.
     // This routine doesn't allow homocodic codes further than 3 digits!
     boolean[] homocode = new boolean[3];
     if (!cf.matches(
@@ -73,7 +78,7 @@ public class FiscalCode {
         homocode[i - 12] = true;
       }
 
-      //The substitution characters skips the O
+      // The substitution characters skips the O
       if ((i >= 12) && String.valueOf(cf.charAt(i)).matches("[PQRSTUV]")) {
         c = cf.charAt(i) - 'L' - 1 + '0';
         homocode[i - 12] = true;
@@ -144,7 +149,7 @@ public class FiscalCode {
   }
 
   private static Response validHomocode(boolean[] homocode) {
-    //Check for the order of the omocodic substitution characters
+    // Check for the order of the omocodic substitution characters
     if (homocode[0]) {
       if (homocode[1]) {
         if (!homocode[2]) {
