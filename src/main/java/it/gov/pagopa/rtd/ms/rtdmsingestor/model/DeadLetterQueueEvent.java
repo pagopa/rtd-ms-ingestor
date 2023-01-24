@@ -1,7 +1,6 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.mongodb.MongoException;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,7 +15,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class EventDeadLetterQueueEvent {
+public class DeadLetterQueueEvent {
 
     @JsonProperty(value = "transaction", required = true)
     private Transaction transaction;
