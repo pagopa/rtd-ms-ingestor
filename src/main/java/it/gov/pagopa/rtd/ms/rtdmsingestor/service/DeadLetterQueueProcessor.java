@@ -9,7 +9,7 @@ import com.mongodb.MongoException;
 
 import lombok.extern.slf4j.Slf4j;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.model.EventDeadLetterQueueEvent;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.model.DeadLetterQueueEvent;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
 import java.util.Optional;
@@ -45,14 +45,13 @@ public class DeadLetterQueueProcessor implements TransactionCheck{
                     processedTrx++;
                 }
             }catch(MongoException ex){
-                EventDeadLetterQueueEvent edlq = new EventDeadLetterQueueEvent(t,ex);
+                DeadLetterQueueEvent edlq = new DeadLetterQueueEvent(t,ex.getMessage());
                 sb.send("rtdDlqTrxProducer-out-0", MessageBuilder.withPayload(edlq).build());
                 log.error("Error getting records : {}", ex.getMessage());
                 exceptionTrx++;
             }catch(InterruptedException ie){
                 log.error("Error setting sleeping time : {}", ie.getMessage());
-                MongoException customME = new MongoException("Error setting sleeping time.");
-                EventDeadLetterQueueEvent edlq = new EventDeadLetterQueueEvent(t,customME);
+                DeadLetterQueueEvent edlq = new DeadLetterQueueEvent(t,"Error setting sleeping time.");
                 sb.send("rtdDlqTrxProducer-out-0", MessageBuilder.withPayload(edlq).build());
             }
         });

@@ -16,25 +16,25 @@ import java.util.Set;
 
 public class TransactionVerifier implements BeanVerifier<Transaction> {
 
-    private static final ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+  private static final ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
 
-    private static final Validator validator = factory.getValidator();
+  private static final Validator validator = factory.getValidator();
 
-    @Override
-    public boolean verifyBean(Transaction transaction) throws CsvConstraintViolationException {
-      Set<ConstraintViolation<Transaction>> violations = validator.validate(transaction);
+  @Override
+  public boolean verifyBean(Transaction transaction) throws CsvConstraintViolationException {
+    Set<ConstraintViolation<Transaction>> violations = validator.validate(transaction);
 
-      if (!violations.isEmpty()) {
-        StringBuilder malformedFields = new StringBuilder();
-        for (ConstraintViolation<Transaction> violation : violations) {
-          malformedFields.append("(").append(violation.getPropertyPath().toString()).append(": ");
-          malformedFields.append(violation.getMessage()).append(") ");
-        }
-
-        throw new CsvConstraintViolationException("Malformed fields extracted: {}"
-            + malformedFields);
+    if (!violations.isEmpty()) {
+      StringBuilder malformedFields = new StringBuilder();
+      for (ConstraintViolation<Transaction> violation : violations) {
+        malformedFields.append("(").append(violation.getPropertyPath().toString()).append(": ");
+        malformedFields.append(violation.getMessage()).append(") ");
       }
 
-      return true;
+      throw new CsvConstraintViolationException("Malformed fields extracted: {}"
+          + malformedFields);
     }
+
+    return true;
   }
+}
