@@ -49,9 +49,8 @@ public class EventHandler {
 
 
   @Bean
-  public Consumer<Message<List<EventDeadLetterQueueEvent>>> rtdDlqTrxConsumer() {
-    return message -> message.getPayload().stream()
-      .map(e -> e.getTransaction());
+  public Consumer<Message<EventDeadLetterQueueEvent>> rtdDlqTrxConsumer() {
+    return message -> System.out.print(message.getPayload().getTransaction());
   }
 
 
