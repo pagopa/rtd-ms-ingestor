@@ -21,6 +21,6 @@ public class EventDeadLetterQueueEvent {
     private Transaction transaction;
 
     @JsonProperty(value = "mongo_exception",required = true)
-    private MongoException ex;
+    private String mongoException;
 
 }

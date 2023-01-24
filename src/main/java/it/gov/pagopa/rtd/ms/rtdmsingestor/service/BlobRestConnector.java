@@ -150,7 +150,7 @@ public class BlobRestConnector {
           }
           numTotalTrx++;
         }catch(MongoException ex){
-          EventDeadLetterQueueEvent edlq = new EventDeadLetterQueueEvent(t,ex);
+          EventDeadLetterQueueEvent edlq = new EventDeadLetterQueueEvent(t,ex.getMessage());
           sb.send("rtdDlqTrxProducer-out-0", MessageBuilder.withPayload(edlq).build());
          log.error("Error getting records : {}", ex.getMessage());
       }
