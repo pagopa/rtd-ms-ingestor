@@ -84,6 +84,9 @@ class BlobRestConnectorTest {
   @SpyBean
   private BlobRestConnector blobRestConnector;
 
+  @SpyBean
+  private DeadLetterQueueProcessor deadLetterQueueProcessor;
+
   @MockBean
   CloseableHttpClient client;
 

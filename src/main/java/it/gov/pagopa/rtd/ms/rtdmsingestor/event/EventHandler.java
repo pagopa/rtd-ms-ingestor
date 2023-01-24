@@ -58,10 +58,9 @@ public class EventHandler {
   public Consumer<Message<List<EventDeadLetterQueueEvent>>> rtdDlqTrxConsumer() {
     return message -> message.getPayload().stream()
       .map(e -> Stream.of(e.getTransaction()))
-      .map(e -> {
+      .forEach(e -> {
         deadLetterQueueProcessor.TransactionCheckProcess(e);
-        return e;
-      }).collect(Collectors.toList());
+      });
     }
 
 

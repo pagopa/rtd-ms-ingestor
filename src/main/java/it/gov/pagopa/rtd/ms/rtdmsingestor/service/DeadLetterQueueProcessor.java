@@ -27,8 +27,13 @@ public class DeadLetterQueueProcessor implements TransactionCheck{
     @Autowired
     IngestorRepository repository;
 
+    private int processedTrx = 0;
+    private int exceptionTrx = 0;
+
     @Override
     public void TransactionCheckProcess(Stream<Transaction> readTransaction) {
+        processedTrx = 0;
+        exceptionTrx = 0;
         readTransaction.forEach(t -> {
             try{
                 TimeUnit.SECONDS.sleep(5);
@@ -37,11 +42,13 @@ public class DeadLetterQueueProcessor implements TransactionCheck{
                     t.setHpan(dbResponse.get().getHashPan());
                     sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
                     log.info(t.toString());
+                    processedTrx++;
                 }
             }catch(MongoException ex){
                 EventDeadLetterQueueEvent edlq = new EventDeadLetterQueueEvent(t,ex);
                 sb.send("rtdDlqTrxProducer-out-0", MessageBuilder.withPayload(edlq).build());
                 log.error("Error getting records : {}", ex.getMessage());
+                exceptionTrx++;
             }catch(InterruptedException ie){
                 log.error("Error setting sleeping time : {}", ie.getMessage());
                 MongoException customME = new MongoException("Error setting sleeping time.");
@@ -51,4 +58,11 @@ public class DeadLetterQueueProcessor implements TransactionCheck{
         });
     }
 
+    protected int getProcessedTrx(){
+        return processedTrx;
+    }
+
+    protected int getExcepitonTrx(){
+        return exceptionTrx;
+    }
 }

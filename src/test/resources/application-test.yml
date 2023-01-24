@@ -39,6 +39,14 @@ spring:
           group: rtd-trx
           destination: rtd-trx
           binder: rtd-trx
+        rtdDlqTrxConsumer-in-0:
+          destination: rtd-dlq-trx
+          content-type: application/json
+          binder: rtd-dlq-trx-consumer
+        rtdDlqTrxProducer-out-0:
+          destination: rtd-dlq-trx
+          content-type: application/json
+          binder: rtd-dlq-trx-producer
       binders:
         rtd-trx:
           type: kafka
@@ -56,6 +64,36 @@ spring:
                       #   value:
                       #     deserializer: org.apache.kafka.common.serialization.StringDeserializer
         blob-storage:
+          type: kafka
+          environment:
+            spring:
+              cloud:
+                stream:
+                  kafka:
+                    binder:
+                      auto-create-topics: false
+                      brokers: ${spring.embedded.kafka.brokers}
+                      consumerProperties:
+                        key:
+                          deserializer: org.apache.kafka.common.serialization.StringDeserializer
+                        value:
+                          deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        rtd-dlq-trx-producer:
+          type: kafka
+          environment:
+            spring:
+              cloud:
+                stream:
+                  kafka:
+                    binder:
+                      auto-create-topics: false
+                      brokers: ${spring.embedded.kafka.brokers}
+                      consumerProperties:
+                        key:
+                          deserializer: org.apache.kafka.common.serialization.StringDeserializer
+                        value:
+                          deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        rtd-dlq-trx-consumer:
           type: kafka
           environment:
             spring:
