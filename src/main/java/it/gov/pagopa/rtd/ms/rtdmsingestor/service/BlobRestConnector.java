@@ -49,7 +49,7 @@ import org.springframework.validation.annotation.Validated;
 @Service
 @Slf4j
 @Validated
-public class BlobRestConnector implements TransactionCheck{
+public class BlobRestConnector implements TransactionCheck {
 
   @Value("${ingestor.api.baseurl}")
   private String baseUrl;
@@ -227,18 +227,18 @@ public class BlobRestConnector implements TransactionCheck{
   @Override
   public void TransactionCheckProcess(Stream<Transaction> readTransaction) {
     readTransaction.forEach(t -> {
-      try{
+      try {
         Optional<EPIItem> dbResponse = repository.findItemByHash(t.getHpan());
         if (dbResponse.isPresent()) {
           t.setHpan(dbResponse.get().getHashPan());
           sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
           log.info(t.toString());
           numCorrectTrx++;
-        }else{
+        } else {
           numNotEnrolledCards++;
         }
         numTotalTrx++;
-      }catch(MongoException ex){
+      } catch (MongoException ex) {
         DeadLetterQueueEvent edlq = new DeadLetterQueueEvent(t, ex.getMessage());
         sb.send("rtdDlqTrxProducer-out-0", MessageBuilder.withPayload(edlq).build());
         log.error("Error getting records : {}", ex.getMessage());

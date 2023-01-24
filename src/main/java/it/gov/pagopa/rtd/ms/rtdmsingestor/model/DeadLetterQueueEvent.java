@@ -18,8 +18,8 @@ import lombok.Setter;
 public class DeadLetterQueueEvent {
 
     /**
-    * The transaction data
-    */
+     * The transaction data
+     */
     @JsonProperty(value = "transaction", required = true)
     private Transaction transaction;
 

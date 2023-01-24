@@ -16,10 +16,9 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-
 @Slf4j
 @Service
-public class DeadLetterQueueProcessor implements TransactionCheck{
+public class DeadLetterQueueProcessor implements TransactionCheck {
 
     @Autowired
     StreamBridge sb;
@@ -35,7 +34,7 @@ public class DeadLetterQueueProcessor implements TransactionCheck{
         processedTrx = 0;
         exceptionTrx = 0;
         readTransaction.forEach(t -> {
-            try{
+            try {
                 TimeUnit.SECONDS.sleep(5);
                 Optional<EPIItem> dbResponse = repository.findItemByHash(t.getHpan());
                 if (dbResponse.isPresent()) {
@@ -44,24 +43,24 @@ public class DeadLetterQueueProcessor implements TransactionCheck{
                     log.info(t.toString());
                     processedTrx++;
                 }
-            }catch(MongoException ex){
-                DeadLetterQueueEvent edlq = new DeadLetterQueueEvent(t,ex.getMessage());
+            } catch (MongoException ex) {
+                DeadLetterQueueEvent edlq = new DeadLetterQueueEvent(t, ex.getMessage());
                 sb.send("rtdDlqTrxProducer-out-0", MessageBuilder.withPayload(edlq).build());
                 log.error("Error getting records : {}", ex.getMessage());
                 exceptionTrx++;
-            }catch(InterruptedException ie){
+            } catch (InterruptedException ie) {
                 log.error("Error setting sleeping time : {}", ie.getMessage());
-                DeadLetterQueueEvent edlq = new DeadLetterQueueEvent(t,"Error setting sleeping time.");
+                DeadLetterQueueEvent edlq = new DeadLetterQueueEvent(t, "Error setting sleeping time.");
                 sb.send("rtdDlqTrxProducer-out-0", MessageBuilder.withPayload(edlq).build());
             }
         });
     }
 
-    protected int getProcessedTrx(){
+    protected int getProcessedTrx() {
         return processedTrx;
     }
 
-    protected int getExcepitonTrx(){
+    protected int getExcepitonTrx() {
         return exceptionTrx;
     }
 }

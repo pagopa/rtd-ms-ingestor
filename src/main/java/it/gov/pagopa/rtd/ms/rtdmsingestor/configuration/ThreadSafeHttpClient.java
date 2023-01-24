@@ -24,23 +24,24 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class ThreadSafeHttpClient {
 
-    @Bean
-    CloseableHttpClient myHttpClient()
-            throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-        SSLContext sslContext = SSLContexts.custom()
-                .loadTrustMaterial(TrustSelfSignedStrategy.INSTANCE)
-                .build();
+        @Bean
+        CloseableHttpClient myHttpClient()
+                        throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+                SSLContext sslContext = SSLContexts.custom()
+                                .loadTrustMaterial(TrustSelfSignedStrategy.INSTANCE)
+                                .build();
 
-        Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
-                .register("http", PlainConnectionSocketFactory.INSTANCE)
-                .register("https",
-                        new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE))
-                .build();
+                Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
+                                .register("http", PlainConnectionSocketFactory.INSTANCE)
+                                .register("https",
+                                                new SSLConnectionSocketFactory(sslContext,
+                                                                NoopHostnameVerifier.INSTANCE))
+                                .build();
 
-        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager(
-                registry);
+                PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager(
+                                registry);
 
-        return HttpClients.custom().setConnectionManager(connectionManager).build();
-    }
+                return HttpClients.custom().setConnectionManager(connectionManager).build();
+        }
 
 }

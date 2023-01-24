@@ -43,141 +43,140 @@ import com.opencsv.bean.BeanVerifier;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 
-
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("test")
-@EmbeddedKafka(topics = {"rtd-platform-events","rtd-dlq-trx"}, partitions = 1,
-    bootstrapServersProperty = "spring.embedded.kafka.brokers")
-@EnableAutoConfiguration(exclude = {TestSupportBinderAutoConfiguration.class, EmbeddedMongoAutoConfiguration.class})
-@TestPropertySource(value = {"classpath:application-test.yml"}, inheritProperties = false)
+@EmbeddedKafka(topics = { "rtd-platform-events",
+        "rtd-dlq-trx" }, partitions = 1, bootstrapServersProperty = "spring.embedded.kafka.brokers")
+@EnableAutoConfiguration(exclude = { TestSupportBinderAutoConfiguration.class, EmbeddedMongoAutoConfiguration.class })
+@TestPropertySource(value = { "classpath:application-test.yml" }, inheritProperties = false)
 @DirtiesContext
-@ContextConfiguration(classes = {EventHandler.class})
+@ContextConfiguration(classes = { EventHandler.class })
 class DeadLetterQueueProcessorTest {
 
-  @Value("${ingestor.resources.base.path}")
-  String resources;
+    @Value("${ingestor.resources.base.path}")
+    String resources;
 
-  @Value("${ingestor.resources.base.path}/tmp")
-  String tmpDirectory;
+    @Value("${ingestor.resources.base.path}/tmp")
+    String tmpDirectory;
 
-  @SpyBean
-  private BlobApplicationAware blobApplicationAware;
+    @SpyBean
+    private BlobApplicationAware blobApplicationAware;
 
-  @SpyBean
-  private BlobRestConnector blobRestConnector;
+    @SpyBean
+    private BlobRestConnector blobRestConnector;
 
-  @SpyBean
-  private DeadLetterQueueProcessor deadLetterQueueProcessor;
+    @SpyBean
+    private DeadLetterQueueProcessor deadLetterQueueProcessor;
 
-  @MockBean
-  CloseableHttpClient client;
+    @MockBean
+    CloseableHttpClient client;
 
-  @MockBean
-  IngestorRepository repository;
+    @MockBean
+    IngestorRepository repository;
 
+    private final String container = "rtd-transactions-decrypted";
+    private final String blobName = "CSTAR.99910.TRNLOG.20220228.103107.001.csv.pgp.0.decrypted";
 
-  private final String container = "rtd-transactions-decrypted";
-  private final String blobName = "CSTAR.99910.TRNLOG.20220228.103107.001.csv.pgp.0.decrypted";
+    private BlobApplicationAware fakeBlob = new BlobApplicationAware(
+            "/blobServices/default/containers/" + container + "/blobs/" + blobName);
 
-  private BlobApplicationAware fakeBlob = new BlobApplicationAware(
-      "/blobServices/default/containers/" + container + "/blobs/" + blobName);
+    // This counter represents the number of fiscal codes that are malformed in the
+    // test file.
+    // The corresponding transactions are not discarded, instead an error is logged
+    // and the
+    // transaction is processed anyway.
+    int malformedBuyProcessedFiscalCodes = 3;
 
-  //This counter represents the number of fiscal codes that are malformed in the test file.
-  // The corresponding transactions are not discarded, instead an error is logged and the
-  // transaction is processed anyway.
-  int malformedBuyProcessedFiscalCodes = 3;
+    @AfterEach
+    void cleanTmpFiles() throws IOException {
+        FileUtils.deleteDirectory(Path.of(tmpDirectory).toFile());
+    }
 
-  @AfterEach
-  void cleanTmpFiles() throws IOException {
-    FileUtils.deleteDirectory(Path.of(tmpDirectory).toFile());
-  }
+    @Test
+    void mongoQueryError() throws IOException {
+        String transactions = "testHashReplacement.csv";
 
-  @Test
-  void mongoQueryError() throws IOException {
-    String transactions = "testHashReplacement.csv";
+        when(repository.findItemByHash(any()))
+                .thenThrow(new MongoException("Exception 429"));
 
-    when(repository.findItemByHash(any()))
-      .thenThrow(new MongoException("Exception 429"));
+        // Create fake file to process
+        File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
+        decryptedFile.getParentFile().mkdirs();
+        decryptedFile.createNewFile();
 
-    //Create fake file to process
-    File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
-    decryptedFile.getParentFile().mkdirs();
-    decryptedFile.createNewFile();
+        FileOutputStream blobDst = new FileOutputStream(Path.of(tmpDirectory, blobName).toString());
+        Files.copy(Path.of(resources, transactions), blobDst);
 
-    FileOutputStream blobDst = new FileOutputStream(Path.of(tmpDirectory, blobName).toString());
-    Files.copy(Path.of(resources, transactions), blobDst);
+        fakeBlob.setTargetDir(tmpDirectory);
+        fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
+        FileReader fileReader = new FileReader(Path.of(fakeBlob.getTargetDir(), fakeBlob.getBlob()).toFile());
 
-    fakeBlob.setTargetDir(tmpDirectory);
-    fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
-    FileReader fileReader = new FileReader(Path.of(fakeBlob.getTargetDir(), fakeBlob.getBlob()).toFile());
+        BeanVerifier<Transaction> verifier = new TransactionVerifier();
 
-    BeanVerifier<Transaction> verifier = new TransactionVerifier();
+        CsvToBeanBuilder<Transaction> builder = new CsvToBeanBuilder<Transaction>(fileReader)
+                .withType(Transaction.class)
+                .withSeparator(';')
+                .withVerifier(verifier)
+                .withThrowExceptions(false);
 
-    CsvToBeanBuilder<Transaction> builder = new CsvToBeanBuilder<Transaction>(fileReader)
-        .withType(Transaction.class)
-        .withSeparator(';')
-        .withVerifier(verifier)
-        .withThrowExceptions(false);
+        CsvToBean<Transaction> csvToBean = builder.build();
+        Stream<Transaction> readTransaction = csvToBean.stream();
 
-    CsvToBean<Transaction> csvToBean = builder.build();
-    Stream<Transaction> readTransaction = csvToBean.stream();
+        readTransaction.map(e -> {
+            return Stream.of(e);
+        }).forEach(e -> {
+            deadLetterQueueProcessor.TransactionCheckProcess(e);
+        });
 
-    readTransaction.map(e -> {
-        return Stream.of(e);
-    }).forEach(e -> {
-        deadLetterQueueProcessor.TransactionCheckProcess(e);
-    });
+        await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
+            assertEquals(0, deadLetterQueueProcessor.getProcessedTrx());
+            assertEquals(1, deadLetterQueueProcessor.getExcepitonTrx());
+        });
+    }
 
-    await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-        assertEquals(0, deadLetterQueueProcessor.getProcessedTrx());
-        assertEquals(1,deadLetterQueueProcessor.getExcepitonTrx());
-    });
-  }
+    @Test
+    void deadLetterQueueCorrectProcessing() throws IOException {
+        String transactions = "testHashReplacement.csv";
 
+        when(repository.findItemByHash(any()))
+                .thenReturn(Optional.of(EPIItem
+                        .builder()
+                        .hashPan("b50245d5fee9fa11bead50e7d0afb6c269c77f59474a87442f867ba9643021fc")
+                        .build()));
 
-  @Test
-  void deadLetterQueueCorrectProcessing() throws IOException {
-    String transactions = "testHashReplacement.csv";
+        // Create fake file to process
+        File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
+        decryptedFile.getParentFile().mkdirs();
+        decryptedFile.createNewFile();
 
-    when(repository.findItemByHash(any()))
-        .thenReturn(Optional.of( EPIItem
-        .builder()
-        .hashPan("b50245d5fee9fa11bead50e7d0afb6c269c77f59474a87442f867ba9643021fc")
-        .build()));
+        FileOutputStream blobDst = new FileOutputStream(Path.of(tmpDirectory, blobName).toString());
+        Files.copy(Path.of(resources, transactions), blobDst);
 
-    //Create fake file to process
-    File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
-    decryptedFile.getParentFile().mkdirs();
-    decryptedFile.createNewFile();
+        fakeBlob.setTargetDir(tmpDirectory);
+        fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
+        FileReader fileReader = new FileReader(Path.of(fakeBlob.getTargetDir(), fakeBlob.getBlob()).toFile());
 
-    FileOutputStream blobDst = new FileOutputStream(Path.of(tmpDirectory, blobName).toString());
-    Files.copy(Path.of(resources, transactions), blobDst);
+        BeanVerifier<Transaction> verifier = new TransactionVerifier();
 
-    fakeBlob.setTargetDir(tmpDirectory);
-    fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
-    FileReader fileReader = new FileReader(Path.of(fakeBlob.getTargetDir(), fakeBlob.getBlob()).toFile());
+        CsvToBeanBuilder<Transaction> builder = new CsvToBeanBuilder<Transaction>(fileReader)
+                .withType(Transaction.class)
+                .withSeparator(';')
+                .withVerifier(verifier)
+                .withThrowExceptions(false);
 
-    BeanVerifier<Transaction> verifier = new TransactionVerifier();
+        CsvToBean<Transaction> csvToBean = builder.build();
+        Stream<Transaction> readTransaction = csvToBean.stream();
 
-    CsvToBeanBuilder<Transaction> builder = new CsvToBeanBuilder<Transaction>(fileReader)
-        .withType(Transaction.class)
-        .withSeparator(';')
-        .withVerifier(verifier)
-        .withThrowExceptions(false);
+        readTransaction.map(e -> {
+            return Stream.of(e);
+        }).forEach(e -> {
+            deadLetterQueueProcessor.TransactionCheckProcess(e);
+        });
 
-    CsvToBean<Transaction> csvToBean = builder.build();
-    Stream<Transaction> readTransaction = csvToBean.stream();
-
-    readTransaction.map(e -> {
-        return Stream.of(e);
-    }).forEach(e -> {
-        deadLetterQueueProcessor.TransactionCheckProcess(e);
-    });
-
-    await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-        assertEquals(1, deadLetterQueueProcessor.getProcessedTrx());
-        assertEquals(0,deadLetterQueueProcessor.getExcepitonTrx());
-    });
-  }
+        await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
+            assertEquals(1, deadLetterQueueProcessor.getProcessedTrx());
+            assertEquals(0, deadLetterQueueProcessor.getExcepitonTrx());
+        });
+    }
 
 }
