@@ -10,7 +10,8 @@ import javax.validation.ConstraintValidatorContext;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * This is the implementation of a custom validator. This validator checks the correctness of an
+ * This is the implementation of a custom validator. This validator checks the
+ * correctness of an
  * italian fiscal code.
  */
 @Slf4j
@@ -21,7 +22,8 @@ public class FiscalCodeValidator implements
   public boolean isValid(String codiceFiscale,
       ConstraintValidatorContext context) {
 
-    //If codiceFiscale is null, then the validation is passed because it is not a mandatory field
+    // If codiceFiscale is null, then the validation is passed because it is not a
+    // mandatory field
     if (codiceFiscale == null || codiceFiscale.equals("")) {
       log.warn("Empty Fiscal Code");
     }

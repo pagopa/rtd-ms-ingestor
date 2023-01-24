@@ -48,6 +48,14 @@ spring:
           destination: rtd-trx
           content-type: application/json
           binder: rtd-trx
+        rtdDlqTrxConsumer-in-0:
+          destination: rtd-dlq-trx
+          content-type: application/json
+          binder: rtd-dlq-trx-consumer
+        rtdDlqTrxProducer-out-0:
+          destination: rtd-dlq-trx
+          content-type: application/json
+          binder: rtd-dlq-trx-producer
       binders:
         rtd-trx:
           type: kafka
@@ -63,6 +71,44 @@ spring:
                         sasl:
                           jaas:
                             config: ${KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_TRX}
+                          mechanism: PLAIN
+                        security:
+                          protocol: SASL_SSL
+                        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+                        default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        rtd-dlq-trx-producer:
+          type: kafka
+          environment:
+            spring:
+              cloud:
+                stream:
+                  kafka:
+                    binder:
+                      auto-create-topics: false
+                      brokers: ${KAFKA_BROKER}
+                      configuration:
+                        sasl:
+                          jaas:
+                            config: ${KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_DQL_TRX}
+                          mechanism: PLAIN
+                        security:
+                          protocol: SASL_SSL
+                        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+                        default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        rtd-dlq-trx-consumer:
+          type: kafka
+          environment:
+            spring:
+              cloud:
+                stream:
+                  kafka:
+                    binder:
+                      auto-create-topics: false
+                      brokers: ${KAFKA_BROKER}
+                      configuration:
+                        sasl:
+                          jaas:
+                            config: ${KAFKA_SASL_JAAS_CONFIG_CONSUMER_RTD_DQL_TRX}
                           mechanism: PLAIN
                         security:
                           protocol: SASL_SSL
@@ -90,7 +136,6 @@ spring:
                           deserializer: org.apache.kafka.common.serialization.StringDeserializer
                         value:
                           deserializer: org.apache.kafka.common.serialization.StringDeserializer
-
 # ---
 # spring:
 #   config:

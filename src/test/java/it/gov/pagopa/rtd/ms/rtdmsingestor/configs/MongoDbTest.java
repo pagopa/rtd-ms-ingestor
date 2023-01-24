@@ -10,7 +10,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @DataMongoTest
 @Inherited
-@Import({MongoDbTestConfig.class})
+@Import({ MongoDbTestConfig.class })
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public @interface MongoDbTest {
 }

@@ -4,7 +4,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * RTD microsrvice to ingest on a Kafka Topic decrypted files contsinint electronic payments.
+ * RTD microsrvice to ingest on a Kafka Topic decrypted files contsinint
+ * electronic payments.
  */
 @SpringBootApplication
 public class RtdMsIngestorApplication {

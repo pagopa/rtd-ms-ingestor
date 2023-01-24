@@ -75,7 +75,6 @@ spring:
   config:
     activate:
       on-profile: mongo-integration-test
-
 # ---
 # spring:
 #   config:

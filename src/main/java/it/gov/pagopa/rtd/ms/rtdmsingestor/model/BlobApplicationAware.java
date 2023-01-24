@@ -45,7 +45,7 @@ public class BlobApplicationAware {
   private String targetDir = "/tmp";
 
   private Pattern uriPattern = Pattern.compile(
-          "^.*containers/((rtd)-transactions-decrypted)/blobs/(.*)");
+      "^.*containers/((rtd)-transactions-decrypted)/blobs/(.*)");
 
   private static final String WRONG_FORMAT_NAME_WARNING_MSG = "Wrong name format:";
   private static final String EVENT_NOT_OF_INTEREST_WARNING_MSG = "Event not of interest:";
@@ -68,7 +68,7 @@ public class BlobApplicationAware {
       container = matcher.group(1);
       blob = matcher.group(3);
 
-      //Tokenized blob name for checking compliance
+      // Tokenized blob name for checking compliance
       String[] blobNameTokenized = blob.split("\\.");
 
       if (checkNameFormat(blobNameTokenized)) {
@@ -82,18 +82,18 @@ public class BlobApplicationAware {
     }
   }
 
-
   /**
    * This method matches PagoPA file name's standard Specifics can be found at:
    * https://docs.pagopa.it/digital-transaction-register/v/digital-transaction-filter/acquirer-integration-with-pagopa-centrostella/integration/standard-pagopa-file-transactions
    * ADE transactions are excluded here.
    *
-   * @param uriTokens values obtained from the name of the blob (separated by dots)
+   * @param uriTokens values obtained from the name of the blob (separated by
+   *                  dots)
    * @return true if the name matches the format, false otherwise
    */
   private boolean checkNameFormat(String[] uriTokens) {
 
-    //Check if the tokens length is right
+    // Check if the tokens length is right
     if (uriTokens.length < 6) {
       return false;
     }
@@ -115,7 +115,8 @@ public class BlobApplicationAware {
     }
 
     SimpleDateFormat daysFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-    // Make the format refuse wrong date and time (default behavior is to overflow values in
+    // Make the format refuse wrong date and time (default behavior is to overflow
+    // values in
     // following date)
     daysFormat.setLenient(false);
 
@@ -137,7 +138,8 @@ public class BlobApplicationAware {
     boolean failCleanup = false;
 
     for (File f : Objects.requireNonNull(Path.of(this.targetDir).toFile().listFiles())) {
-      //Delete every file in the temporary directory that starts with the name of the blob.
+      // Delete every file in the temporary directory that starts with the name of the
+      // blob.
       if (f.getName().startsWith(blob)) {
         try {
           Files.delete(f.toPath());
