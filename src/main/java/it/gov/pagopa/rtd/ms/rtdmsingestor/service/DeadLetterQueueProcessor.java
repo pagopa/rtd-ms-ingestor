@@ -13,7 +13,6 @@ import it.gov.pagopa.rtd.ms.rtdmsingestor.model.DeadLetterQueueEvent;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -30,12 +29,11 @@ public class DeadLetterQueueProcessor implements TransactionCheck {
     private int exceptionTrx = 0;
 
     @Override
-    public void TransactionCheckProcess(Stream<Transaction> readTransaction) {
+    public void transactionCheckProcess(Stream<Transaction> readTransaction) {
         processedTrx = 0;
         exceptionTrx = 0;
         readTransaction.forEach(t -> {
             try {
-                TimeUnit.SECONDS.sleep(5);
                 Optional<EPIItem> dbResponse = repository.findItemByHash(t.getHpan());
                 if (dbResponse.isPresent()) {
                     t.setHpan(dbResponse.get().getHashPan());
@@ -48,10 +46,6 @@ public class DeadLetterQueueProcessor implements TransactionCheck {
                 sb.send("rtdDlqTrxProducer-out-0", MessageBuilder.withPayload(edlq).build());
                 log.error("Error getting records : {}", ex.getMessage());
                 exceptionTrx++;
-            } catch (InterruptedException ie) {
-                log.error("Error setting sleeping time : {}", ie.getMessage());
-                DeadLetterQueueEvent edlq = new DeadLetterQueueEvent(t, "Error setting sleeping time.");
-                sb.send("rtdDlqTrxProducer-out-0", MessageBuilder.withPayload(edlq).build());
             }
         });
     }

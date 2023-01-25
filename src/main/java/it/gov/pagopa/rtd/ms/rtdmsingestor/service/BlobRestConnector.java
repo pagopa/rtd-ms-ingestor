@@ -137,7 +137,7 @@ public class BlobRestConnector implements TransactionCheck {
     CsvToBean<Transaction> csvToBean = builder.build();
     Stream<Transaction> readTransaction = csvToBean.stream();
 
-    TransactionCheckProcess(readTransaction);
+    transactionCheckProcess(readTransaction);
 
     List<CsvException> violations = csvToBean.getCapturedExceptions();
 
@@ -225,7 +225,7 @@ public class BlobRestConnector implements TransactionCheck {
   }
 
   @Override
-  public void TransactionCheckProcess(Stream<Transaction> readTransaction) {
+  public void transactionCheckProcess(Stream<Transaction> readTransaction) {
     readTransaction.forEach(t -> {
       try {
         Optional<EPIItem> dbResponse = repository.findItemByHash(t.getHpan());

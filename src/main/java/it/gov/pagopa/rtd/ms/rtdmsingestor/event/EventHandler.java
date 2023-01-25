@@ -13,9 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -25,14 +23,7 @@ import org.springframework.messaging.Message;
  */
 @Configuration
 @Getter
-@Slf4j
 public class EventHandler {
-
-  @Autowired
-  BlobRestConnector blobRestConnector;
-
-  @Autowired
-  DeadLetterQueueProcessor deadLetterQueueProcessor;
 
   /**
    * Constructor.
@@ -40,7 +31,7 @@ public class EventHandler {
    * @return a consumer for Event Grid events.
    */
   @Bean
-  public Consumer<Message<List<EventGridEvent>>> blobStorageConsumer() {
+  public Consumer<Message<List<EventGridEvent>>> blobStorageConsumer(BlobRestConnector blobRestConnector) {
     return message -> message.getPayload().stream()
         .filter(e -> "Microsoft.Storage.BlobCreated".equals(e.getEventType()))
         .map(EventGridEvent::getSubject)
@@ -58,9 +49,9 @@ public class EventHandler {
   }
 
   @Bean
-  public Consumer<Message<DeadLetterQueueEvent>> rtdDlqTrxConsumer() {
+  public Consumer<Message<DeadLetterQueueEvent>> rtdDlqTrxConsumer(DeadLetterQueueProcessor deadLetterQueueProcessor) {
     return message -> deadLetterQueueProcessor
-        .TransactionCheckProcess(Stream.of(message.getPayload().getTransaction()));
+        .transactionCheckProcess(Stream.of(message.getPayload().getTransaction()));
   }
 
 }

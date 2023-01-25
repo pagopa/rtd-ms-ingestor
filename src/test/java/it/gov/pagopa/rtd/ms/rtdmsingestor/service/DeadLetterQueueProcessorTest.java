@@ -125,7 +125,7 @@ class DeadLetterQueueProcessorTest {
         readTransaction.map(e -> {
             return Stream.of(e);
         }).forEach(e -> {
-            deadLetterQueueProcessor.TransactionCheckProcess(e);
+            deadLetterQueueProcessor.transactionCheckProcess(e);
         });
 
         await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
@@ -170,7 +170,7 @@ class DeadLetterQueueProcessorTest {
         readTransaction.map(e -> {
             return Stream.of(e);
         }).forEach(e -> {
-            deadLetterQueueProcessor.TransactionCheckProcess(e);
+            deadLetterQueueProcessor.transactionCheckProcess(e);
         });
 
         await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
