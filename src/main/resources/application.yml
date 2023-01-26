@@ -50,6 +50,7 @@ spring:
           binder: rtd-trx
         rtdDlqTrxConsumer-in-0:
           destination: rtd-dlq-trx
+          group: rtd-ingestor-consumer-group
           content-type: application/json
           binder: rtd-dlq-trx-consumer
         rtdDlqTrxProducer-out-0:
