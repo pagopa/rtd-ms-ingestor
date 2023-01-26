@@ -34,12 +34,13 @@ public class DeadLetterQueueProcessor implements TransactionCheck {
         processedTrx = 0;
         exceptionTrx = 0;
         readTransaction.forEach(t -> {
+            log.info("DLQ PROCESS TRANSACTION "+ t.getHpan());
             try {
                 Optional<EPIItem> dbResponse = repository.findItemByHash(t.getHpan());
                 if (dbResponse.isPresent()) {
                     t.setHpan(dbResponse.get().getHashPan());
                     sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
-                    log.info(t.toString());
+                    log.info("DLQ"+t.toString());
                     processedTrx++;
                 }
             } catch (MongoException ex) {
