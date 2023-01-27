@@ -86,7 +86,7 @@ spring:
                   kafka:
                     binder:
                       auto-create-topics: false
-                      brokers: ${KAFKA_BROKER://localhost:29095}
+                      brokers: ${KAFKA_BROKER_DLQ://localhost:29095}
                       configuration:
                         sasl:
                           jaas:
@@ -105,7 +105,7 @@ spring:
                   kafka:
                     binder:
                       auto-create-topics: false
-                      brokers: ${KAFKA_BROKER://localhost:29095}
+                      brokers: ${KAFKA_BROKER_DLQ://localhost:29095}
                       configuration:
                         sasl:
                           jaas:
