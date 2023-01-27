@@ -47,7 +47,7 @@ microservice-chart:
     KAFKA_SASL_JAAS_CONFIG_CONSUMER_BLOB_STORAGE_EVENTS: evh-rtd-platform-events-rtd-platform-events-sub-key
     KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_TRX: evh-rtd-trx-rtd-trx-producer-key
     KAFKA_SASL_JAAS_CONFIG_CONSUMER_RTD_DLQ_TRX: evh-rtd-dlq-trx-rtd-dlq-trx-consumer-policy-rtd
-    KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_DQL_TRX: evh-rtd-dlq-trx-rtd-dlq-trx-producer-policy-rtd
+    KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_DLQ_TRX: evh-rtd-dlq-trx-rtd-dlq-trx-producer-policy-rtd
     INTERNAL_SERVICES_API_KEY: rtd-internal-api-product-subscription-key
     MONGODB_CONNECTION_URI: mongo-db-connection-uri
 

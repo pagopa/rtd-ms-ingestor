@@ -90,7 +90,7 @@ spring:
                       configuration:
                         sasl:
                           jaas:
-                            config: ${KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_DQL_TRX}
+                            config: ${KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_DLQ_TRX}
                           mechanism: PLAIN
                         security:
                           protocol: SASL_SSL
@@ -109,7 +109,7 @@ spring:
                       configuration:
                         sasl:
                           jaas:
-                            config: ${KAFKA_SASL_JAAS_CONFIG_CONSUMER_RTD_DQL_TRX}
+                            config: ${KAFKA_SASL_JAAS_CONFIG_CONSUMER_RTD_DLQ_TRX}
                           mechanism: PLAIN
                         security:
                           protocol: SASL_SSL
