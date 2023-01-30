@@ -25,7 +25,7 @@ spring:
     stream:
       source: rtdTrxProducer
       function:
-        definition: blobStorageConsumer
+        definition: blobStorageConsumer;rtdDlqTrxConsumer
       bindings:
         blobStorageConsumer-in-0: # name must match [handler name]-in-0
           destination: rtd-platform-events
@@ -41,6 +41,7 @@ spring:
           binder: rtd-trx
         rtdDlqTrxConsumer-in-0:
           destination: rtd-dlq-trx
+          group: rtd-ingestor-dlq-consumer-group
           content-type: application/json
           binder: rtd-dlq-trx-consumer
         rtdDlqTrxProducer-out-0:

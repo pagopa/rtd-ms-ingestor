@@ -62,9 +62,10 @@ import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("test")
-@EmbeddedKafka(topics = {
-    "rtd-platform-events" }, partitions = 1, bootstrapServersProperty = "spring.embedded.kafka.brokers")
-@EnableAutoConfiguration(exclude = { TestSupportBinderAutoConfiguration.class, EmbeddedMongoAutoConfiguration.class })
+@EmbeddedKafka(topics = {"rtd-platform-events" },
+    partitions = 1, bootstrapServersProperty = "spring.embedded.kafka.brokers")
+@EnableAutoConfiguration(exclude = { TestSupportBinderAutoConfiguration.class,
+    EmbeddedMongoAutoConfiguration.class })
 @TestPropertySource(value = { "classpath:application-test.yml" }, inheritProperties = false)
 @DirtiesContext
 @ExtendWith(OutputCaptureExtension.class)
@@ -151,7 +152,7 @@ class BlobRestConnectorTest {
 
   @Test
   void shouldProcess() throws IOException {
-    String transactions = "testTransactions.csv";
+    final String transactions = "testTransactions.csv";
 
     when(repository.findItemByHash(any()))
         .thenReturn(Optional.of(EPIItem
@@ -199,7 +200,7 @@ class BlobRestConnectorTest {
   // There is one malformed transaction for every field in the object Transaction.
   @Test
   void shouldNotProcessForMalformedFields(CapturedOutput output) throws IOException {
-    String transactions = "testMalformedTransactions.csv";
+    final String transactions = "testMalformedTransactions.csv";
 
     when(repository.findItemByHash(any()))
         .thenReturn(Optional.of(EPIItem
@@ -242,7 +243,7 @@ class BlobRestConnectorTest {
       String fileName,
       String hashpan) throws IOException {
 
-    String transactions = fileName;
+    final String transactions = fileName;
 
     when(repository.findItemByHash(any()))
         .thenReturn(Optional.of(EPIItem

@@ -17,13 +17,13 @@ import lombok.Setter;
 @Setter
 public class DeadLetterQueueEvent {
 
-    /**
-     * The transaction data
-     */
-    @JsonProperty(value = "transaction", required = true)
-    private Transaction transaction;
+  /**
+  * The transaction data.
+  */
+  @JsonProperty(value = "transaction", required = true)
+  private Transaction transaction;
 
-    @JsonProperty(value = "mongo_exception", required = true)
-    private String mongoException;
+  @JsonProperty(value = "mongo_exception", required = true)
+  private String mongoException;
 
 }

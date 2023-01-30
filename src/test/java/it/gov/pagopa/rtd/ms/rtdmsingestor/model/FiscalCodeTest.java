@@ -3,6 +3,7 @@ package it.gov.pagopa.rtd.ms.rtdmsingestor.model;
 import static it.gov.pagopa.rtd.ms.rtdmsingestor.model.FiscalCode.formatCf;
 import static it.gov.pagopa.rtd.ms.rtdmsingestor.model.FiscalCode.validate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.FiscalCode.Response;
 
 import org.junit.jupiter.api.Test;

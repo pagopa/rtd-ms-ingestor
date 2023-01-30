@@ -1,9 +1,9 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.service;
 
-import java.util.stream.Stream;
-
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
 
+import java.util.stream.Stream;
+
 public interface TransactionCheck {
-   public void transactionCheckProcess(Stream<Transaction> readTransaction);
+  public void transactionCheckProcess(Stream<Transaction> readTransaction);
 }

@@ -1,8 +1,8 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.event;
 
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.model.DeadLetterQueueEvent;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.model.DeadLetterQueueEvent;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.EventGridEvent;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.service.BlobRestConnector;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.service.DeadLetterQueueProcessor;

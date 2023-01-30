@@ -12,8 +12,8 @@ import it.gov.pagopa.rtd.ms.rtdmsingestor.event.EventHandler;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.repositories.IngestorDAO;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.EventGridEvent;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.service.BlobRestConnector;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.service.DeadLetterQueueProcessor;
 
@@ -45,7 +45,8 @@ import org.springframework.test.context.TestPropertySource;
 @ActiveProfiles("test")
 @EmbeddedKafka(topics = { "rtd-platform-events",
     "rtd-trx" }, partitions = 1, bootstrapServersProperty = "spring.embedded.kafka.brokers")
-@EnableAutoConfiguration(exclude = { TestSupportBinderAutoConfiguration.class, EmbeddedMongoAutoConfiguration.class })
+@EnableAutoConfiguration(exclude = { TestSupportBinderAutoConfiguration.class,
+    EmbeddedMongoAutoConfiguration.class })
 @ContextConfiguration(classes = { EventHandler.class })
 @TestPropertySource(value = { "classpath:application-test.yml" }, inheritProperties = false)
 @DirtiesContext

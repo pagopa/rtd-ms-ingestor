@@ -5,13 +5,15 @@ import com.opencsv.exceptions.CsvConstraintViolationException;
 
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
 
+import java.util.Set;
+
+import javax.validation.ConstraintViolation;
+
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 
-import javax.validation.ConstraintViolation;
 
-import java.util.Set;
 
 public class TransactionVerifier implements BeanVerifier<Transaction> {
 
