@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,7 +22,6 @@ import org.springframework.messaging.Message;
  * Component defining the processing steps in response to storage events.
  */
 @Configuration
-@Slf4j
 @Getter
 public class EventHandler {
 
