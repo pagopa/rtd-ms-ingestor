@@ -110,7 +110,20 @@ class IngestorQueryTest {
 
         @Test
         void testFindHashpanFunction() throws IOException {
-
+                /* assertEquals(true,
+                                repository.findItemByHash(
+                                                "c3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")
+                                                .isPresent());
+                assertEquals(true,
+                                repository.findItemByHash(
+                                                "abd525b1f1b866145e90f7fff7b47c43ef6b90a6083cd5babfb55332329fce5e")
+                                                .isPresent());
+                assertEquals(false, repository
+                                .findItemByHash("7858580aef0faef76c2d6839f84ec383947783966c99cf6afad446a54ddc0e94")
+                                .isPresent());
+                assertEquals(false, repository
+                                .findItemByHash("ee4bac9851e9f4325b008bd6c92af29d0d45dd6c6511dd286c5995825695feec")
+                                .isPresent()); */
         }
 
 }
