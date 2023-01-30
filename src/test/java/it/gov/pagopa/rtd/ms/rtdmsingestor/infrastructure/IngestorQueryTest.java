@@ -110,7 +110,7 @@ class IngestorQueryTest {
 
         @Test
         void testFindHashpanFunction() throws IOException {
-                /* assertEquals(true,
+                assertEquals(true,
                                 repository.findItemByHash(
                                                 "c3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")
                                                 .isPresent());
@@ -123,7 +123,7 @@ class IngestorQueryTest {
                                 .isPresent());
                 assertEquals(false, repository
                                 .findItemByHash("ee4bac9851e9f4325b008bd6c92af29d0d45dd6c6511dd286c5995825695feec")
-                                .isPresent()); */
+                                .isPresent());
         }
 
 }
