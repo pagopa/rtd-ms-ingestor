@@ -18,5 +18,4 @@ public class RtdMsIngestorApplication {
   public static void main(String[] args) {
     SpringApplication.run(RtdMsIngestorApplication.class, args);
   }
-
 }

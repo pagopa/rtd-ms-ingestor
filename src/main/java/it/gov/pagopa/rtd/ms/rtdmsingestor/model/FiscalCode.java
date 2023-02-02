@@ -57,13 +57,11 @@ public class FiscalCode {
    * @return Null if valid, or string describing why this CF must be rejected.
    */
   private static Response validateRegular(String cf) {
-
     // This array stores the presence of substitution codes in the last 3 digits in
     // case of homocody.
     // This routine doesn't allow homocodic codes further than 3 digits!
     boolean[] homocode = new boolean[3];
-    if (!cf.matches(
-        "^[A-Z]{6}\\d{2}[ABCDEHLMPRST]\\d{2}[0-9A-Z]{4}[A-Z]$")) {
+    if (!cf.matches("^[A-Z]{6}\\d{2}[ABCDEHLMPRST]\\d{2}[0-9A-Z]{4}[A-Z]$")) {
       return Response.INVALID_CHARACTERS;
     }
 

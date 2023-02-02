@@ -15,13 +15,13 @@ import lombok.extern.slf4j.Slf4j;
  * italian fiscal code.
  */
 @Slf4j
-public class FiscalCodeValidator implements
-    ConstraintValidator<FiscalCodeConstraint, String> {
+public class FiscalCodeValidator
+    implements ConstraintValidator<FiscalCodeConstraint, String> {
 
   @Override
-  public boolean isValid(String codiceFiscale,
+  public boolean isValid(
+      String codiceFiscale,
       ConstraintValidatorContext context) {
-
     // If codiceFiscale is null, then the validation is passed because it is not a
     // mandatory field
     if (codiceFiscale == null || codiceFiscale.equals("")) {
@@ -41,5 +41,4 @@ public class FiscalCodeValidator implements
     }
     return true;
   }
-
 }

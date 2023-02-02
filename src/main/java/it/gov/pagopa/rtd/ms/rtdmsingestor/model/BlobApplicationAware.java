@@ -64,7 +64,6 @@ public class BlobApplicationAware {
     Matcher matcher = uriPattern.matcher(uri);
 
     if (matcher.matches()) {
-
       container = matcher.group(1);
       blob = matcher.group(3);
 
@@ -92,7 +91,6 @@ public class BlobApplicationAware {
    * @return true if the name matches the format, false otherwise
    */
   private boolean checkNameFormat(String[] uriTokens) {
-
     // Check if the tokens length is right
     if (uriTokens.length < 6) {
       return false;
@@ -134,10 +132,10 @@ public class BlobApplicationAware {
    * This method deletes the local files left by the blob handling.
    */
   public BlobApplicationAware localCleanup() {
-
     boolean failCleanup = false;
 
-    for (File f : Objects.requireNonNull(Path.of(this.targetDir).toFile().listFiles())) {
+    for (File f : Objects.requireNonNull(
+        Path.of(this.targetDir).toFile().listFiles())) {
       // Delete every file in the temporary directory that starts with the name of the
       // blob.
       if (f.getName().startsWith(blob)) {
@@ -155,5 +153,4 @@ public class BlobApplicationAware {
     }
     return this;
   }
-
 }

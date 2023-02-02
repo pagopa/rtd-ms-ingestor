@@ -1,17 +1,12 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.service;
 
-import com.mongodb.MongoException;
-
 import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.DeadLetterQueueEvent;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
-
 import java.util.Optional;
 import java.util.stream.Stream;
-
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.messaging.support.MessageBuilder;
@@ -39,13 +34,19 @@ public class DeadLetterQueueProcessor implements TransactionCheck {
         Optional<EPIItem> dbResponse = repository.findItemByHash(t.getHpan());
         if (dbResponse.isPresent()) {
           t.setHpan(dbResponse.get().getHashPan());
-          sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
+          sb.send(
+              "rtdTrxProducer-out-0",
+              MessageBuilder.withPayload(t).build());
           log.info("[DLQ] " + t.toString());
           processedTrx++;
         }
-      } catch (MongoException ex) {
-        DeadLetterQueueEvent edlq = new DeadLetterQueueEvent(t, ex.getMessage());
-        sb.send("rtdDlqTrxProducer-out-0", MessageBuilder.withPayload(edlq).build());
+      } catch (Exception ex) {
+        DeadLetterQueueEvent dlqException = new DeadLetterQueueEvent(
+            t,
+            ex.getMessage());
+        sb.send(
+            "rtdDlqTrxProducer-out-0",
+            MessageBuilder.withPayload(dlqException).build());
         log.error("[DLQ] Error getting records : {}", ex.getMessage());
         exceptionTrx++;
       }

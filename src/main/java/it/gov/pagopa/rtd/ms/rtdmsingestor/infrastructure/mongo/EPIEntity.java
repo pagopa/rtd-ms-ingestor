@@ -4,14 +4,10 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
-
 import java.time.LocalDateTime;
-
 import java.util.List;
-
 import lombok.Builder;
 import lombok.Data;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -74,5 +70,4 @@ public class EPIEntity {
 
   @Field(name = "hashPanExports")
   private List<String> hashPanExports;
-
 }

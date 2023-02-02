@@ -6,14 +6,11 @@ import it.gov.pagopa.rtd.ms.rtdmsingestor.model.DeadLetterQueueEvent;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.EventGridEvent;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.service.BlobRestConnector;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.service.DeadLetterQueueProcessor;
-
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import lombok.Getter;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -31,8 +28,11 @@ public class EventHandler {
    * @return a consumer for Event Grid events.
    */
   @Bean
-  public Consumer<Message<List<EventGridEvent>>> blobStorageConsumer(BlobRestConnector blobRestConnector) {
-    return message -> message.getPayload().stream()
+  public Consumer<Message<List<EventGridEvent>>> blobStorageConsumer(
+      BlobRestConnector blobRestConnector) {
+    return message -> message
+        .getPayload()
+        .stream()
         .filter(e -> "Microsoft.Storage.BlobCreated".equals(e.getEventType()))
         .map(EventGridEvent::getSubject)
         .map(BlobApplicationAware::new)
@@ -49,9 +49,9 @@ public class EventHandler {
   }
 
   @Bean
-  public Consumer<Message<DeadLetterQueueEvent>> rtdDlqTrxConsumer(DeadLetterQueueProcessor deadLetterQueueProcessor) {
-    return message -> deadLetterQueueProcessor
-        .transactionCheckProcess(Stream.of(message.getPayload().getTransaction()));
+  public Consumer<Message<DeadLetterQueueEvent>> rtdDlqTrxConsumer(
+      DeadLetterQueueProcessor deadLetterQueueProcessor) {
+    return message -> deadLetterQueueProcessor.transactionCheckProcess(
+        Stream.of(message.getPayload().getTransaction()));
   }
-
 }

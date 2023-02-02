@@ -55,7 +55,6 @@ public class EventGridEvent {
   // @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   @JsonSerialize(using = LocalDateTimeSerializer.class)
   @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-
   @JsonProperty(value = "eventTime", required = true)
   private LocalDateTime eventTime;
 

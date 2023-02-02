@@ -27,20 +27,24 @@ public class ThreadSafeHttpClient {
   @Bean
   CloseableHttpClient myHttpClient()
       throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-    SSLContext sslContext = SSLContexts.custom()
-         .loadTrustMaterial(TrustSelfSignedStrategy.INSTANCE).build();
+    SSLContext sslContext = SSLContexts
+        .custom()
+        .loadTrustMaterial(TrustSelfSignedStrategy.INSTANCE)
+        .build();
 
     Registry<ConnectionSocketFactory> registry = RegistryBuilder
         .<ConnectionSocketFactory>create()
         .register("http", PlainConnectionSocketFactory.INSTANCE)
-        .register("https",
-                        new SSLConnectionSocketFactory(sslContext,
-                                        NoopHostnameVerifier.INSTANCE))
+        .register(
+            "https",
+            new SSLConnectionSocketFactory(
+                sslContext,
+                NoopHostnameVerifier.INSTANCE))
         .build();
 
-    PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager(registry);
+    PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager(
+        registry);
 
     return HttpClients.custom().setConnectionManager(connectionManager).build();
   }
-
 }
