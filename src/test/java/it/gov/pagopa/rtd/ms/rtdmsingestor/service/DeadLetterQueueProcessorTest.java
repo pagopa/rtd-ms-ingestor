@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import com.mongodb.MongoException;
 import com.opencsv.bean.BeanVerifier;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
@@ -41,21 +42,13 @@ import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("test")
-@EmbeddedKafka(
-  topics = { "rtd-platform-events", "rtd-dlq-trx" },
-  partitions = 1,
-  bootstrapServersProperty = "spring.embedded.kafka.brokers"
-)
-@EnableAutoConfiguration(
-  exclude = {
+@EmbeddedKafka(topics = { "rtd-platform-events",
+    "rtd-dlq-trx" }, partitions = 1, bootstrapServersProperty = "spring.embedded.kafka.brokers")
+@EnableAutoConfiguration(exclude = {
     TestSupportBinderAutoConfiguration.class,
     EmbeddedMongoAutoConfiguration.class,
-  }
-)
-@TestPropertySource(
-  value = { "classpath:application-test.yml" },
-  inheritProperties = false
-)
+})
+@TestPropertySource(value = { "classpath:application-test.yml" }, inheritProperties = false)
 @DirtiesContext
 @ContextConfiguration(classes = { EventHandler.class })
 class DeadLetterQueueProcessorTest {
@@ -82,12 +75,10 @@ class DeadLetterQueueProcessorTest {
   IngestorRepository repository;
 
   private final String container = "rtd-transactions-decrypted";
-  private final String blobName =
-    "CSTAR.99910.TRNLOG.20220228.103107.001.csv.pgp.0.decrypted";
+  private final String blobName = "CSTAR.99910.TRNLOG.20220228.103107.001.csv.pgp.0.decrypted";
 
   private BlobApplicationAware fakeBlob = new BlobApplicationAware(
-    "/blobServices/default/containers/" + container + "/blobs/" + blobName
-  );
+      "/blobServices/default/containers/" + container + "/blobs/" + blobName);
 
   // This counter represents the number of fiscal codes that are malformed in the
   // test file.
@@ -106,7 +97,7 @@ class DeadLetterQueueProcessorTest {
     final String transactions = "testHashReplacement.csv";
 
     when(repository.findItemByHash(any()))
-      .thenThrow(new Exception("", new Exception()));
+        .thenThrow(new MongoException(""));
 
     // Create fake file to process
     File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
@@ -114,43 +105,40 @@ class DeadLetterQueueProcessorTest {
     decryptedFile.createNewFile();
 
     FileOutputStream blobDst = new FileOutputStream(
-      Path.of(tmpDirectory, blobName).toString()
-    );
+        Path.of(tmpDirectory, blobName).toString());
     Files.copy(Path.of(resources, transactions), blobDst);
 
     fakeBlob.setTargetDir(tmpDirectory);
     fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
     FileReader fileReader = new FileReader(
-      Path.of(fakeBlob.getTargetDir(), fakeBlob.getBlob()).toFile()
-    );
+        Path.of(fakeBlob.getTargetDir(), fakeBlob.getBlob()).toFile());
 
     BeanVerifier<Transaction> verifier = new TransactionVerifier();
 
     CsvToBeanBuilder<Transaction> builder = new CsvToBeanBuilder<Transaction>(
-      fileReader
-    )
-      .withType(Transaction.class)
-      .withSeparator(';')
-      .withVerifier(verifier)
-      .withThrowExceptions(false);
+        fileReader)
+        .withType(Transaction.class)
+        .withSeparator(';')
+        .withVerifier(verifier)
+        .withThrowExceptions(false);
 
     CsvToBean<Transaction> csvToBean = builder.build();
     Stream<Transaction> readTransaction = csvToBean.stream();
 
     readTransaction
-      .map(e -> {
-        return Stream.of(e);
-      })
-      .forEach(e -> {
-        deadLetterQueueProcessor.transactionCheckProcess(e);
-      });
+        .map(e -> {
+          return Stream.of(e);
+        })
+        .forEach(e -> {
+          deadLetterQueueProcessor.transactionCheckProcess(e);
+        });
 
     await()
-      .atMost(Duration.ofSeconds(10))
-      .untilAsserted(() -> {
-        assertEquals(0, deadLetterQueueProcessor.getProcessedTrx());
-        assertEquals(1, deadLetterQueueProcessor.getExcepitonTrx());
-      });
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(() -> {
+          assertEquals(0, deadLetterQueueProcessor.getProcessedTrx());
+          assertEquals(1, deadLetterQueueProcessor.getExcepitonTrx());
+        });
   }
 
   @Test
@@ -158,16 +146,13 @@ class DeadLetterQueueProcessorTest {
     final String transactions = "testHashReplacement.csv";
 
     when(repository.findItemByHash(any()))
-      .thenReturn(
-        Optional.of(
-          EPIItem
-            .builder()
-            .hashPan(
-              "b50245d5fee9fa11bead50e7d0afb6c269c77f59474a87442f867ba9643021fc"
-            )
-            .build()
-        )
-      );
+        .thenReturn(
+            Optional.of(
+                EPIItem
+                    .builder()
+                    .hashPan(
+                        "b50245d5fee9fa11bead50e7d0afb6c269c77f59474a87442f867ba9643021fc")
+                    .build()));
 
     // Create fake file to process
     File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
@@ -175,42 +160,39 @@ class DeadLetterQueueProcessorTest {
     decryptedFile.createNewFile();
 
     FileOutputStream blobDst = new FileOutputStream(
-      Path.of(tmpDirectory, blobName).toString()
-    );
+        Path.of(tmpDirectory, blobName).toString());
     Files.copy(Path.of(resources, transactions), blobDst);
 
     fakeBlob.setTargetDir(tmpDirectory);
     fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
     FileReader fileReader = new FileReader(
-      Path.of(fakeBlob.getTargetDir(), fakeBlob.getBlob()).toFile()
-    );
+        Path.of(fakeBlob.getTargetDir(), fakeBlob.getBlob()).toFile());
 
     BeanVerifier<Transaction> verifier = new TransactionVerifier();
 
     CsvToBeanBuilder<Transaction> builder = new CsvToBeanBuilder<Transaction>(
-      fileReader
-    )
-      .withType(Transaction.class)
-      .withSeparator(';')
-      .withVerifier(verifier)
-      .withThrowExceptions(false);
+        fileReader)
+        .withType(Transaction.class)
+        .withSeparator(';')
+        .withVerifier(verifier)
+        .withThrowExceptions(false);
 
     CsvToBean<Transaction> csvToBean = builder.build();
     Stream<Transaction> readTransaction = csvToBean.stream();
 
     readTransaction
-      .map(e -> {
-        return Stream.of(e);
-      })
-      .forEach(e -> {
-        deadLetterQueueProcessor.transactionCheckProcess(e);
-      });
+        .map(e -> {
+          return Stream.of(e);
+        })
+        .forEach(e -> {
+          deadLetterQueueProcessor.transactionCheckProcess(e);
+        });
 
     await()
-      .atMost(Duration.ofSeconds(10))
-      .untilAsserted(() -> {
-        assertEquals(1, deadLetterQueueProcessor.getProcessedTrx());
-        assertEquals(0, deadLetterQueueProcessor.getExcepitonTrx());
-      });
+        .atMost(Duration.ofSeconds(10))
+        .untilAsserted(() -> {
+          assertEquals(1, deadLetterQueueProcessor.getProcessedTrx());
+          assertEquals(0, deadLetterQueueProcessor.getExcepitonTrx());
+        });
   }
 }
