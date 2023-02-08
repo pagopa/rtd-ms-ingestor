@@ -9,7 +9,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @SpringBootApplication
 public class RtdMsIngestorApplication {
-
   /**
    * Main method to run the Ingestor Miscroservice.
    *
