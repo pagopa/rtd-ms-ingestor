@@ -257,27 +257,14 @@ public class BlobRestConnector implements TransactionCheck {
   @Override
   public void transactionCheckProcess(Stream<Transaction> readTransaction) {
     readTransaction.forEach(t -> {
-      try {
-        Optional<EPIItem> dbResponse = repository.findItemByHash(t.getHpan());
-        if (dbResponse.isPresent()) {
-          t.setHpan(dbResponse.get().getHashPan());
-          sb.send(
-              "rtdTrxProducer-out-0",
-              MessageBuilder.withPayload(t).build());
-          numCorrectTrx++;
-        } else {
-          numNotEnrolledCards++;
-        }
-        numTotalTrx++;
-      } catch (Exception ex) {
-        DeadLetterQueueEvent dlqException = new DeadLetterQueueEvent(
-            t,
-            ex.getMessage());
-        sb.send(
-            "rtdDlqTrxProducer-out-0",
-            MessageBuilder.withPayload(dlqException).build());
-        log.error("Error getting records : {}", ex.getMessage());
-      }
+
+      sb.send(
+          "rtdTrxProducer-out-0",
+          MessageBuilder.withPayload(t).build());
+      numCorrectTrx++;
+
+      numTotalTrx++;
+
     });
   }
 }
