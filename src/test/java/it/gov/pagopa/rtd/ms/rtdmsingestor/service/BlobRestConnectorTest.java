@@ -60,16 +60,16 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
-
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("test")
-@EmbeddedKafka(topics = {"rtd-platform-events"}, partitions = 1,
-    bootstrapServersProperty = "spring.embedded.kafka.brokers")
-@EnableAutoConfiguration(exclude = {TestSupportBinderAutoConfiguration.class, EmbeddedMongoAutoConfiguration.class})
-@TestPropertySource(value = {"classpath:application-test.yml"}, inheritProperties = false)
+@EmbeddedKafka(topics = {"rtd-platform-events" },
+    partitions = 1, bootstrapServersProperty = "spring.embedded.kafka.brokers")
+@EnableAutoConfiguration(exclude = { TestSupportBinderAutoConfiguration.class,
+    EmbeddedMongoAutoConfiguration.class })
+@TestPropertySource(value = { "classpath:application-test.yml" }, inheritProperties = false)
 @DirtiesContext
 @ExtendWith(OutputCaptureExtension.class)
-@ContextConfiguration(classes = {EventHandler.class})
+@ContextConfiguration(classes = { EventHandler.class })
 class BlobRestConnectorTest {
 
   @Value("${ingestor.resources.base.path}")
@@ -84,12 +84,14 @@ class BlobRestConnectorTest {
   @SpyBean
   private BlobRestConnector blobRestConnector;
 
+  @SpyBean
+  private DeadLetterQueueProcessor deadLetterQueueProcessor;
+
   @MockBean
   CloseableHttpClient client;
 
   @MockBean
   IngestorRepository repository;
-
 
   private final String container = "rtd-transactions-decrypted";
   private final String blobName = "CSTAR.99910.TRNLOG.20220228.103107.001.csv.pgp.0.decrypted";
@@ -97,8 +99,10 @@ class BlobRestConnectorTest {
   private BlobApplicationAware fakeBlob = new BlobApplicationAware(
       "/blobServices/default/containers/" + container + "/blobs/" + blobName);
 
-  //This counter represents the number of fiscal codes that are malformed in the test file.
-  // The corresponding transactions are not discarded, instead an error is logged and the
+  // This counter represents the number of fiscal codes that are malformed in the
+  // test file.
+  // The corresponding transactions are not discarded, instead an error is logged
+  // and the
   // transaction is processed anyway.
   int malformedBuyProcessedFiscalCodes = 3;
 
@@ -107,14 +111,15 @@ class BlobRestConnectorTest {
     FileUtils.deleteDirectory(Path.of(tmpDirectory).toFile());
   }
 
-
   @Test
   void shouldDownload(CapturedOutput output) throws IOException {
-    // Improvement idea: mock all the stuff needed in order to allow the FileDownloadResponseHandler
-    // class to create a file in a temporary directory and test the content of the downloaded file
+    // Improvement idea: mock all the stuff needed in order to allow the
+    // FileDownloadResponseHandler
+    // class to create a file in a temporary directory and test the content of the
+    // downloaded file
     // for an expected content.
 
-    //Create the mocked output stream to simulate the blob get
+    // Create the mocked output stream to simulate the blob get
     File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
     decryptedFile.getParentFile().mkdirs();
     decryptedFile.createNewFile();
@@ -132,7 +137,6 @@ class BlobRestConnectorTest {
     assertThat(output.getOut(), not(containsString("Cannot GET blob ")));
   }
 
-
   @Test
   void shouldFailDownload(CapturedOutput output) throws IOException {
     doThrow(IOException.class).when(client)
@@ -146,18 +150,17 @@ class BlobRestConnectorTest {
     assertThat(output.getOut(), containsString("Cannot GET blob "));
   }
 
-
   @Test
   void shouldProcess() throws IOException {
-    String transactions = "testTransactions.csv";
+    final String transactions = "testTransactions.csv";
 
     when(repository.findItemByHash(any()))
-      .thenReturn(Optional.of( EPIItem
-        .builder()
-        .hashPan("b50245d5fee9fa11bead50e7d0afb6c269c77f59474a87442f867ba9643021fc")
-        .build()));
+        .thenReturn(Optional.of(EPIItem
+            .builder()
+            .hashPan("b50245d5fee9fa11bead50e7d0afb6c269c77f59474a87442f867ba9643021fc")
+            .build()));
 
-    //Create fake file to process
+    // Create fake file to process
     File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
     decryptedFile.getParentFile().mkdirs();
     decryptedFile.createNewFile();
@@ -170,9 +173,9 @@ class BlobRestConnectorTest {
 
     blobRestConnector.process(fakeBlob);
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-      assertEquals(blobRestConnector.getNumTotalTrx(),blobRestConnector.getNumCorrectTrx());
-      assertEquals(5,blobRestConnector.getNumTotalTrx());
-      assertEquals(5,blobRestConnector.getNumCorrectTrx());
+      assertEquals(blobRestConnector.getNumTotalTrx(), blobRestConnector.getNumCorrectTrx());
+      assertEquals(5, blobRestConnector.getNumTotalTrx());
+      assertEquals(5, blobRestConnector.getNumCorrectTrx());
       assertEquals(Status.PROCESSED, fakeBlob.getStatus());
     });
   }
@@ -193,19 +196,19 @@ class BlobRestConnectorTest {
     });
   }
 
-  //This test uses a file with all malformed transaction
+  // This test uses a file with all malformed transaction
   // There is one malformed transaction for every field in the object Transaction.
   @Test
   void shouldNotProcessForMalformedFields(CapturedOutput output) throws IOException {
-    String transactions = "testMalformedTransactions.csv";
+    final String transactions = "testMalformedTransactions.csv";
 
     when(repository.findItemByHash(any()))
-      .thenReturn(Optional.of( EPIItem
-        .builder()
-        .hashPan("c3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")
-        .build()));
+        .thenReturn(Optional.of(EPIItem
+            .builder()
+            .hashPan("c3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")
+            .build()));
 
-    //Create fake file to process
+    // Create fake file to process
     File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
     decryptedFile.getParentFile().mkdirs();
     decryptedFile.createNewFile();
@@ -218,7 +221,7 @@ class BlobRestConnectorTest {
     blobRestConnector.process(fakeBlob);
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
 
-      assertEquals(3,blobRestConnector.getNumCorrectTrx());
+      assertEquals(3, blobRestConnector.getNumCorrectTrx());
       assertEquals(0, blobRestConnector.getNumNotEnrolledCards());
       assertEquals(53, blobRestConnector.getNumTotalTrx());
 
@@ -229,26 +232,26 @@ class BlobRestConnectorTest {
     });
   }
 
-   //This test uses a file with all malformed transaction
+  // This test uses a file with all malformed transaction
   // There is one malformed transaction for every field in the object Transaction.
   @ParameterizedTest
-  @CsvSource({"testMalformedTransactionHash.csv,",
-    "testMalformedTransactionHash_2.csv,3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9",
-    "testMalformedTransactionHash_3.csv,ac3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9",
-    "testMalformedTransactionHash_4.csv,+3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9"})
+  @CsvSource({ "testMalformedTransactionHash.csv,",
+      "testMalformedTransactionHash_2.csv,3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9",
+      "testMalformedTransactionHash_3.csv,ac3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9",
+      "testMalformedTransactionHash_4.csv,+3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9" })
   void shouldNotProcessForMalformedEmptyHashPan(
-    String fileName,
-    String hashpan) throws IOException {
+      String fileName,
+      String hashpan) throws IOException {
 
-    String transactions = fileName;
+    final String transactions = fileName;
 
     when(repository.findItemByHash(any()))
-      .thenReturn(Optional.of( EPIItem
-        .builder()
-        .hashPan(hashpan)
-        .build()));
+        .thenReturn(Optional.of(EPIItem
+            .builder()
+            .hashPan(hashpan)
+            .build()));
 
-    //Create fake file to process
+    // Create fake file to process
     File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
     decryptedFile.getParentFile().mkdirs();
     decryptedFile.createNewFile();
@@ -267,7 +270,6 @@ class BlobRestConnectorTest {
       assertEquals(Status.PROCESSED, fakeBlob.getStatus());
     });
   }
-
 
   @Test
   void shouldDelete(CapturedOutput output) throws IOException {

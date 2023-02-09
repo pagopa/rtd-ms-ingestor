@@ -16,7 +16,6 @@ import javax.validation.Payload;
 @Target({ ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface FiscalCodeConstraint {
-
   /**
    * Message in case of violated constraint.
    *

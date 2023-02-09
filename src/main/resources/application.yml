@@ -37,7 +37,7 @@ spring:
     stream:
       source: rtdTrxProducer
       function:
-        definition: blobStorageConsumer
+        definition: blobStorageConsumer;rtdDlqTrxConsumer
       bindings:
         blobStorageConsumer-in-0: # name must match [handler name]-in-0
           destination: rtd-platform-events
@@ -50,6 +50,7 @@ spring:
           binder: rtd-trx
         rtdDlqTrxConsumer-in-0:
           destination: rtd-dlq-trx
+          group: rtd-ingestor-dlq-consumer-group
           content-type: application/json
           binder: rtd-dlq-trx-consumer
         rtdDlqTrxProducer-out-0:
@@ -66,7 +67,7 @@ spring:
                   kafka:
                     binder:
                       auto-create-topics: false
-                      brokers: ${KAFKA_BROKER}
+                      brokers: ${KAFKA_BROKER://localhost:29095}
                       configuration:
                         sasl:
                           jaas:
@@ -85,11 +86,11 @@ spring:
                   kafka:
                     binder:
                       auto-create-topics: false
-                      brokers: ${KAFKA_BROKER}
+                      brokers: ${KAFKA_BROKER_DLQ://localhost:29095}
                       configuration:
                         sasl:
                           jaas:
-                            config: ${KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_DQL_TRX}
+                            config: ${KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_DLQ_TRX}
                           mechanism: PLAIN
                         security:
                           protocol: SASL_SSL
@@ -104,11 +105,11 @@ spring:
                   kafka:
                     binder:
                       auto-create-topics: false
-                      brokers: ${KAFKA_BROKER}
+                      brokers: ${KAFKA_BROKER_DLQ://localhost:29095}
                       configuration:
                         sasl:
                           jaas:
-                            config: ${KAFKA_SASL_JAAS_CONFIG_CONSUMER_RTD_DQL_TRX}
+                            config: ${KAFKA_SASL_JAAS_CONFIG_CONSUMER_RTD_DLQ_TRX}
                           mechanism: PLAIN
                         security:
                           protocol: SASL_SSL
@@ -123,7 +124,7 @@ spring:
                   kafka:
                     binder:
                       auto-create-topics: false
-                      brokers: ${KAFKA_BROKER}
+                      brokers: ${KAFKA_BROKER://localhost:29095}
                       configuration:
                         sasl:
                           jaas:

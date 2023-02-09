@@ -1,18 +1,15 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.service;
 
-import com.mongodb.MongoException;
 import com.opencsv.bean.BeanVerifier;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.exceptions.CsvException;
-
 import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.model.DeadLetterQueueEvent;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.model.DeadLetterQueueEvent;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
-
+import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -23,9 +20,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
-
 import lombok.extern.slf4j.Slf4j;
-
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.ResponseHandler;
@@ -34,7 +29,6 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicHeader;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
@@ -49,7 +43,7 @@ import org.springframework.validation.annotation.Validated;
 @Service
 @Slf4j
 @Validated
-public class BlobRestConnector {
+public class BlobRestConnector implements TransactionCheck {
 
   @Value("${ingestor.api.baseurl}")
   private String baseUrl;
@@ -81,20 +75,33 @@ public class BlobRestConnector {
    * @return a locally available blob
    */
   public BlobApplicationAware get(BlobApplicationAware blob) {
-
-    String uri = baseUrl + "/" + blobBasePath + "/" + blob.getContainer() + "/" + blob.getBlob();
+    String uri = baseUrl +
+        "/" +
+        blobBasePath +
+        "/" +
+        blob.getContainer() +
+        "/" +
+        blob.getBlob();
     final HttpGet getBlob = new HttpGet(uri);
     getBlob.setHeader(new BasicHeader("Ocp-Apim-Subscription-Key", blobApiKey));
 
     try {
-      OutputStream result = httpClient.execute(getBlob,
+      OutputStream result = httpClient.execute(
+          getBlob,
           new FileDownloadResponseHandler(
-              new FileOutputStream(Path.of(blob.getTargetDir(), blob.getBlob()).toFile())));
+              new FileOutputStream(
+                  Path.of(blob.getTargetDir(), blob.getBlob()).toFile())));
       result.close();
       blob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
-      log.info("Successful GET of blob {} from {}", blob.getBlob(), blob.getContainer());
+      log.info(
+          "Successful GET of blob {} from {}",
+          blob.getBlob(),
+          blob.getContainer());
     } catch (Exception ex) {
-      log.error("Cannot GET blob {} from {}: {}", blob.getBlob(), blob.getContainer(),
+      log.error(
+          "Cannot GET blob {} from {}: {}",
+          blob.getBlob(),
+          blob.getContainer(),
           ex.getMessage());
     }
 
@@ -110,7 +117,6 @@ public class BlobRestConnector {
    * @param blob the blob of the transaction.
    */
   public BlobApplicationAware process(BlobApplicationAware blob) {
-
     log.info("Extracting transactions from:{}", blob.getBlobUri());
 
     FileReader fileReader;
@@ -128,7 +134,8 @@ public class BlobRestConnector {
 
     BeanVerifier<Transaction> verifier = new TransactionVerifier();
 
-    CsvToBeanBuilder<Transaction> builder = new CsvToBeanBuilder<Transaction>(fileReader)
+    CsvToBeanBuilder<Transaction> builder = new CsvToBeanBuilder<Transaction>(
+        fileReader)
         .withType(Transaction.class)
         .withSeparator(';')
         .withVerifier(verifier)
@@ -137,24 +144,7 @@ public class BlobRestConnector {
     CsvToBean<Transaction> csvToBean = builder.build();
     Stream<Transaction> readTransaction = csvToBean.stream();
 
-    readTransaction.forEach(t -> {
-      try {
-        Optional<EPIItem> dbResponse = repository.findItemByHash(t.getHpan());
-        if (dbResponse.isPresent()) {
-          t.setHpan(dbResponse.get().getHashPan());
-          sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
-          log.info(t.toString());
-          numCorrectTrx++;
-        } else {
-          numNotEnrolledCards++;
-        }
-        numTotalTrx++;
-      } catch (MongoException ex) {
-        DeadLetterQueueEvent edlq = new DeadLetterQueueEvent(t, ex.getMessage());
-        sb.send("rtdDlqTrxProducer-out-0", MessageBuilder.withPayload(edlq).build());
-        log.error("Error getting records : {}", ex.getMessage());
-      }
-    });
+    transactionCheckProcess(readTransaction);
 
     List<CsvException> violations = csvToBean.getCapturedExceptions();
 
@@ -162,19 +152,28 @@ public class BlobRestConnector {
 
     if (!violations.isEmpty()) {
       for (CsvException e : violations) {
-        log.error("Validation error at line " + e.getLineNumber() + " : " + e.getMessage());
+        log.error(
+            "Validation error at line " +
+                e.getLineNumber() +
+                " : " +
+                e.getMessage());
       }
     } else if (numTotalTrx == 0) {
       log.error("No records found in file {}", blob.getBlob());
     }
 
     if (numTotalTrx == numCorrectTrx) {
-      log.info("Extraction result: extracted all {} transactions from:{}", numCorrectTrx,
+      log.info(
+          "Extraction result: extracted all {} transactions from:{}",
+          numCorrectTrx,
           blob.getBlobUri());
     } else {
       log.info(
-          "Extraction result: {} well formed transactions and {} not enrolled cards out of {} rows extracted from:{}",
-          numCorrectTrx, numNotEnrolledCards, numTotalTrx,
+          "Extraction result: {} well formed transactions and {} " +
+              "not enrolled cards out of {} rows extracted from:{}",
+          numCorrectTrx,
+          numNotEnrolledCards,
+          numTotalTrx,
           blob.getBlobUri());
     }
 
@@ -190,30 +189,42 @@ public class BlobRestConnector {
    * @return a remotely deleted blob with REMOTELY_DELETED status.
    */
   public BlobApplicationAware deleteRemote(BlobApplicationAware blob) {
-    String uri = baseUrl + "/" + blobBasePath + "/" + blob.getContainer() + "/" + blob.getBlob();
+    String uri = baseUrl +
+        "/" +
+        blobBasePath +
+        "/" +
+        blob.getContainer() +
+        "/" +
+        blob.getBlob();
     final HttpDelete deleteBlob = new HttpDelete(uri);
-    deleteBlob.setHeader(new BasicHeader("Ocp-Apim-Subscription-Key", blobApiKey));
+    deleteBlob.setHeader(
+        new BasicHeader("Ocp-Apim-Subscription-Key", blobApiKey));
     deleteBlob.setHeader(new BasicHeader("x-ms-version", "2021-04-10"));
 
     try (CloseableHttpResponse myResponse = httpClient.execute(deleteBlob)) {
-
       int statusCode = myResponse.getStatusLine().getStatusCode();
       if (statusCode == HttpStatus.SC_ACCEPTED) {
         blob.setStatus(Status.REMOTELY_DELETED);
         log.info("Remote blob {} deleted successfully", uri);
       } else {
-        log.error("Can't delete blob {}. Invalid HTTP response: {}, {}", uri, statusCode,
+        log.error(
+            "Can't delete blob {}. Invalid HTTP response: {}, {}",
+            uri,
+            statusCode,
             myResponse.getStatusLine().getReasonPhrase());
       }
-
     } catch (Exception ex) {
-      log.error("Can't delete blob {}. Unexpected error: {}", uri, ex.getMessage());
+      log.error(
+          "Can't delete blob {}. Unexpected error: {}",
+          uri,
+          ex.getMessage());
     }
 
     return blob;
   }
 
-  static class FileDownloadResponseHandler implements ResponseHandler<OutputStream> {
+  static class FileDownloadResponseHandler
+      implements ResponseHandler<OutputStream> {
 
     private final OutputStream target;
 
@@ -222,11 +233,13 @@ public class BlobRestConnector {
     }
 
     @Override
-    public OutputStream handleResponse(HttpResponse response) throws IOException {
-      StreamUtils.copy(Objects.requireNonNull(response.getEntity().getContent()), this.target);
+    public OutputStream handleResponse(HttpResponse response)
+        throws IOException {
+      StreamUtils.copy(
+          Objects.requireNonNull(response.getEntity().getContent()),
+          this.target);
       return this.target;
     }
-
   }
 
   protected int getNumNotEnrolledCards() {
@@ -241,4 +254,31 @@ public class BlobRestConnector {
     return numCorrectTrx;
   }
 
+  @Override
+  public void transactionCheckProcess(Stream<Transaction> readTransaction) {
+    readTransaction.forEach(t -> {
+      try {
+        Optional<EPIItem> dbResponse = repository.findItemByHash(t.getHpan());
+        if (dbResponse.isPresent()) {
+          t.setHpan(dbResponse.get().getHashPan());
+          sb.send(
+              "rtdTrxProducer-out-0",
+              MessageBuilder.withPayload(t).build());
+          log.info(t.toString());
+          numCorrectTrx++;
+        } else {
+          numNotEnrolledCards++;
+        }
+        numTotalTrx++;
+      } catch (Exception ex) {
+        DeadLetterQueueEvent dlqException = new DeadLetterQueueEvent(
+            t,
+            ex.getMessage());
+        sb.send(
+            "rtdDlqTrxProducer-out-0",
+            MessageBuilder.withPayload(dlqException).build());
+        log.error("Error getting records : {}", ex.getMessage());
+      }
+    });
+  }
 }

@@ -1,9 +1,8 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.repositories;
 
-import java.util.Optional;
-
 import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
+import java.util.Optional;
 
 public class IngestorRepositoryImpl implements IngestorRepository {
 
@@ -17,5 +16,4 @@ public class IngestorRepositoryImpl implements IngestorRepository {
     public Optional<EPIItem> findItemByHash(String hash) {
         return dao.findItemByHash(hash);
     }
-
 }
