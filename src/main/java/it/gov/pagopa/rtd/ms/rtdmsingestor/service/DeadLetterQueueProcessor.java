@@ -37,7 +37,6 @@ public class DeadLetterQueueProcessor implements TransactionCheck {
           sb.send(
               "rtdTrxProducer-out-0",
               MessageBuilder.withPayload(t).build());
-          log.info("[DLQ] " + t.toString());
           processedTrx++;
         }
       } catch (Exception ex) {

@@ -264,7 +264,6 @@ public class BlobRestConnector implements TransactionCheck {
           sb.send(
               "rtdTrxProducer-out-0",
               MessageBuilder.withPayload(t).build());
-          log.info(t.toString());
           numCorrectTrx++;
         } else {
           numNotEnrolledCards++;
