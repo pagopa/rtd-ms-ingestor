@@ -68,4 +68,5 @@ public class EPIEntity {
 
   @Field(name = "hashPanExports")
   private List<String> hashPanExports;
+
 }
