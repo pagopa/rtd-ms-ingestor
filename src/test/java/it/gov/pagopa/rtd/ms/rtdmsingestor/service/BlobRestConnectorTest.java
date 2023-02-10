@@ -150,6 +150,7 @@ class BlobRestConnectorTest {
     assertThat(output.getOut(), containsString("Cannot GET blob "));
   }
 
+
   @Test
   void shouldProcess() throws IOException {
     final String transactions = "testTransactions.csv";

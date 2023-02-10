@@ -7,7 +7,6 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.Builder;
-import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -17,7 +16,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 @Document("enrolled_payment_instrument")
 @Builder(toBuilder = true)
-@Data
 public class EPIEntity {
 
   @Id
