@@ -14,8 +14,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
-@ContextConfiguration(classes = { ThreadSafeHttpClient.class })
-@TestPropertySource(value = { "classpath:application-test.yml" }, inheritProperties = false)
+@ContextConfiguration(classes = {ThreadSafeHttpClient.class})
+@TestPropertySource(value = {"classpath:application-test.yml"}, inheritProperties = false)
 class HttpClientTest {
 
   @Autowired

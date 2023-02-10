@@ -6,14 +6,14 @@ import java.util.Optional;
 
 public class IngestorRepositoryImpl implements IngestorRepository {
 
-    private final IngestorDAO dao;
+  private final IngestorDAO dao;
 
-    public IngestorRepositoryImpl(IngestorDAO dao) {
-        this.dao = dao;
-    }
+  public IngestorRepositoryImpl(IngestorDAO dao) {
+    this.dao = dao;
+  }
 
-    @Override
-    public Optional<EPIItem> findItemByHash(String hash) {
-        return dao.findItemByHash(hash);
-    }
+  @Override
+  public Optional<EPIItem> findItemByHash(String hash) {
+    return dao.findItemByHash(hash);
+  }
 }

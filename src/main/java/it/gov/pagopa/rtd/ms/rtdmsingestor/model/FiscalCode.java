@@ -1,14 +1,10 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.model;
 
 /**
- * Italian Codice Fiscale normalization, formatting and validation routines. A
- * <u>regular CF</u> is
- * composed by 16 among letters and digits; the last character is always a
- * letter representing the
- * control code. A <u>temporary CF</u> could also be assigned; a temporary CF is
- * composed of 11
- * digits, the last digit being the control code. Examples: MRORSS00A00A000U,
- * 12345678903.
+ * Italian Codice Fiscale normalization, formatting and validation routines. A <u>regular CF</u> is
+ * composed by 16 among letters and digits; the last character is always a letter representing the
+ * control code. A <u>temporary CF</u> could also be assigned; a temporary CF is composed of 11
+ * digits, the last digit being the control code. Examples: MRORSS00A00A000U, 12345678903.
  *
  * @author Umberto Salsi salsi@icosaedro.it.
  * @version 2020-01-24
@@ -19,16 +15,11 @@ public class FiscalCode {
    * Enumeration of possible validation responses.
    */
   public enum Response {
-    CORRECT_FISCAL_CODE,
-    INVALID_CHARACTERS,
-    INVALID_CHECKSUM,
-    INVALID_LENGTH,
-    EMPTY,
+    CORRECT_FISCAL_CODE, INVALID_CHARACTERS, INVALID_CHECKSUM, INVALID_LENGTH, EMPTY,
   }
 
   /**
-   * Normalizes a CF by removing white spaces and converting to upper-case. Useful
-   * to clean-up
+   * Normalizes a CF by removing white spaces and converting to upper-case. Useful to clean-up
    * user's input and to save the result in the DB.
    *
    * @param cf Raw CF, possibly with spaces.

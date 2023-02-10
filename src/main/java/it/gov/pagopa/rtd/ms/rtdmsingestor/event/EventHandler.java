@@ -30,28 +30,21 @@ public class EventHandler {
   @Bean
   public Consumer<Message<List<EventGridEvent>>> blobStorageConsumer(
       BlobRestConnector blobRestConnector) {
-    return message -> message
-        .getPayload()
-        .stream()
+    return message -> message.getPayload().stream()
         .filter(e -> "Microsoft.Storage.BlobCreated".equals(e.getEventType()))
-        .map(EventGridEvent::getSubject)
-        .map(BlobApplicationAware::new)
-        .filter(b -> Status.RECEIVED.equals(b.getStatus()))
-        .map(blobRestConnector::get)
-        .filter(b -> Status.DOWNLOADED.equals(b.getStatus()))
-        .map(blobRestConnector::process)
-        .filter(b -> Status.PROCESSED.equals(b.getStatus()))
-        .map(blobRestConnector::deleteRemote)
+        .map(EventGridEvent::getSubject).map(BlobApplicationAware::new)
+        .filter(b -> Status.RECEIVED.equals(b.getStatus())).map(blobRestConnector::get)
+        .filter(b -> Status.DOWNLOADED.equals(b.getStatus())).map(blobRestConnector::process)
+        .filter(b -> Status.PROCESSED.equals(b.getStatus())).map(blobRestConnector::deleteRemote)
         .filter(b -> Status.REMOTELY_DELETED.equals(b.getStatus()))
         .map(BlobApplicationAware::localCleanup)
-        .filter(b -> Status.LOCALLY_DELETED.equals(b.getStatus()))
-        .collect(Collectors.toList());
+        .filter(b -> Status.LOCALLY_DELETED.equals(b.getStatus())).collect(Collectors.toList());
   }
 
   @Bean
   public Consumer<Message<DeadLetterQueueEvent>> rtdDlqTrxConsumer(
       DeadLetterQueueProcessor deadLetterQueueProcessor) {
-    return message -> deadLetterQueueProcessor.transactionCheckProcess(
-        Stream.of(message.getPayload().getTransaction()));
+    return message -> deadLetterQueueProcessor
+        .transactionCheckProcess(Stream.of(message.getPayload().getTransaction()));
   }
 }
