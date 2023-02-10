@@ -16,23 +16,17 @@ public class TransactionVerifier implements BeanVerifier<Transaction> {
   private static final Validator validator = factory.getValidator();
 
   @Override
-  public boolean verifyBean(Transaction transaction)
-      throws CsvConstraintViolationException {
-    Set<ConstraintViolation<Transaction>> violations = validator.validate(
-        transaction);
+  public boolean verifyBean(Transaction transaction) throws CsvConstraintViolationException {
+    Set<ConstraintViolation<Transaction>> violations = validator.validate(transaction);
 
     if (!violations.isEmpty()) {
       StringBuilder malformedFields = new StringBuilder();
       for (ConstraintViolation<Transaction> violation : violations) {
-        malformedFields
-            .append("(")
-            .append(violation.getPropertyPath().toString())
-            .append(": ");
+        malformedFields.append("(").append(violation.getPropertyPath().toString()).append(": ");
         malformedFields.append(violation.getMessage()).append(") ");
       }
 
-      throw new CsvConstraintViolationException(
-          "Malformed fields extracted: {}" + malformedFields);
+      throw new CsvConstraintViolationException("Malformed fields extracted: {}" + malformedFields);
     }
 
     return true;

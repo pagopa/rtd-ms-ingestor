@@ -26,12 +26,7 @@ public class BlobApplicationAware {
    * File lifecycle statuses.
    */
   public enum Status {
-    INIT,
-    RECEIVED,
-    DOWNLOADED,
-    PROCESSED,
-    REMOTELY_DELETED,
-    LOCALLY_DELETED,
+    INIT, RECEIVED, DOWNLOADED, PROCESSED, REMOTELY_DELETED, LOCALLY_DELETED,
   }
 
   private String blobUri;
@@ -44,8 +39,8 @@ public class BlobApplicationAware {
 
   private String targetDir = "/tmp";
 
-  private Pattern uriPattern = Pattern.compile(
-      "^.*containers/((rtd)-transactions-decrypted)/blobs/(.*)");
+  private Pattern uriPattern =
+      Pattern.compile("^.*containers/((rtd)-transactions-decrypted)/blobs/(.*)");
 
   private static final String WRONG_FORMAT_NAME_WARNING_MSG = "Wrong name format:";
   private static final String EVENT_NOT_OF_INTEREST_WARNING_MSG = "Event not of interest:";
@@ -86,8 +81,7 @@ public class BlobApplicationAware {
    * https://docs.pagopa.it/digital-transaction-register/v/digital-transaction-filter/acquirer-integration-with-pagopa-centrostella/integration/standard-pagopa-file-transactions
    * ADE transactions are excluded here.
    *
-   * @param uriTokens values obtained from the name of the blob (separated by
-   *                  dots)
+   * @param uriTokens values obtained from the name of the blob (separated by dots)
    * @return true if the name matches the format, false otherwise
    */
   private boolean checkNameFormat(String[] uriTokens) {
@@ -134,8 +128,7 @@ public class BlobApplicationAware {
   public BlobApplicationAware localCleanup() {
     boolean failCleanup = false;
 
-    for (File f : Objects.requireNonNull(
-        Path.of(this.targetDir).toFile().listFiles())) {
+    for (File f : Objects.requireNonNull(Path.of(this.targetDir).toFile().listFiles())) {
       // Delete every file in the temporary directory that starts with the name of the
       // blob.
       if (f.getName().startsWith(blob)) {

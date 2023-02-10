@@ -62,14 +62,14 @@ import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("test")
-@EmbeddedKafka(topics = {"rtd-platform-events" },
-    partitions = 1, bootstrapServersProperty = "spring.embedded.kafka.brokers")
-@EnableAutoConfiguration(exclude = { TestSupportBinderAutoConfiguration.class,
-    EmbeddedMongoAutoConfiguration.class })
-@TestPropertySource(value = { "classpath:application-test.yml" }, inheritProperties = false)
+@EmbeddedKafka(topics = {"rtd-platform-events"}, partitions = 1,
+    bootstrapServersProperty = "spring.embedded.kafka.brokers")
+@EnableAutoConfiguration(
+    exclude = {TestSupportBinderAutoConfiguration.class, EmbeddedMongoAutoConfiguration.class})
+@TestPropertySource(value = {"classpath:application-test.yml"}, inheritProperties = false)
 @DirtiesContext
 @ExtendWith(OutputCaptureExtension.class)
-@ContextConfiguration(classes = { EventHandler.class })
+@ContextConfiguration(classes = {EventHandler.class})
 class BlobRestConnectorTest {
 
   @Value("${ingestor.resources.base.path}")
@@ -126,8 +126,8 @@ class BlobRestConnectorTest {
     fakeBlob.setTargetDir(tmpDirectory);
     OutputStream mockedOutputStream = mock(OutputStream.class);
 
-    doReturn(mockedOutputStream).when(client)
-        .execute(any(HttpGet.class), any(BlobRestConnector.FileDownloadResponseHandler.class));
+    doReturn(mockedOutputStream).when(client).execute(any(HttpGet.class),
+        any(BlobRestConnector.FileDownloadResponseHandler.class));
 
     BlobApplicationAware blobOut = blobRestConnector.get(fakeBlob);
 
@@ -139,8 +139,8 @@ class BlobRestConnectorTest {
 
   @Test
   void shouldFailDownload(CapturedOutput output) throws IOException {
-    doThrow(IOException.class).when(client)
-        .execute(any(HttpGet.class), any(BlobRestConnector.FileDownloadResponseHandler.class));
+    doThrow(IOException.class).when(client).execute(any(HttpGet.class),
+        any(BlobRestConnector.FileDownloadResponseHandler.class));
 
     BlobApplicationAware blobOut = blobRestConnector.get(fakeBlob);
 
@@ -154,11 +154,8 @@ class BlobRestConnectorTest {
   void shouldProcess() throws IOException {
     final String transactions = "testTransactions.csv";
 
-    when(repository.findItemByHash(any()))
-        .thenReturn(Optional.of(EPIItem
-            .builder()
-            .hashPan("b50245d5fee9fa11bead50e7d0afb6c269c77f59474a87442f867ba9643021fc")
-            .build()));
+    when(repository.findItemByHash(any())).thenReturn(Optional.of(EPIItem.builder()
+        .hashPan("b50245d5fee9fa11bead50e7d0afb6c269c77f59474a87442f867ba9643021fc").build()));
 
     // Create fake file to process
     File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
@@ -202,11 +199,8 @@ class BlobRestConnectorTest {
   void shouldNotProcessForMalformedFields(CapturedOutput output) throws IOException {
     final String transactions = "testMalformedTransactions.csv";
 
-    when(repository.findItemByHash(any()))
-        .thenReturn(Optional.of(EPIItem
-            .builder()
-            .hashPan("c3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9")
-            .build()));
+    when(repository.findItemByHash(any())).thenReturn(Optional.of(EPIItem.builder()
+        .hashPan("c3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9").build()));
 
     // Create fake file to process
     File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
@@ -235,21 +229,17 @@ class BlobRestConnectorTest {
   // This test uses a file with all malformed transaction
   // There is one malformed transaction for every field in the object Transaction.
   @ParameterizedTest
-  @CsvSource({ "testMalformedTransactionHash.csv,",
+  @CsvSource({"testMalformedTransactionHash.csv,",
       "testMalformedTransactionHash_2.csv,3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9",
       "testMalformedTransactionHash_3.csv,ac3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9",
-      "testMalformedTransactionHash_4.csv,+3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9" })
-  void shouldNotProcessForMalformedEmptyHashPan(
-      String fileName,
-      String hashpan) throws IOException {
+      "testMalformedTransactionHash_4.csv,+3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9"})
+  void shouldNotProcessForMalformedEmptyHashPan(String fileName, String hashpan)
+      throws IOException {
 
     final String transactions = fileName;
 
     when(repository.findItemByHash(any()))
-        .thenReturn(Optional.of(EPIItem
-            .builder()
-            .hashPan(hashpan)
-            .build()));
+        .thenReturn(Optional.of(EPIItem.builder().hashPan(hashpan).build()));
 
     // Create fake file to process
     File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
@@ -275,12 +265,10 @@ class BlobRestConnectorTest {
   void shouldDelete(CapturedOutput output) throws IOException {
 
     CloseableHttpResponse mockedResponse = mock(CloseableHttpResponse.class);
-    when(mockedResponse.getStatusLine()).thenReturn(
-        new BasicStatusLine(HttpVersion.HTTP_1_1, HttpStatus.SC_ACCEPTED,
-            "Blob successfully deleted."));
+    when(mockedResponse.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1,
+        HttpStatus.SC_ACCEPTED, "Blob successfully deleted."));
 
-    doReturn(mockedResponse).when(client)
-        .execute(any(HttpDelete.class));
+    doReturn(mockedResponse).when(client).execute(any(HttpDelete.class));
 
     blobRestConnector.deleteRemote(fakeBlob);
 
@@ -293,8 +281,7 @@ class BlobRestConnectorTest {
   @Test
   void shouldFailDeleteExceptionOnHttpCall(CapturedOutput output) throws IOException {
 
-    doThrow(new IOException("Connection problem.")).when(client)
-        .execute(any(HttpDelete.class));
+    doThrow(new IOException("Connection problem.")).when(client).execute(any(HttpDelete.class));
 
     blobRestConnector.deleteRemote(fakeBlob);
 
@@ -307,12 +294,10 @@ class BlobRestConnectorTest {
   void shouldFailDeleteWrongStatusCode(CapturedOutput output) throws IOException {
 
     CloseableHttpResponse mockedResponse = mock(CloseableHttpResponse.class);
-    when(mockedResponse.getStatusLine()).thenReturn(
-        new BasicStatusLine(HttpVersion.HTTP_1_1, HttpStatus.SC_FORBIDDEN,
-            "Authentication failed."));
+    when(mockedResponse.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1,
+        HttpStatus.SC_FORBIDDEN, "Authentication failed."));
 
-    doReturn(mockedResponse).when(client)
-        .execute(any(HttpDelete.class));
+    doReturn(mockedResponse).when(client).execute(any(HttpDelete.class));
 
     blobRestConnector.deleteRemote(fakeBlob);
 

@@ -8,7 +8,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 @Configuration
-@EnableMongoRepositories(basePackages = "it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.repositories")
+@EnableMongoRepositories(
+    basePackages = "it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.repositories")
 public class RepositoryConfiguration {
 
   @Bean

@@ -23,10 +23,8 @@ public class MongoDbTestConfig {
 
   @Bean
   public MongodConfig embeddedMongoConfiguration() throws IOException {
-    return MongodConfig.builder()
-        .version(Version.Main.PRODUCTION)
+    return MongodConfig.builder().version(Version.Main.PRODUCTION)
         .net(new Net(IP, PORT, Network.localhostIsIPv6()))
-        .cmdOptions(MongoCmdOptions.builder().useNoJournal(false).build())
-        .build();
+        .cmdOptions(MongoCmdOptions.builder().useNoJournal(false).build()).build();
   }
 }
