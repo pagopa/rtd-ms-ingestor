@@ -13,7 +13,7 @@ import javax.validation.Payload;
  */
 @Documented
 @Constraint(validatedBy = FiscalCodeValidator.class)
-@Target({ ElementType.METHOD, ElementType.FIELD })
+@Target({ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface FiscalCodeConstraint {
   /**

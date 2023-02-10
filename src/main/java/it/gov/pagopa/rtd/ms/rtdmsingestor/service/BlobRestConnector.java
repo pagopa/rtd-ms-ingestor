@@ -4,10 +4,8 @@ import com.opencsv.bean.BeanVerifier;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.exceptions.CsvException;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.model.DeadLetterQueueEvent;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
 import java.io.FileNotFoundException;
@@ -18,7 +16,6 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpResponse;
@@ -70,38 +67,22 @@ public class BlobRestConnector implements TransactionCheck {
   /**
    * Method that allows the get of the blob from a remote storage.
    *
-   * @param blob a blob that has been received from the event hub but not
-   *             downloaded.
+   * @param blob a blob that has been received from the event hub but not downloaded.
    * @return a locally available blob
    */
   public BlobApplicationAware get(BlobApplicationAware blob) {
-    String uri = baseUrl +
-        "/" +
-        blobBasePath +
-        "/" +
-        blob.getContainer() +
-        "/" +
-        blob.getBlob();
+    String uri = baseUrl + "/" + blobBasePath + "/" + blob.getContainer() + "/" + blob.getBlob();
     final HttpGet getBlob = new HttpGet(uri);
     getBlob.setHeader(new BasicHeader("Ocp-Apim-Subscription-Key", blobApiKey));
 
     try {
-      OutputStream result = httpClient.execute(
-          getBlob,
-          new FileDownloadResponseHandler(
-              new FileOutputStream(
-                  Path.of(blob.getTargetDir(), blob.getBlob()).toFile())));
+      OutputStream result = httpClient.execute(getBlob, new FileDownloadResponseHandler(
+          new FileOutputStream(Path.of(blob.getTargetDir(), blob.getBlob()).toFile())));
       result.close();
       blob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
-      log.info(
-          "Successful GET of blob {} from {}",
-          blob.getBlob(),
-          blob.getContainer());
+      log.info("Successful GET of blob {} from {}", blob.getBlob(), blob.getContainer());
     } catch (Exception ex) {
-      log.error(
-          "Cannot GET blob {} from {}: {}",
-          blob.getBlob(),
-          blob.getContainer(),
+      log.error("Cannot GET blob {} from {}: {}", blob.getBlob(), blob.getContainer(),
           ex.getMessage());
     }
 
@@ -109,10 +90,8 @@ public class BlobRestConnector implements TransactionCheck {
   }
 
   /**
-   * Method that maps transaction fields taken them from csv into Transaction
-   * object, then send it
-   * on the output queue. This is done for each transaction inside the blob
-   * received.
+   * Method that maps transaction fields taken them from csv into Transaction object, then send it
+   * on the output queue. This is done for each transaction inside the blob received.
    *
    * @param blob the blob of the transaction.
    */
@@ -134,12 +113,9 @@ public class BlobRestConnector implements TransactionCheck {
 
     BeanVerifier<Transaction> verifier = new TransactionVerifier();
 
-    CsvToBeanBuilder<Transaction> builder = new CsvToBeanBuilder<Transaction>(
-        fileReader)
-        .withType(Transaction.class)
-        .withSeparator(';')
-        .withVerifier(verifier)
-        .withThrowExceptions(false);
+    CsvToBeanBuilder<Transaction> builder =
+        new CsvToBeanBuilder<Transaction>(fileReader).withType(Transaction.class).withSeparator(';')
+            .withVerifier(verifier).withThrowExceptions(false);
 
     CsvToBean<Transaction> csvToBean = builder.build();
     Stream<Transaction> readTransaction = csvToBean.stream();
@@ -152,29 +128,20 @@ public class BlobRestConnector implements TransactionCheck {
 
     if (!violations.isEmpty()) {
       for (CsvException e : violations) {
-        log.error(
-            "Validation error at line " +
-                e.getLineNumber() +
-                " : " +
-                e.getMessage());
+        log.error("Validation error at line " + e.getLineNumber() + " : " + e.getMessage());
       }
     } else if (numTotalTrx == 0) {
       log.error("No records found in file {}", blob.getBlob());
     }
 
     if (numTotalTrx == numCorrectTrx) {
-      log.info(
-          "Extraction result: extracted all {} transactions from:{}",
-          numCorrectTrx,
+      log.info("Extraction result: extracted all {} transactions from:{}", numCorrectTrx,
           blob.getBlobUri());
     } else {
       log.info(
-          "Extraction result: {} well formed transactions and {} " +
-              "not enrolled cards out of {} rows extracted from:{}",
-          numCorrectTrx,
-          numNotEnrolledCards,
-          numTotalTrx,
-          blob.getBlobUri());
+          "Extraction result: {} well formed transactions and {} "
+              + "not enrolled cards out of {} rows extracted from:{}",
+          numCorrectTrx, numNotEnrolledCards, numTotalTrx, blob.getBlobUri());
     }
 
     blob.setStatus(Status.PROCESSED);
@@ -184,21 +151,13 @@ public class BlobRestConnector implements TransactionCheck {
   /**
    * Method that allows the deletion of the blob from a remote storage.
    *
-   * @param blob a blob that has been processed and have to be removed both
-   *             remotely ad locally.
+   * @param blob a blob that has been processed and have to be removed both remotely ad locally.
    * @return a remotely deleted blob with REMOTELY_DELETED status.
    */
   public BlobApplicationAware deleteRemote(BlobApplicationAware blob) {
-    String uri = baseUrl +
-        "/" +
-        blobBasePath +
-        "/" +
-        blob.getContainer() +
-        "/" +
-        blob.getBlob();
+    String uri = baseUrl + "/" + blobBasePath + "/" + blob.getContainer() + "/" + blob.getBlob();
     final HttpDelete deleteBlob = new HttpDelete(uri);
-    deleteBlob.setHeader(
-        new BasicHeader("Ocp-Apim-Subscription-Key", blobApiKey));
+    deleteBlob.setHeader(new BasicHeader("Ocp-Apim-Subscription-Key", blobApiKey));
     deleteBlob.setHeader(new BasicHeader("x-ms-version", "2021-04-10"));
 
     try (CloseableHttpResponse myResponse = httpClient.execute(deleteBlob)) {
@@ -207,24 +166,17 @@ public class BlobRestConnector implements TransactionCheck {
         blob.setStatus(Status.REMOTELY_DELETED);
         log.info("Remote blob {} deleted successfully", uri);
       } else {
-        log.error(
-            "Can't delete blob {}. Invalid HTTP response: {}, {}",
-            uri,
-            statusCode,
+        log.error("Can't delete blob {}. Invalid HTTP response: {}, {}", uri, statusCode,
             myResponse.getStatusLine().getReasonPhrase());
       }
     } catch (Exception ex) {
-      log.error(
-          "Can't delete blob {}. Unexpected error: {}",
-          uri,
-          ex.getMessage());
+      log.error("Can't delete blob {}. Unexpected error: {}", uri, ex.getMessage());
     }
 
     return blob;
   }
 
-  static class FileDownloadResponseHandler
-      implements ResponseHandler<OutputStream> {
+  static class FileDownloadResponseHandler implements ResponseHandler<OutputStream> {
 
     private final OutputStream target;
 
@@ -233,11 +185,8 @@ public class BlobRestConnector implements TransactionCheck {
     }
 
     @Override
-    public OutputStream handleResponse(HttpResponse response)
-        throws IOException {
-      StreamUtils.copy(
-          Objects.requireNonNull(response.getEntity().getContent()),
-          this.target);
+    public OutputStream handleResponse(HttpResponse response) throws IOException {
+      StreamUtils.copy(Objects.requireNonNull(response.getEntity().getContent()), this.target);
       return this.target;
     }
   }
@@ -258,9 +207,7 @@ public class BlobRestConnector implements TransactionCheck {
   public void transactionCheckProcess(Stream<Transaction> readTransaction) {
     readTransaction.forEach(t -> {
 
-      sb.send(
-          "rtdTrxProducer-out-0",
-          MessageBuilder.withPayload(t).build());
+      sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
       numCorrectTrx++;
 
       numTotalTrx++;

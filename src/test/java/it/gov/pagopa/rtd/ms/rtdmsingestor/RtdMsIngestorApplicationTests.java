@@ -43,12 +43,12 @@ import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("test")
-@EmbeddedKafka(topics = { "rtd-platform-events",
-    "rtd-trx" }, partitions = 1, bootstrapServersProperty = "spring.embedded.kafka.brokers")
-@EnableAutoConfiguration(exclude = { TestSupportBinderAutoConfiguration.class,
-    EmbeddedMongoAutoConfiguration.class })
-@ContextConfiguration(classes = { EventHandler.class })
-@TestPropertySource(value = { "classpath:application-test.yml" }, inheritProperties = false)
+@EmbeddedKafka(topics = {"rtd-platform-events", "rtd-trx"}, partitions = 1,
+    bootstrapServersProperty = "spring.embedded.kafka.brokers")
+@EnableAutoConfiguration(
+    exclude = {TestSupportBinderAutoConfiguration.class, EmbeddedMongoAutoConfiguration.class})
+@ContextConfiguration(classes = {EventHandler.class})
+@TestPropertySource(value = {"classpath:application-test.yml"}, inheritProperties = false)
 @DirtiesContext
 @ExtendWith(OutputCaptureExtension.class)
 class RtdMsIngestorApplicationTests {
