@@ -34,18 +34,12 @@ public class DeadLetterQueueProcessor implements TransactionCheck {
         Optional<EPIItem> dbResponse = repository.findItemByHash(t.getHpan());
         if (dbResponse.isPresent()) {
           t.setHpan(dbResponse.get().getHashPan());
-          sb.send(
-              "rtdTrxProducer-out-0",
-              MessageBuilder.withPayload(t).build());
+          sb.send("rtdTrxProducer-out-0", MessageBuilder.withPayload(t).build());
           processedTrx++;
         }
       } catch (Exception ex) {
-        DeadLetterQueueEvent dlqException = new DeadLetterQueueEvent(
-            t,
-            ex.getMessage());
-        sb.send(
-            "rtdDlqTrxProducer-out-0",
-            MessageBuilder.withPayload(dlqException).build());
+        DeadLetterQueueEvent dlqException = new DeadLetterQueueEvent(t, ex.getMessage());
+        sb.send("rtdDlqTrxProducer-out-0", MessageBuilder.withPayload(dlqException).build());
         log.error("[DLQ] Error getting records : {}", ex.getMessage());
         exceptionTrx++;
       }

@@ -18,8 +18,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 /**
- * This class represents the object containing transaction fields as attributes.
- * The format is based
+ * This class represents the object containing transaction fields as attributes. The format is based
  * on the one specified at:
  * https://docs.pagopa.it/digital-transaction-register/v/digital-transaction-filter/acquirer-integration-with-pagopa-centrostella/integration/standard-pagopa-file-transactions
  */
@@ -27,7 +26,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(of = { "idTrxAcquirer", "acquirerCode", "trxDate" }, callSuper = false)
+@EqualsAndHashCode(of = {"idTrxAcquirer", "acquirerCode", "trxDate"}, callSuper = false)
 public class Transaction {
 
   @NotNull
@@ -67,17 +66,20 @@ public class Transaction {
   @NotNull
   @NotBlank
   @CsvBindByPosition(position = 5)
-  @Pattern(regexp = "[a-zA-Z0-9]{1,255}", message = "ID trx acquirer length must be 255 alphanumeric char at max")
+  @Pattern(regexp = "[a-zA-Z0-9]{1,255}",
+      message = "ID trx acquirer length must be 255 alphanumeric char at max")
   String idTrxAcquirer;
 
   @NotNull
   @NotBlank
   @CsvBindByPosition(position = 6)
-  @Pattern(regexp = "[a-zA-Z0-9]{1,255}", message = "ID trx issuer length must be 255 alphanumeric char at max")
+  @Pattern(regexp = "[a-zA-Z0-9]{1,255}",
+      message = "ID trx issuer length must be 255 alphanumeric char at max")
   String idTrxIssuer;
 
   @CsvBindByPosition(position = 7)
-  @Pattern(regexp = "[a-zA-Z0-9]{0,255}", message = "Correlation ID length must be 255 alphanumeric char at max")
+  @Pattern(regexp = "[a-zA-Z0-9]{0,255}",
+      message = "Correlation ID length must be 255 alphanumeric char at max")
   String correlationId;
 
   @NotNull
@@ -93,19 +95,22 @@ public class Transaction {
   @NotNull
   @NotBlank
   @CsvBindByPosition(position = 10)
-  @Pattern(regexp = "[a-zA-Z0-9]{1,255}", message = "Acquirer ID length must be 255 alphanumeric char at max")
+  @Pattern(regexp = "[a-zA-Z0-9]{1,255}",
+      message = "Acquirer ID length must be 255 alphanumeric char at max")
   String acquirerId;
 
   @NotNull
   @NotBlank
   @CsvBindByPosition(position = 11)
-  @Pattern(regexp = "[a-zA-Z0-9]{1,255}", message = "Merchant ID length must be 255 alphanumeric char at max")
+  @Pattern(regexp = "[a-zA-Z0-9]{1,255}",
+      message = "Merchant ID length must be 255 alphanumeric char at max")
   String merchantId;
 
   @NotNull
   @NotBlank
   @CsvBindByPosition(position = 12)
-  @Pattern(regexp = "[a-zA-Z0-9]{1,255}", message = "Terminal ID length must be 255 alphanumeric char at max")
+  @Pattern(regexp = "[a-zA-Z0-9]{1,255}",
+      message = "Terminal ID length must be 255 alphanumeric char at max")
   String terminalId;
 
   @NotNull
@@ -125,7 +130,8 @@ public class Transaction {
   String fiscalCode;
 
   @CsvBindByPosition(position = 16)
-  @Pattern(regexp = "[a-zA-Z0-9]{0,50}", message = "VAT code length must be 50 alphanumeric char at max")
+  @Pattern(regexp = "[a-zA-Z0-9]{0,50}",
+      message = "VAT code length must be 50 alphanumeric char at max")
   String vat;
 
   @NotNull
