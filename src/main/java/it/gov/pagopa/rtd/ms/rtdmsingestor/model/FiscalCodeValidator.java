@@ -22,7 +22,7 @@ public class FiscalCodeValidator implements ConstraintValidator<FiscalCodeConstr
     // mandatory field
     if (codiceFiscale == null || codiceFiscale.equals("")) {
       log.warn("Empty Fiscal Code");
-    }else {
+    } else {
       Response checkedCodFis = FiscalCode.validate(codiceFiscale);
 
       if (checkedCodFis.equals(INVALID_CHARACTERS)) {
