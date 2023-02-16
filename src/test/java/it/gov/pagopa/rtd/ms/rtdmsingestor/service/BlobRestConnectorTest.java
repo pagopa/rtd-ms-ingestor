@@ -262,6 +262,31 @@ class BlobRestConnectorTest {
   }
 
   @Test
+  void shouldNotFailOnEmptyFile() throws IOException {
+    final String transactions = "testEmptyFile.csv";
+
+    when(repository.findItemByHash(any())).thenReturn(Optional.of(EPIItem.builder()
+        .hashPan("b50245d5fee9fa11bead50e7d0afb6c269c77f59474a87442f867ba9643021fc").build()));
+
+
+    File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
+    decryptedFile.getParentFile().mkdirs();
+    decryptedFile.createNewFile();
+    FileOutputStream blobDst = new FileOutputStream(Path.of(tmpDirectory, blobName).toString());
+    Files.copy(Path.of(resources, transactions), blobDst);
+
+    fakeBlob.setTargetDir(tmpDirectory);
+    fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
+
+    blobRestConnector.process(fakeBlob);
+
+    await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
+      assertEquals(0, blobRestConnector.getNumCorrectTrx());
+    });
+  }
+
+
+  @Test
   void shouldDelete(CapturedOutput output) throws IOException {
 
     CloseableHttpResponse mockedResponse = mock(CloseableHttpResponse.class);

@@ -22,18 +22,18 @@ public class FiscalCodeValidator implements ConstraintValidator<FiscalCodeConstr
     // mandatory field
     if (codiceFiscale == null || codiceFiscale.equals("")) {
       log.warn("Empty Fiscal Code");
-    }
+    } else {
+      Response checkedCodFis = FiscalCode.validate(codiceFiscale);
 
-    Response checkedCodFis = FiscalCode.validate(codiceFiscale);
-
-    if (checkedCodFis.equals(INVALID_CHARACTERS)) {
-      log.error("Invalid character for Fiscal Code " + codiceFiscale);
-    }
-    if (checkedCodFis.equals(INVALID_LENGTH)) {
-      log.error("Invalid length for Fiscal Code " + codiceFiscale);
-    }
-    if (checkedCodFis.equals(INVALID_CHECKSUM)) {
-      log.error("Invalid checksum for Fiscal Code " + codiceFiscale);
+      if (checkedCodFis.equals(INVALID_CHARACTERS)) {
+        log.error("Invalid character for Fiscal Code " + codiceFiscale);
+      }
+      if (checkedCodFis.equals(INVALID_LENGTH)) {
+        log.error("Invalid length for Fiscal Code " + codiceFiscale);
+      }
+      if (checkedCodFis.equals(INVALID_CHECKSUM)) {
+        log.error("Invalid checksum for Fiscal Code " + codiceFiscale);
+      }
     }
     return true;
   }
