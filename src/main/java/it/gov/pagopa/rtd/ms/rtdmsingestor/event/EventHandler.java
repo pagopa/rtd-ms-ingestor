@@ -44,7 +44,6 @@ public class EventHandler {
   @Bean
   public Consumer<Message<DeadLetterQueueEvent>> rtdDlqTrxConsumer(
       DeadLetterQueueProcessor deadLetterQueueProcessor) {
-    return message -> deadLetterQueueProcessor
-        .transactionCheckProcess(Stream.of(message.getPayload().getTransaction()));
+    return message -> message.toString();
   }
 }
