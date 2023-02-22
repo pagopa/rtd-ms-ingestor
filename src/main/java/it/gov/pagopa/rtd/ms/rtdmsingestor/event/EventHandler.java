@@ -41,9 +41,9 @@ public class EventHandler {
         .filter(b -> Status.LOCALLY_DELETED.equals(b.getStatus())).collect(Collectors.toList());
   }
 
-  @Bean
-  public Consumer<Message<DeadLetterQueueEvent>> rtdDlqTrxConsumer(
-      DeadLetterQueueProcessor deadLetterQueueProcessor) {
-    return message -> message.toString();
-  }
+  //@Bean
+  //public Consumer<Message<DeadLetterQueueEvent>> rtdDlqTrxConsumer(
+  //    DeadLetterQueueProcessor deadLetterQueueProcessor) {
+  //  return message -> message.toString();
+  //}
 }
