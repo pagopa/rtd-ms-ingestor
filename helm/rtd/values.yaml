@@ -1,0 +1,61 @@
+microservice-chart:
+  namespace: "rtd"
+  nameOverride: ""
+  fullnameOverride: ""
+
+  livenessProbe:
+    httpGet:
+      path: /actuator/health/liveness
+      port: 8080
+    initialDelaySeconds: 60
+    failureThreshold: 6
+    periodSeconds: 10
+
+  readinessProbe:
+    httpGet:
+      path: /actuator/health/readiness
+      port: 8080
+    initialDelaySeconds: 60
+    failureThreshold: 6
+    periodSeconds: 10
+
+  podAnnotations: {}
+
+  deployment:
+    create: true
+
+  service:
+    create: false
+
+  ingress:
+    create: false
+
+  serviceAccount:
+    create: false
+    annotations: {}
+    name: ""
+
+  podSecurityContext:
+    seccompProfile:
+      type: RuntimeDefault
+
+  securityContext:
+    allowPrivilegeEscalation: false
+
+  envSecret:
+    APPLICATIONINSIGHTS_CONNECTION_STRING: appinsights-instrumentation-key
+    KAFKA_SASL_JAAS_CONFIG_CONSUMER_BLOB_STORAGE_EVENTS: evh-rtd-platform-events-rtd-platform-events-sub-key
+    KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_TRX: evh-rtd-trx-rtd-trx-producer-key
+    INTERNAL_SERVICES_API_KEY: rtd-internal-api-product-subscription-key
+
+  envConfigMapExternals:
+    rtdingestor:
+      JAVA_TOOL_OPTIONS: JAVA_TOOL_OPTIONS
+      CSV_INGESTOR_HOST: CSV_INGESTOR_HOST
+
+    rtd-blob-storage-events:
+      KAFKA_TOPIC_BLOB_STORAGE_EVENTS: KAFKA_TOPIC_BLOB_STORAGE_EVENTS
+      KAFKA_BROKER: KAFKA_BROKER
+
+    rtd-trx-producer:
+      KAFKA_TOPIC_RTD_TRX: KAFKA_TOPIC_RTD_TRX
