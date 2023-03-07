@@ -25,15 +25,10 @@ microservice-chart:
     create: true
 
   service:
-    create: true
-    type: ClusterIP
-    ports:
-      - 8080
+    create: false
 
   ingress:
-    create: true
-    path: /rtdmsingestor/(.*)
-    servicePort: 8080
+    create: false
 
   serviceAccount:
     create: false
