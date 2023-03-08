@@ -12,6 +12,10 @@ import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
+
+/**
+ * This class contains handling methods for dead letter queue
+ */
 @Slf4j
 @Service
 public class DeadLetterQueueProcessor implements TransactionCheck {
