@@ -42,6 +42,9 @@ microservice-chart:
   securityContext:
     allowPrivilegeEscalation: false
 
+  envConfig:
+    APPLICATIONINSIGHTS_PREVIEW_PROFILER_ENABLED: "false"
+
   envSecret:
     APPLICATIONINSIGHTS_CONNECTION_STRING: appinsights-instrumentation-key
     KAFKA_SASL_JAAS_CONFIG_CONSUMER_BLOB_STORAGE_EVENTS: evh-rtd-platform-events-rtd-platform-events-sub-key
