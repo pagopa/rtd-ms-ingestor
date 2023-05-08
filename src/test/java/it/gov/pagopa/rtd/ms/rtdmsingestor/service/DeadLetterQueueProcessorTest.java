@@ -9,8 +9,8 @@ import com.mongodb.MongoException;
 import com.opencsv.bean.BeanVerifier;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.event.EventHandler;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.repositories.IngestorDAO;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
@@ -27,28 +27,32 @@ import org.apache.commons.io.FileUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
-import org.springframework.cloud.stream.test.binder.TestSupportBinderAutoConfiguration;
-import org.springframework.kafka.test.context.EmbeddedKafka;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest
 @ActiveProfiles("test")
-@EmbeddedKafka(topics = {"rtd-platform-events", "rtd-dlq-trx"}, partitions = 1,
-    bootstrapServersProperty = "spring.embedded.kafka.brokers")
-@EnableAutoConfiguration(
-    exclude = {TestSupportBinderAutoConfiguration.class, EmbeddedMongoAutoConfiguration.class,})
-@TestPropertySource(value = {"classpath:application-test.yml"}, inheritProperties = false)
-@DirtiesContext
-@ContextConfiguration(classes = {EventHandler.class})
+@ExtendWith(SpringExtension.class)
+@Import({TestChannelBinderConfiguration.class})
+@EnableAutoConfiguration(exclude = {
+    MongoAutoConfiguration.class, MongoDataAutoConfiguration.class})
+@TestPropertySource(value = {"classpath:application-test.yml"}, inheritProperties = false
+//    , properties = {
+//    "spring.cloud.function.definition=rtdDlqTrxConsumer"
+//}
+)
 class DeadLetterQueueProcessorTest {
 
   @Value("${ingestor.resources.base.path}")
@@ -56,9 +60,6 @@ class DeadLetterQueueProcessorTest {
 
   @Value("${ingestor.resources.base.path}/tmp")
   String tmpDirectory;
-
-  @SpyBean
-  private BlobApplicationAware blobApplicationAware;
 
   @SpyBean
   private BlobRestConnector blobRestConnector;
@@ -72,10 +73,13 @@ class DeadLetterQueueProcessorTest {
   @MockBean
   IngestorRepository repository;
 
+  @MockBean
+  IngestorDAO dao;
+
   private final String container = "rtd-transactions-decrypted";
   private final String blobName = "CSTAR.99910.TRNLOG.20220228.103107.001.csv.pgp.0.decrypted";
 
-  private BlobApplicationAware fakeBlob = new BlobApplicationAware(
+  private final BlobApplicationAware fakeBlob = new BlobApplicationAware(
       "/blobServices/default/containers/" + container + "/blobs/" + blobName);
 
   // This counter represents the number of fiscal codes that are malformed in the
@@ -118,15 +122,12 @@ class DeadLetterQueueProcessorTest {
     CsvToBean<Transaction> csvToBean = builder.build();
     Stream<Transaction> readTransaction = csvToBean.stream();
 
-    readTransaction.map(e -> {
-      return Stream.of(e);
-    }).forEach(e -> {
-      deadLetterQueueProcessor.transactionCheckProcess(e);
-    });
+    readTransaction.map(Stream::of)
+        .forEach(e -> deadLetterQueueProcessor.transactionCheckProcess(e));
 
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
       assertEquals(0, deadLetterQueueProcessor.getProcessedTrx());
-      assertEquals(1, deadLetterQueueProcessor.getExcepitonTrx());
+      assertEquals(1, deadLetterQueueProcessor.getExceptionTrx());
     });
   }
 
@@ -159,15 +160,12 @@ class DeadLetterQueueProcessorTest {
     CsvToBean<Transaction> csvToBean = builder.build();
     Stream<Transaction> readTransaction = csvToBean.stream();
 
-    readTransaction.map(e -> {
-      return Stream.of(e);
-    }).forEach(e -> {
-      deadLetterQueueProcessor.transactionCheckProcess(e);
-    });
+    readTransaction.map(Stream::of)
+        .forEach(e -> deadLetterQueueProcessor.transactionCheckProcess(e));
 
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
       assertEquals(1, deadLetterQueueProcessor.getProcessedTrx());
-      assertEquals(0, deadLetterQueueProcessor.getExcepitonTrx());
+      assertEquals(0, deadLetterQueueProcessor.getExceptionTrx());
     });
   }
 }
