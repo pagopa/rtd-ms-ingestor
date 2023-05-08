@@ -28,7 +28,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
@@ -48,11 +47,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @Import({TestChannelBinderConfiguration.class})
 @EnableAutoConfiguration(exclude = {
     MongoAutoConfiguration.class, MongoDataAutoConfiguration.class})
-@TestPropertySource(value = {"classpath:application-test.yml"}, inheritProperties = false
-//    , properties = {
-//    "spring.cloud.function.definition=rtdDlqTrxConsumer"
-//}
-)
+@TestPropertySource(value = {"classpath:application-test.yml"}, inheritProperties = false)
 class DeadLetterQueueProcessorTest {
 
   @Value("${ingestor.resources.base.path}")
