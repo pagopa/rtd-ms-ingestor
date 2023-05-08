@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -29,7 +30,6 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicHeader;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.messaging.support.MessageBuilder;
@@ -43,6 +43,7 @@ import org.springframework.validation.annotation.Validated;
 @Service
 @Slf4j
 @Validated
+@RequiredArgsConstructor
 public class BlobRestConnector implements TransactionCheck {
 
   @Value("${ingestor.api.baseurl}")
@@ -54,14 +55,11 @@ public class BlobRestConnector implements TransactionCheck {
   @Value("${ingestor.blobclient.basepath}")
   private String blobBasePath;
 
-  @Autowired
-  CloseableHttpClient httpClient;
+  private final CloseableHttpClient httpClient;
 
-  @Autowired
-  StreamBridge sb;
+  private final StreamBridge sb;
 
-  @Autowired
-  IngestorRepository repository;
+  private final IngestorRepository repository;
 
   private int numNotEnrolledCards = 0;
   private int numCorrectTrx = 0;
