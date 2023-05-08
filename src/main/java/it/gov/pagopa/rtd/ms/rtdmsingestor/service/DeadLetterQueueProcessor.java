@@ -54,7 +54,7 @@ public class DeadLetterQueueProcessor implements TransactionCheck {
     return processedTrx;
   }
 
-  protected int getExcepitonTrx() {
+  protected int getExceptionTrx() {
     return exceptionTrx;
   }
 }
