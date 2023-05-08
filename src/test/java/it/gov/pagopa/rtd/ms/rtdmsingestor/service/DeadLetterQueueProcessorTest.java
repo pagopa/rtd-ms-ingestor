@@ -24,7 +24,6 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -63,11 +62,7 @@ class DeadLetterQueueProcessorTest {
   private DeadLetterQueueProcessor deadLetterQueueProcessor;
 
   @MockBean
-  CloseableHttpClient client;
-
-  @MockBean
   IngestorRepository repository;
-
   @MockBean
   IngestorDAO dao;
 
@@ -76,13 +71,6 @@ class DeadLetterQueueProcessorTest {
 
   private final BlobApplicationAware fakeBlob = new BlobApplicationAware(
       "/blobServices/default/containers/" + container + "/blobs/" + blobName);
-
-  // This counter represents the number of fiscal codes that are malformed in the
-  // test file.
-  // The corresponding transactions are not discarded, instead an error is logged
-  // and the
-  // transaction is processed anyway.
-  int malformedBuyProcessedFiscalCodes = 3;
 
   @AfterEach
   void cleanTmpFiles() throws IOException {
