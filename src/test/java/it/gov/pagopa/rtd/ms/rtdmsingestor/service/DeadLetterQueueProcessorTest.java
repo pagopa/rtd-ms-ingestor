@@ -1,6 +1,5 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.service;
 
-import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -20,7 +19,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
@@ -35,6 +33,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
@@ -65,6 +64,8 @@ class DeadLetterQueueProcessorTest {
   IngestorRepository repository;
   @MockBean
   IngestorDAO dao;
+  @MockBean
+  StreamBridge streamBridge;
 
   private final String container = "rtd-transactions-decrypted";
   private final String blobName = "CSTAR.99910.TRNLOG.20220228.103107.001.csv.pgp.0.decrypted";
@@ -105,13 +106,10 @@ class DeadLetterQueueProcessorTest {
     CsvToBean<Transaction> csvToBean = builder.build();
     Stream<Transaction> readTransaction = csvToBean.stream();
 
-    readTransaction.map(Stream::of)
-        .forEach(e -> deadLetterQueueProcessor.transactionCheckProcess(e));
+    deadLetterQueueProcessor.transactionCheckProcess(readTransaction);
 
-    await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-      assertEquals(0, deadLetterQueueProcessor.getProcessedTrx());
-      assertEquals(1, deadLetterQueueProcessor.getExceptionTrx());
-    });
+    assertEquals(0, deadLetterQueueProcessor.getProcessedTrx());
+    assertEquals(1, deadLetterQueueProcessor.getExceptionTrx());
   }
 
   @Test
@@ -143,12 +141,9 @@ class DeadLetterQueueProcessorTest {
     CsvToBean<Transaction> csvToBean = builder.build();
     Stream<Transaction> readTransaction = csvToBean.stream();
 
-    readTransaction.map(Stream::of)
-        .forEach(e -> deadLetterQueueProcessor.transactionCheckProcess(e));
+    deadLetterQueueProcessor.transactionCheckProcess(readTransaction);
 
-    await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-      assertEquals(1, deadLetterQueueProcessor.getProcessedTrx());
-      assertEquals(0, deadLetterQueueProcessor.getExceptionTrx());
-    });
+    assertEquals(1, deadLetterQueueProcessor.getProcessedTrx());
+    assertEquals(0, deadLetterQueueProcessor.getExceptionTrx());
   }
 }

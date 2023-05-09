@@ -22,10 +22,10 @@ spring:
     activate:
       on-profile: test
   cloud:
+    function:
+      definition: blobStorageConsumer;rtdDlqTrxConsumer
     stream:
       source: rtdTrxProducer
-      function:
-        definition: blobStorageConsumer;rtdDlqTrxConsumer
       bindings:
         blobStorageConsumer-in-0: # name must match [handler name]-in-0
           destination: rtd-platform-events
