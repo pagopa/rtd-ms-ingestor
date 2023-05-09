@@ -1,11 +1,11 @@
-FROM maven:3.8.4-jdk-11-slim as buildtime
+FROM maven:3.9.0-amazoncorretto-17 as buildtime
 
 WORKDIR /build
 COPY . .
 
 RUN mvn clean package
 
-FROM amazoncorretto:11 as runtime
+FROM amazoncorretto:17.0.7-al2023-headless as runtime
 
 VOLUME /tmp
 WORKDIR /app
