@@ -5,8 +5,8 @@ import static it.gov.pagopa.rtd.ms.rtdmsingestor.model.FiscalCode.Response.INVAL
 import static it.gov.pagopa.rtd.ms.rtdmsingestor.model.FiscalCode.Response.INVALID_LENGTH;
 
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.FiscalCode.Response;
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 import lombok.extern.slf4j.Slf4j;
 
 /**

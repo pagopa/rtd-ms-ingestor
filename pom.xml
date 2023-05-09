@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>2.7.7</version>
+    <version>3.0.6</version>
     <relativePath/>
     <!-- lookup parent from repository -->
   </parent>
@@ -17,8 +17,10 @@
   <description>Microservice useful to ingest files of transactions on RTD queue</description>
 
   <properties>
-    <java.version>11</java.version>
-    <spring-cloud.version>2021.0.5</spring-cloud.version>
+    <java.version>17</java.version>
+    <spring-cloud.version>2022.0.2</spring-cloud.version>
+    <snakeyaml.version>2.0</snakeyaml.version>
+    <testcontainers.version>1.18.0</testcontainers.version>
   </properties>
 
   <dependencies>
@@ -26,11 +28,6 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework.kafka</groupId>
-      <artifactId>spring-kafka</artifactId>
     </dependency>
 
     <dependency>
@@ -44,11 +41,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
       <version>2.11.0</version>
@@ -57,24 +49,16 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
-      <version>4.5.14</version>
     </dependency>
 
     <dependency>
       <groupId>com.fasterxml.jackson.datatype</groupId>
       <artifactId>jackson-datatype-jsr310</artifactId>
-      <version>2.14.0</version>
     </dependency>
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework.kafka</groupId>
-      <artifactId>spring-kafka-test</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -87,16 +71,8 @@
 
     <dependency>
       <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-stream-test-support</artifactId>
+      <artifactId>spring-cloud-stream-test-binder</artifactId>
       <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-stream</artifactId>
-      <scope>test</scope>
-      <classifier>test-binder</classifier>
-      <type>test-jar</type>
     </dependency>
 
     <dependency>
@@ -117,20 +93,9 @@
     </dependency>
 
     <dependency>
-        <groupId>com.fasterxml.jackson.datatype</groupId>
-        <artifactId>jackson-datatype-jsr310</artifactId>
-    </dependency>
-
-    <dependency>
-        <groupId>javax.validation</groupId>
-        <artifactId>validation-api</artifactId>
-        <version>2.0.1.Final</version>
-    </dependency>
-
-    <dependency>
         <groupId>org.modelmapper</groupId>
         <artifactId>modelmapper</artifactId>
-        <version>3.1.0</version>
+        <version>3.1.1</version>
     </dependency>
 
     <dependency>
@@ -142,21 +107,38 @@
     <dependency>
         <groupId>io.cloudevents</groupId>
         <artifactId>cloudevents-kafka</artifactId>
-        <version>2.4.0</version>
-    </dependency>
-
-    <!-- https://mvnrepository.com/artifact/de.flapdoodle.embed/de.flapdoodle.embed.mongo -->
-    <dependency>
-        <groupId>de.flapdoodle.embed</groupId>
-        <artifactId>de.flapdoodle.embed.mongo</artifactId>
-        <version>3.4.9</version>
-        <scope>test</scope>
+        <version>2.4.2</version>
     </dependency>
 
      <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <scope>test</scope>
+    </dependency>
+
+    <!-- testcontainers -->
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>mongodb</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-inline</artifactId>
+      <scope>test</scope>
     </dependency>
 
   </dependencies>
@@ -170,11 +152,12 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-       <!-- fix snakeyml CVE -->
       <dependency>
-          <groupId>org.yaml</groupId>
-          <artifactId>snakeyaml</artifactId>
-          <version>1.33</version>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>testcontainers-bom</artifactId>
+        <version>${testcontainers.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
