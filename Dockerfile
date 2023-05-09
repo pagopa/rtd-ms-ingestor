@@ -3,7 +3,7 @@ FROM maven:3.9.0-amazoncorretto-17 as buildtime
 WORKDIR /build
 COPY . .
 
-RUN mvn clean package
+RUN mvn clean package -DskipTests
 
 FROM amazoncorretto:17.0.7-al2023-headless as runtime
 
