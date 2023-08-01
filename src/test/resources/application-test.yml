@@ -3,6 +3,7 @@ logging:
     root: INFO
 
 ingestor:
+  anonymizePaymentInstrument: true
   resources:
     base:
       path: src/test/resources

@@ -7,7 +7,6 @@ import com.opencsv.exceptions.CsvException;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.model.DeadLetterQueueEvent;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
 import java.io.FileNotFoundException;
@@ -218,8 +217,8 @@ public class BlobRestConnector implements TransactionCheck {
         }
         numTotalTrx++;
       } catch (Exception ex) {
-        DeadLetterQueueEvent dlqException = new DeadLetterQueueEvent(t, ex.getMessage());
-        sb.send("rtdDlqTrxProducer-out-0", MessageBuilder.withPayload(dlqException).build());
+        // DeadLetterQueueEvent dlqException = new DeadLetterQueueEvent(t, ex.getMessage());
+        // sb.send("rtdDlqTrxProducer-out-0", MessageBuilder.withPayload(dlqException).build());
         log.error("Error getting records : {}", ex.getMessage());
       }
     });
