@@ -24,7 +24,7 @@ public class RepositoryConfiguration {
   public IngestorRepository ingestorRepository(
       IngestorDAO ingestorDAO
   ) {
-    if (anonymizePaymentInstrument) {
+    if (anonymizePaymentInstrument.equals(Boolean.TRUE)) {
       return new IngestorRepositoryImpl(ingestorDAO);
     } else {
       log.warn("Anonymize payment instrument disabled");
