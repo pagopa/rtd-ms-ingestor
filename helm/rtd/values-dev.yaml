@@ -19,7 +19,7 @@ microservice-chart:
     aks-api-url: cstar-d-weu-dev01-aks-apiserver-url
 
   envConfig:
-    ANONYMIZE_PAYMENT_INSTRUMENT: "true"
+    ANONYMIZE_PAYMENT_INSTRUMENT: "false"
   #  autoscaling:
   #    enable: false
   #    minReplica: 1

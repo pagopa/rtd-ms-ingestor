@@ -72,4 +72,4 @@ microservice-chart:
       KAFKA_BROKER: KAFKA_BROKER
 
     rtd-trx-producer:
-      KAFKA_TOPIC_RTD_TRX: KAFKA_TOPIC_RTD_TRX
+      KAFKA_BROKER_RTD: KAFKA_BROKER_RTD
