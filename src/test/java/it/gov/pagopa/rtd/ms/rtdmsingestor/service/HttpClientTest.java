@@ -30,5 +30,4 @@ class HttpClientTest {
     assertEquals(200, response.getStatusLine().getStatusCode());
   }
 
-
 }

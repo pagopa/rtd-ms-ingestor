@@ -5,8 +5,8 @@ import static it.gov.pagopa.rtd.ms.rtdmsingestor.model.FiscalCode.Response.INVAL
 import static it.gov.pagopa.rtd.ms.rtdmsingestor.model.FiscalCode.Response.INVALID_LENGTH;
 
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.FiscalCode.Response;
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -14,30 +14,27 @@ import lombok.extern.slf4j.Slf4j;
  * italian fiscal code.
  */
 @Slf4j
-public class FiscalCodeValidator implements
-    ConstraintValidator<FiscalCodeConstraint, String> {
+public class FiscalCodeValidator implements ConstraintValidator<FiscalCodeConstraint, String> {
 
   @Override
-  public boolean isValid(String codiceFiscale,
-      ConstraintValidatorContext context) {
-
-    //If codiceFiscale is null, then the validation is passed because it is not a mandatory field
+  public boolean isValid(String codiceFiscale, ConstraintValidatorContext context) {
+    // If codiceFiscale is null, then the validation is passed because it is not a
+    // mandatory field
     if (codiceFiscale == null || codiceFiscale.equals("")) {
       log.warn("Empty Fiscal Code");
-    }
+    } else {
+      Response checkedCodFis = FiscalCode.validate(codiceFiscale);
 
-    Response checkedCodFis = FiscalCode.validate(codiceFiscale);
-
-    if (checkedCodFis.equals(INVALID_CHARACTERS)) {
-      log.error("Invalid character for Fiscal Code " + codiceFiscale);
-    }
-    if (checkedCodFis.equals(INVALID_LENGTH)) {
-      log.error("Invalid length for Fiscal Code " + codiceFiscale);
-    }
-    if (checkedCodFis.equals(INVALID_CHECKSUM)) {
-      log.error("Invalid checksum for Fiscal Code " + codiceFiscale);
+      if (checkedCodFis.equals(INVALID_CHARACTERS)) {
+        log.error("Invalid character for Fiscal Code " + codiceFiscale);
+      }
+      if (checkedCodFis.equals(INVALID_LENGTH)) {
+        log.error("Invalid length for Fiscal Code " + codiceFiscale);
+      }
+      if (checkedCodFis.equals(INVALID_CHECKSUM)) {
+        log.error("Invalid checksum for Fiscal Code " + codiceFiscale);
+      }
     }
     return true;
   }
-
 }

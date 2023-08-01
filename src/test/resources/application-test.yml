@@ -3,6 +3,7 @@ logging:
     root: INFO
 
 ingestor:
+  anonymizePaymentInstrument: true
   resources:
     base:
       path: src/test/resources
@@ -22,10 +23,10 @@ spring:
     activate:
       on-profile: test
   cloud:
+    function:
+      definition: blobStorageConsumer;rtdDlqTrxConsumer
     stream:
       source: rtdTrxProducer
-      function:
-        definition: blobStorageConsumer
       bindings:
         blobStorageConsumer-in-0: # name must match [handler name]-in-0
           destination: rtd-platform-events
@@ -39,6 +40,15 @@ spring:
           group: rtd-trx
           destination: rtd-trx
           binder: rtd-trx
+        rtdDlqTrxConsumer-in-0:
+          destination: rtd-dlq-trx
+          group: rtd-ingestor-dlq-consumer-group
+          content-type: application/json
+          binder: rtd-dlq-trx-consumer
+        rtdDlqTrxProducer-out-0:
+          destination: rtd-dlq-trx
+          content-type: application/json
+          binder: rtd-dlq-trx-producer
       binders:
         rtd-trx:
           type: kafka
@@ -70,7 +80,41 @@ spring:
                           deserializer: org.apache.kafka.common.serialization.StringDeserializer
                         value:
                           deserializer: org.apache.kafka.common.serialization.StringDeserializer
-
+        rtd-dlq-trx-producer:
+          type: kafka
+          environment:
+            spring:
+              cloud:
+                stream:
+                  kafka:
+                    binder:
+                      auto-create-topics: false
+                      brokers: ${spring.embedded.kafka.brokers}
+                      consumerProperties:
+                        key:
+                          deserializer: org.apache.kafka.common.serialization.StringDeserializer
+                        value:
+                          deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        rtd-dlq-trx-consumer:
+          type: kafka
+          environment:
+            spring:
+              cloud:
+                stream:
+                  kafka:
+                    binder:
+                      auto-create-topics: false
+                      brokers: ${spring.embedded.kafka.brokers}
+                      consumerProperties:
+                        key:
+                          deserializer: org.apache.kafka.common.serialization.StringDeserializer
+                        value:
+                          deserializer: org.apache.kafka.common.serialization.StringDeserializer
+---
+spring:
+  config:
+    activate:
+      on-profile: mongo-integration-test
 # ---
 # spring:
 #   config:
@@ -178,4 +222,3 @@ spring:
 #               # partition:
 #               #   assignment:
 #               #     strategy: org.apache.kafka.clients.consumer.RangeAssignor
-

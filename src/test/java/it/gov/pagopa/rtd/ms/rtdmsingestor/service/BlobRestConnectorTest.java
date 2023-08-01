@@ -14,8 +14,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.repositories.IngestorDAO;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -23,6 +26,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Optional;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.HttpVersion;
@@ -36,31 +40,32 @@ import org.apache.http.message.BasicStatusLine;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentMatchers;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
-import org.springframework.cloud.stream.function.StreamBridge;
-import org.springframework.cloud.stream.test.binder.TestSupportBinderAutoConfiguration;
-import org.springframework.kafka.test.context.EmbeddedKafka;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
-
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("test")
-@EmbeddedKafka(topics = {"rtd-platform-events"}, partitions = 1,
-    bootstrapServersProperty = "spring.embedded.kafka.brokers")
-@EnableAutoConfiguration(exclude = {TestSupportBinderAutoConfiguration.class})
+@EnableAutoConfiguration(exclude = {
+    MongoAutoConfiguration.class, MongoDataAutoConfiguration.class})
+@Import(TestChannelBinderConfiguration.class)
 @TestPropertySource(value = {"classpath:application-test.yml"}, inheritProperties = false)
-@DirtiesContext
 @ExtendWith(OutputCaptureExtension.class)
+@ExtendWith(SpringExtension.class)
 class BlobRestConnectorTest {
 
   @Value("${ingestor.resources.base.path}")
@@ -69,50 +74,44 @@ class BlobRestConnectorTest {
   @Value("${ingestor.resources.base.path}/tmp")
   String tmpDirectory;
 
-  @Autowired
-  private StreamBridge stream;
-
-  @SpyBean
-  private BlobApplicationAware blobApplicationAware;
-
   @SpyBean
   private BlobRestConnector blobRestConnector;
 
   @MockBean
   CloseableHttpClient client;
+  @MockBean
+  IngestorRepository repository;
+  @MockBean
+  IngestorDAO dao;
 
   private final String container = "rtd-transactions-decrypted";
   private final String blobName = "CSTAR.99910.TRNLOG.20220228.103107.001.csv.pgp.0.decrypted";
 
-  private BlobApplicationAware fakeBlob = new BlobApplicationAware(
+  private final BlobApplicationAware fakeBlob = new BlobApplicationAware(
       "/blobServices/default/containers/" + container + "/blobs/" + blobName);
-
-  //This counter represents the number of fiscal codes that are malformed in the test file.
-  // The corresponding transactions are not discarded, instead an error is logged and the
-  // transaction is processed anyway.
-  int malformedBuyProcessedFiscalCodes = 3;
 
   @AfterEach
   void cleanTmpFiles() throws IOException {
     FileUtils.deleteDirectory(Path.of(tmpDirectory).toFile());
   }
 
-
   @Test
   void shouldDownload(CapturedOutput output) throws IOException {
-    // Improvement idea: mock all the stuff needed in order to allow the FileDownloadResponseHandler
-    // class to create a file in a temporary directory and test the content of the downloaded file
+    // Improvement idea: mock all the stuff needed in order to allow the
+    // FileDownloadResponseHandler
+    // class to create a file in a temporary directory and test the content of the
+    // downloaded file
     // for an expected content.
 
-    //Create the mocked output stream to simulate the blob get
+    // Create the mocked output stream to simulate the blob get
     File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
     decryptedFile.getParentFile().mkdirs();
     decryptedFile.createNewFile();
     fakeBlob.setTargetDir(tmpDirectory);
     OutputStream mockedOutputStream = mock(OutputStream.class);
 
-    doReturn(mockedOutputStream).when(client)
-        .execute(any(HttpGet.class), any(BlobRestConnector.FileDownloadResponseHandler.class));
+    doReturn(mockedOutputStream).when(client).execute(any(HttpGet.class),
+        any(BlobRestConnector.FileDownloadResponseHandler.class));
 
     BlobApplicationAware blobOut = blobRestConnector.get(fakeBlob);
 
@@ -122,11 +121,10 @@ class BlobRestConnectorTest {
     assertThat(output.getOut(), not(containsString("Cannot GET blob ")));
   }
 
-
   @Test
   void shouldFailDownload(CapturedOutput output) throws IOException {
-    doThrow(IOException.class).when(client)
-        .execute(any(HttpGet.class), any(BlobRestConnector.FileDownloadResponseHandler.class));
+    doThrow(IOException.class).when(client).execute(any(HttpGet.class),
+        any(BlobRestConnector.FileDownloadResponseHandler.class));
 
     BlobApplicationAware blobOut = blobRestConnector.get(fakeBlob);
 
@@ -136,15 +134,18 @@ class BlobRestConnectorTest {
     assertThat(output.getOut(), containsString("Cannot GET blob "));
   }
 
-
   @Test
-  void shouldProcess(CapturedOutput output) throws IOException {
-    String transactions = "testTransactions.csv";
+  void shouldProcess() throws IOException {
+    final String transactions = "testTransactions.csv";
 
-    //Create fake file to process
+    when(repository.findItemByHash(any())).thenReturn(Optional.of(EPIItem.builder()
+        .hashPan("b50245d5fee9fa11bead50e7d0afb6c269c77f59474a87442f867ba9643021fc").build()));
+
+    // Create fake file to process
     File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
     decryptedFile.getParentFile().mkdirs();
     decryptedFile.createNewFile();
+
     FileOutputStream blobDst = new FileOutputStream(Path.of(tmpDirectory, blobName).toString());
     Files.copy(Path.of(resources, transactions), blobDst);
 
@@ -153,9 +154,9 @@ class BlobRestConnectorTest {
 
     blobRestConnector.process(fakeBlob);
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-      assertThat(output.getOut(), containsString("Extracting transactions from:"));
-      assertThat(output.getOut(),
-          containsString("Extraction result: extracted all 5 transactions from:"));
+      assertEquals(blobRestConnector.getNumTotalTrx(), blobRestConnector.getNumCorrectTrx());
+      assertEquals(5, blobRestConnector.getNumTotalTrx());
+      assertEquals(5, blobRestConnector.getNumCorrectTrx());
       assertEquals(Status.PROCESSED, fakeBlob.getStatus());
     });
   }
@@ -176,13 +177,16 @@ class BlobRestConnectorTest {
     });
   }
 
-  //This test uses a file with all malformed transaction
+  // This test uses a file with all malformed transaction
   // There is one malformed transaction for every field in the object Transaction.
   @Test
   void shouldNotProcessForMalformedFields(CapturedOutput output) throws IOException {
-    String transactions = "testMalformedTransactions.csv";
+    final String transactions = "testMalformedTransactions.csv";
 
-    //Create fake file to process
+    when(repository.findItemByHash(any())).thenReturn(Optional.of(EPIItem.builder()
+        .hashPan("c3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9").build()));
+
+    // Create fake file to process
     File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
     decryptedFile.getParentFile().mkdirs();
     decryptedFile.createNewFile();
@@ -194,10 +198,11 @@ class BlobRestConnectorTest {
 
     blobRestConnector.process(fakeBlob);
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-      assertThat(output.getOut(), containsString("Extracting transactions from:"));
-      assertThat(output.getOut(),
-          containsString("Extraction result: " + malformedBuyProcessedFiscalCodes
-              + " well formed transactions out of"));
+
+      assertEquals(3, blobRestConnector.getNumCorrectTrx());
+      assertEquals(0, blobRestConnector.getNumNotEnrolledCards());
+      assertEquals(53, blobRestConnector.getNumTotalTrx());
+
       assertThat(output.getOut(), containsString("Invalid character for Fiscal Code "));
       assertThat(output.getOut(), containsString("Invalid length for Fiscal Code "));
       assertThat(output.getOut(), containsString("Invalid checksum for Fiscal Code "));
@@ -205,16 +210,73 @@ class BlobRestConnectorTest {
     });
   }
 
+  // This test uses a file with all malformed transaction
+  // There is one malformed transaction for every field in the object Transaction.
+  @ParameterizedTest
+  @CsvSource({"testMalformedTransactionHash.csv,",
+      "testMalformedTransactionHash_2.csv,3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9",
+      "testMalformedTransactionHash_3.csv,ac3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9",
+      "testMalformedTransactionHash_4.csv,+3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9"})
+  void shouldNotProcessForMalformedEmptyHashPan(String fileName, String hashpan)
+      throws IOException {
+
+    final String transactions = fileName;
+
+    when(repository.findItemByHash(any()))
+        .thenReturn(Optional.of(EPIItem.builder().hashPan(hashpan).build()));
+
+    // Create fake file to process
+    File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
+    decryptedFile.getParentFile().mkdirs();
+    decryptedFile.createNewFile();
+    FileOutputStream blobDst = new FileOutputStream(Path.of(tmpDirectory, blobName).toString());
+    Files.copy(Path.of(resources, transactions), blobDst);
+
+    fakeBlob.setTargetDir(tmpDirectory);
+    fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
+
+    blobRestConnector.process(fakeBlob);
+    await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
+
+      assertEquals(0, blobRestConnector.getNumCorrectTrx());
+      assertEquals(1, blobRestConnector.getNumTotalTrx());
+      assertEquals(0, blobRestConnector.getNumNotEnrolledCards());
+      assertEquals(Status.PROCESSED, fakeBlob.getStatus());
+    });
+  }
+
+  @Test
+  void shouldNotFailOnEmptyFile() throws IOException {
+    final String transactions = "testEmptyFile.csv";
+
+    when(repository.findItemByHash(any())).thenReturn(Optional.of(EPIItem.builder()
+        .hashPan("b50245d5fee9fa11bead50e7d0afb6c269c77f59474a87442f867ba9643021fc").build()));
+
+    File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
+    decryptedFile.getParentFile().mkdirs();
+    decryptedFile.createNewFile();
+    FileOutputStream blobDst = new FileOutputStream(Path.of(tmpDirectory, blobName).toString());
+    Files.copy(Path.of(resources, transactions), blobDst);
+
+    fakeBlob.setTargetDir(tmpDirectory);
+    fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
+
+    blobRestConnector.process(fakeBlob);
+
+    await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
+      assertEquals(0, blobRestConnector.getNumCorrectTrx());
+    });
+  }
+
+
   @Test
   void shouldDelete(CapturedOutput output) throws IOException {
 
     CloseableHttpResponse mockedResponse = mock(CloseableHttpResponse.class);
-    when(mockedResponse.getStatusLine()).thenReturn(
-        new BasicStatusLine(HttpVersion.HTTP_1_1, HttpStatus.SC_ACCEPTED,
-            "Blob successfully deleted."));
+    when(mockedResponse.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1,
+        HttpStatus.SC_ACCEPTED, "Blob successfully deleted."));
 
-    doReturn(mockedResponse).when(client)
-        .execute(any(HttpDelete.class));
+    doReturn(mockedResponse).when(client).execute(any(HttpDelete.class));
 
     blobRestConnector.deleteRemote(fakeBlob);
 
@@ -227,8 +289,7 @@ class BlobRestConnectorTest {
   @Test
   void shouldFailDeleteExceptionOnHttpCall(CapturedOutput output) throws IOException {
 
-    doThrow(new IOException("Connection problem.")).when(client)
-        .execute(any(HttpDelete.class));
+    doThrow(new IOException("Connection problem.")).when(client).execute(any(HttpDelete.class));
 
     blobRestConnector.deleteRemote(fakeBlob);
 
@@ -241,12 +302,10 @@ class BlobRestConnectorTest {
   void shouldFailDeleteWrongStatusCode(CapturedOutput output) throws IOException {
 
     CloseableHttpResponse mockedResponse = mock(CloseableHttpResponse.class);
-    when(mockedResponse.getStatusLine()).thenReturn(
-        new BasicStatusLine(HttpVersion.HTTP_1_1, HttpStatus.SC_FORBIDDEN,
-            "Authentication failed."));
+    when(mockedResponse.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1,
+        HttpStatus.SC_FORBIDDEN, "Authentication failed."));
 
-    doReturn(mockedResponse).when(client)
-        .execute(any(HttpDelete.class));
+    doReturn(mockedResponse).when(client).execute(any(HttpDelete.class));
 
     blobRestConnector.deleteRemote(fakeBlob);
 

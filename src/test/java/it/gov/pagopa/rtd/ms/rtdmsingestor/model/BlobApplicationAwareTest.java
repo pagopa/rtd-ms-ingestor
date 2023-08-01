@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,12 +21,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@SpringBootTest
+@ExtendWith(SpringExtension.class)
 @ExtendWith(OutputCaptureExtension.class)
 class BlobApplicationAwareTest {
 
@@ -47,15 +46,12 @@ class BlobApplicationAwareTest {
 
   @BeforeEach
   void setUp() throws IOException {
-    //Create dummy files to be deleted
+    // Create dummy files to be deleted
     File blobFile = Path.of(tmpDirectory, blobNameRtd).toFile();
     blobFile.getParentFile().mkdirs();
     blobFile.createNewFile();
 
-    FileOutputStream blobStream = new FileOutputStream(
-        Path.of(tmpDirectory, blobNameRtd).toString());
-
-    //Instantiate a fake blob with empty content
+    // Instantiate a fake blob with empty content
     fakeBlob = new BlobApplicationAware(
         "/blobServices/default/containers/" + containerRtd + "/blobs/" + blobNameRtd);
     fakeBlob.setTargetDir(tmpDirectory);
@@ -65,7 +61,6 @@ class BlobApplicationAwareTest {
   void cleanTmpFiles() throws IOException {
     FileUtils.deleteDirectory(Path.of(tmpDirectory).toFile());
   }
-
 
   @Test
   void shouldMatchRegexRtd() {
@@ -82,7 +77,7 @@ class BlobApplicationAwareTest {
     assertThat(output.getOut(), containsString("Event not of interest:"));
   }
 
-  //Ingestor do not accept ADE files
+  // Ingestor do not accept ADE files
   @Test
   void shouldNotMatchRegexWrogName(CapturedOutput output) {
     String blobAde = "ADE.99910.TRNLOG.20220228.203107.001.csv.pgp";
@@ -92,10 +87,14 @@ class BlobApplicationAwareTest {
     assertThat(output.getOut(), containsString("Wrong name format:"));
   }
 
-  //The test parameters reproduce the following scenarios: blobUriShouldFailWrongService,
-  // blobUriShouldFailNoService, blobUriShouldFailShortABI, blobUriShouldFailLongABI,
-  // blobUriShouldFailNoABI, blobUriShouldFailWrongFiletype, blobUriShouldFailNoFiletype,
-  // blobUriShouldFailWrongDate, blobUriShouldFailNoDate, blobUriShouldFailWrongTime,
+  // The test parameters reproduce the following scenarios:
+  // blobUriShouldFailWrongService,
+  // blobUriShouldFailNoService, blobUriShouldFailShortABI,
+  // blobUriShouldFailLongABI,
+  // blobUriShouldFailNoABI, blobUriShouldFailWrongFiletype,
+  // blobUriShouldFailNoFiletype,
+  // blobUriShouldFailWrongDate, blobUriShouldFailNoDate,
+  // blobUriShouldFailWrongTime,
   // blobUriShouldFailNoTime, blobUriShouldFailWrongProgressive,
   // blobUriShouldFailNoProgressive
   @ParameterizedTest
@@ -105,9 +104,9 @@ class BlobApplicationAwareTest {
       "CSTAR..TRNLOG.20220228.203107.001.csv.pgp", "CSTAR.99910.TRNLO.20220228.203107.001.csv.pgp",
       "CSTAR.99910..20220228.203107.001.csv.pgp", "CSTAR.99910.TRNLOG.20220230.103107.001.csv.pgp",
       "CSTAR.99910.TRNLOG..103107.001.csv.pgp", "CSTAR.99910.TRNLOG.20220228.243107.001.csv.pgp",
-      "CSTAR.99910.TRNLOG.20220228..001.csv.pgp","CSTAR.99910.TRNLOG...001.csv.pgp",
-      "CSTAR.99910.TRNLOG.20220228.103107.1.csv.pgp","","CSTAR","CSTAR.99910",
-      "CSTAR.99910.TRNLOG","CSTAR.99910.TRNLOG.20220228","CSTAR.99910.TRNLOG.20220228.103107",
+      "CSTAR.99910.TRNLOG.20220228..001.csv.pgp", "CSTAR.99910.TRNLOG...001.csv.pgp",
+      "CSTAR.99910.TRNLOG.20220228.103107.1.csv.pgp", "", "CSTAR", "CSTAR.99910",
+      "CSTAR.99910.TRNLOG", "CSTAR.99910.TRNLOG.20220228", "CSTAR.99910.TRNLOG.20220228.103107",
       "CSTAR.99910.TRNLOG.20220228.103107..csv.pgp"})
   void blobUriShouldFailRegex(String blobName, CapturedOutput output) {
     String blobUri = "/blobServices/default/containers/" + containerRtd + "/blobs/" + blobName;
@@ -121,8 +120,9 @@ class BlobApplicationAwareTest {
     assertFalse(Files.exists(Path.of(tmpDirectory, fakeBlob.getBlob())));
   }
 
-  //This test simulates the following scenario:
-  // In the temporary folder there is a folder (containing a dummy file) with the name that
+  // This test simulates the following scenario:
+  // In the temporary folder there is a folder (containing a dummy file) with the
+  // name that
   // starts as the blob to be deleted.
   // This is done in order to trigger the catch clause in the localCleanup method.
   @Test
