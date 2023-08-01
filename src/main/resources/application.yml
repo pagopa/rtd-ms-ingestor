@@ -14,6 +14,7 @@ management:
         enabled: true
 
 ingestor:
+  anonymizePaymentInstrument: ${ANONYMIZE_PAYMENT_INSTRUMENT:true}
   resources:
     base:
       path: src/test/resources
@@ -35,7 +36,7 @@ spring:
       database: ${MONGODB_NAME:rtd}
   cloud:
     function:
-      definition: blobStorageConsumer;rtdDlqTrxConsumer
+      definition: blobStorageConsumer
     stream:
       source: rtd-trx
       defaultBinder: rtd-trx
@@ -49,15 +50,15 @@ spring:
           destination: rtd-trx
           content-type: application/json
           binder: rtd-trx
-        rtdDlqTrxConsumer-in-0:
-          destination: rtd-dlq-trx
-          group: rtd-ingestor-dlq-consumer-group
-          content-type: application/json
-          binder: rtd-dlq-trx-consumer
-        rtdDlqTrxProducer-out-0:
-          destination: rtd-dlq-trx
-          content-type: application/json
-          binder: rtd-dlq-trx-producer
+#        rtdDlqTrxConsumer-in-0:
+#          destination: rtd-dlq-trx
+#          group: rtd-ingestor-dlq-consumer-group
+#          content-type: application/json
+#          binder: rtd-dlq-trx-consumer
+#        rtdDlqTrxProducer-out-0:
+#          destination: rtd-dlq-trx
+#          content-type: application/json
+#          binder: rtd-dlq-trx-producer
       binders:
         rtd-trx:
           type: kafka
@@ -68,7 +69,7 @@ spring:
                   kafka:
                     binder:
                       auto-create-topics: false
-                      brokers: ${KAFKA_BROKER://localhost:29095}
+                      brokers: ${KAFKA_TOPIC_RTD_TRX://localhost:29095}
                       configuration:
                         sasl:
                           jaas:
@@ -78,44 +79,44 @@ spring:
                           protocol: SASL_SSL
                         default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
                         default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-        rtd-dlq-trx-producer:
-          type: kafka
-          environment:
-            spring:
-              cloud:
-                stream:
-                  kafka:
-                    binder:
-                      auto-create-topics: false
-                      brokers: ${KAFKA_BROKER_DLQ://localhost:29095}
-                      configuration:
-                        sasl:
-                          jaas:
-                            config: ${KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_DLQ_TRX}
-                          mechanism: PLAIN
-                        security:
-                          protocol: SASL_SSL
-                        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-                        default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-        rtd-dlq-trx-consumer:
-          type: kafka
-          environment:
-            spring:
-              cloud:
-                stream:
-                  kafka:
-                    binder:
-                      auto-create-topics: false
-                      brokers: ${KAFKA_BROKER_DLQ://localhost:29095}
-                      configuration:
-                        sasl:
-                          jaas:
-                            config: ${KAFKA_SASL_JAAS_CONFIG_CONSUMER_RTD_DLQ_TRX}
-                          mechanism: PLAIN
-                        security:
-                          protocol: SASL_SSL
-                        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-                        default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+#        rtd-dlq-trx-producer:
+#          type: kafka
+#          environment:
+#            spring:
+#              cloud:
+#                stream:
+#                  kafka:
+#                    binder:
+#                      auto-create-topics: false
+#                      brokers: ${KAFKA_BROKER_DLQ://localhost:29095}
+#                      configuration:
+#                        sasl:
+#                          jaas:
+#                            config: ${KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_DLQ_TRX}
+#                          mechanism: PLAIN
+#                        security:
+#                          protocol: SASL_SSL
+#                        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+#                        default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+#        rtd-dlq-trx-consumer:
+#          type: kafka
+#          environment:
+#            spring:
+#              cloud:
+#                stream:
+#                  kafka:
+#                    binder:
+#                      auto-create-topics: false
+#                      brokers: ${KAFKA_BROKER_DLQ://localhost:29095}
+#                      configuration:
+#                        sasl:
+#                          jaas:
+#                            config: ${KAFKA_SASL_JAAS_CONFIG_CONSUMER_RTD_DLQ_TRX}
+#                          mechanism: PLAIN
+#                        security:
+#                          protocol: SASL_SSL
+#                        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+#                        default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
         blob-storage:
           type: kafka
           environment:
@@ -138,110 +139,3 @@ spring:
                           deserializer: org.apache.kafka.common.serialization.StringDeserializer
                         value:
                           deserializer: org.apache.kafka.common.serialization.StringDeserializer
-# ---
-# spring:
-#   config:
-#     activate:
-#       on-profile: default
-#   cloud:
-#     stream:
-#       bindings:
-#         blobStorageConsumer-in-0: # name must match [handler name]-in-0
-#           destination: rtd-platform-events
-#           group: rtd-ingestor-consumer-group
-#           content-type: application/json
-#           binder: blob-storage-consumer
-#         rtdTrxProducer-out-0: # name must match [handler name]-out-0
-#           destination: rtd-trx
-#           binder: rtd-trx-producer
-#       binders:
-#         blob-storage-consumer:
-#           type: kafka
-#           environment:
-#             auto-create-topics: false
-#             brokers: ${KAFKA_BROKER}
-#             configuration:
-#               sasl:
-#                 jaas:
-#                   config: ${KAFKA_SASL_JAAS_CONFIG_CONSUMER_BLOB_STORAGE_EVENTS}
-#                 mechanism: PLAIN
-#               security:
-#                 protocol: SASL_SSL
-#             consumerProperties:
-#               key:
-#                 deserializer: org.apache.kafka.common.serialization.StringDeserializer
-#               value:
-#                 deserializer: org.apache.kafka.common.serialization.StringDeserializer
-#               socket:
-#                 connection:
-#                   setup:
-#                     timeout:
-#                       max:
-#                         ms: 200000
-#                       ms: 100000
-#               request:
-#                 timeout:
-#                   ms: 60000
-#               connections:
-#                 max:
-#                   idle:
-#                     ms: 180000
-#               max:
-#                 partition:
-#                   fetch:
-#                     bytes: 10485760
-#               session:
-#                 timeout:
-#                   ms: 10000
-#               metadata:
-#                 max:
-#                   age:
-#                     ms: 180000
-#               # partition:
-#               #   assignment:
-#               #     strategy: org.apache.kafka.clients.consumer.RangeAssignor
-#         rtd-trx-producer:
-#           type: kafka
-#           environment:
-#             auto-create-topics: false
-#             brokers: ${KAFKA_BROKER}
-#             configuration:
-#               sasl:
-#                 jaas:
-#                   config: ${KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_TRX}
-#                 mechanism: PLAIN
-#               security:
-#                 protocol: SASL_SSL
-#             consumerProperties:
-#               # key:
-#               #   deserializer: org.apache.kafka.common.serialization.StringDeserializer
-#               # value:
-#               #   deserializer: org.apache.kafka.common.serialization.StringDeserializer
-#               socket:
-#                 connection:
-#                   setup:
-#                     timeout:
-#                       max:
-#                         ms: 200000
-#                       ms: 100000
-#               request:
-#                 timeout:
-#                   ms: 60000
-#               connections:
-#                 max:
-#                   idle:
-#                     ms: 180000
-#               max:
-#                 partition:
-#                   fetch:
-#                     bytes: 10485760
-#               session:
-#                 timeout:
-#                   ms: 10000
-#               metadata:
-#                 max:
-#                   age:
-#                     ms: 180000
-#               # partition:
-#               #   assignment:
-#               #     strategy: org.apache.kafka.clients.consumer.RangeAssignor
