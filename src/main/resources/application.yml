@@ -25,7 +25,6 @@ ingestor:
     apikey: ${INTERNAL_SERVICES_API_KEY:myapikey}
     sourceContainer: rtd-transactions-decrypted
 
----
 spring:
   config:
     activate:
