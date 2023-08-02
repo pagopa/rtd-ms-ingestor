@@ -7,9 +7,9 @@ import com.opencsv.bean.CsvBindByPosition;
 import com.opencsv.bean.CsvDate;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,7 +19,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 /**
  * This class represents the object containing transaction fields as attributes. The format is based
- * on the one specified at: https://docs.pagopa.it/digital-transaction-register/v/digital-transaction-filter/acquirer-integration-with-pagopa-centrostella/integration/standard-pagopa-file-transactions
+ * on the one specified at:
+ * https://docs.pagopa.it/digital-transaction-register/v/digital-transaction-filter/acquirer-integration-with-pagopa-centrostella/integration/standard-pagopa-file-transactions
  */
 @Data
 @Builder
@@ -38,24 +39,23 @@ public class Transaction {
   @NotNull
   @NotBlank
   @CsvBindByPosition(position = 1)
-  @Pattern(regexp = "[0-9]{2}", message = "Operation type length must match [0-9]{2}")
+  @Pattern(regexp = "\\d{2}", message = "Operation type length must match \\d{2}")
   @JsonProperty(value = "operationType", required = true)
   String operationType;
 
   @NotNull
   @NotBlank
   @CsvBindByPosition(position = 2)
-  @Pattern(regexp = "[0-9]{2}", message = "Circuit type length must match [0-9]{2}")
+  @Pattern(regexp = "\\d{2}", message = "Circuit type length must match \\d{2}")
   String circuitType;
 
   @NotNull
   @NotBlank
   @CsvBindByPosition(position = 3)
-  @Pattern(regexp = "[a-zA-Z0-9]{64}",
-      message = "HPAN length must be 64 alphanumeric char at max")
+  @Pattern(regexp = "[a-zA-Z0-9]{64}", message = "HPAN length must be 64 alphanumeric char at max")
   String hpan;
 
-  //ISO8601
+  // ISO8601
   @NotNull
   @CsvBindByPosition(position = 4)
   @CsvDate(value = "yyyy-MM-dd'T'HH:mm:ss.SSS[XX][XXX]")
@@ -89,8 +89,7 @@ public class Transaction {
   @NotNull
   @NotBlank
   @CsvBindByPosition(position = 9)
-  @Pattern(regexp = "978",
-      message = "Currency must be 978 (fixed value, ISO 4217 for Euro)")
+  @Pattern(regexp = "978", message = "Currency must be 978 (fixed value, ISO 4217 for Euro)")
   String amountCurrency;
 
   @NotNull
@@ -117,8 +116,7 @@ public class Transaction {
   @NotNull
   @NotBlank
   @CsvBindByPosition(position = 13)
-  @Pattern(regexp = "[0-9]{6}|[0-9]{8}",
-      message = "BIN length must match [0-9]{6}|[0-9]{8}")
+  @Pattern(regexp = "\\d{6}|\\d{8}", message = "BIN length must match \\d{6}|\\d{8}")
   String bin;
 
   @NotNull
@@ -139,7 +137,7 @@ public class Transaction {
   @NotNull
   @NotBlank
   @CsvBindByPosition(position = 17)
-  @Pattern(regexp = "[0-9]{2}", message = "Pos type must match [0-9]{2}")
+  @Pattern(regexp = "\\d{2}", message = "Pos type must match \\d{2}")
   String posType;
 
   @CsvBindByPosition(position = 18)

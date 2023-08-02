@@ -26,12 +26,7 @@ public class BlobApplicationAware {
    * File lifecycle statuses.
    */
   public enum Status {
-    INIT,
-    RECEIVED,
-    DOWNLOADED,
-    PROCESSED,
-    REMOTELY_DELETED,
-    LOCALLY_DELETED,
+    INIT, RECEIVED, DOWNLOADED, PROCESSED, REMOTELY_DELETED, LOCALLY_DELETED,
   }
 
   private String blobUri;
@@ -44,8 +39,8 @@ public class BlobApplicationAware {
 
   private String targetDir = "/tmp";
 
-  private Pattern uriPattern = Pattern.compile(
-      "^.*containers/((rtd)-transactions-decrypted)/blobs/(.*)");
+  private Pattern uriPattern =
+      Pattern.compile("^.*containers/((rtd)-transactions-decrypted)/blobs/(.*)");
 
   private static final String WRONG_FORMAT_NAME_WARNING_MSG = "Wrong name format:";
   private static final String EVENT_NOT_OF_INTEREST_WARNING_MSG = "Event not of interest:";
@@ -64,11 +59,10 @@ public class BlobApplicationAware {
     Matcher matcher = uriPattern.matcher(uri);
 
     if (matcher.matches()) {
-
       container = matcher.group(1);
       blob = matcher.group(3);
 
-      //Tokenized blob name for checking compliance
+      // Tokenized blob name for checking compliance
       String[] blobNameTokenized = blob.split("\\.");
 
       if (checkNameFormat(blobNameTokenized)) {
@@ -82,7 +76,6 @@ public class BlobApplicationAware {
     }
   }
 
-
   /**
    * This method matches PagoPA file name's standard Specifics can be found at:
    * https://docs.pagopa.it/digital-transaction-register/v/digital-transaction-filter/acquirer-integration-with-pagopa-centrostella/integration/standard-pagopa-file-transactions
@@ -92,29 +85,30 @@ public class BlobApplicationAware {
    * @return true if the name matches the format, false otherwise
    */
   private boolean checkNameFormat(String[] uriTokens) {
+    // Check if the tokens length is right
+    if (uriTokens.length < 6) {
+      return false;
+    }
+
     // Check for application name (add new services to the regex)
-    if (uriTokens[0] == null || !uriTokens[0].matches("(CSTAR)")) {
+    if (!uriTokens[0].matches("(CSTAR)")) {
       return false;
     }
 
     // Check for sender ABI code
-    if (uriTokens[1] == null || !uriTokens[1].matches("[a-zA-Z0-9]{5}")) {
+    if (!uriTokens[1].matches("[a-zA-Z0-9]{5}")) {
       return false;
     }
 
     // Check for filetype (fixed "TRNLOG" value)
     // Should ignore case?
-    if (uriTokens[2] == null || !uriTokens[2].equalsIgnoreCase("TRNLOG")) {
-      return false;
-    }
-
-    // Check for creation timestamp correctness
-    if (uriTokens[3] == null || uriTokens[4] == null) {
+    if (!uriTokens[2].equalsIgnoreCase("TRNLOG")) {
       return false;
     }
 
     SimpleDateFormat daysFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-    // Make the format refuse wrong date and time (default behavior is to overflow values in
+    // Make the format refuse wrong date and time (default behavior is to overflow
+    // values in
     // following date)
     daysFormat.setLenient(false);
 
@@ -125,18 +119,18 @@ public class BlobApplicationAware {
     }
 
     // Check for progressive value
-    return (uriTokens[5] != null) && uriTokens[5].matches("[0-9]{3}");
+    return uriTokens[5].matches("\\d{3}");
   }
 
   /**
    * This method deletes the local files left by the blob handling.
    */
   public BlobApplicationAware localCleanup() {
-
     boolean failCleanup = false;
-    
+
     for (File f : Objects.requireNonNull(Path.of(this.targetDir).toFile().listFiles())) {
-      //Delete every file in the temporary directory that starts with the name of the blob.
+      // Delete every file in the temporary directory that starts with the name of the
+      // blob.
       if (f.getName().startsWith(blob)) {
         try {
           Files.delete(f.toPath());
@@ -152,5 +146,4 @@ public class BlobApplicationAware {
     }
     return this;
   }
-
 }

@@ -1,6 +1,5 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.model;
 
-
 /**
  * Italian Codice Fiscale normalization, formatting and validation routines. A <u>regular CF</u> is
  * composed by 16 among letters and digits; the last character is always a letter representing the
@@ -16,11 +15,7 @@ public class FiscalCode {
    * Enumeration of possible validation responses.
    */
   public enum Response {
-    CORRECT_FISCAL_CODE,
-    INVALID_CHARACTERS,
-    INVALID_CHECKSUM,
-    INVALID_LENGTH,
-    EMPTY,
+    CORRECT_FISCAL_CODE, INVALID_CHARACTERS, INVALID_CHECKSUM, INVALID_LENGTH, EMPTY,
   }
 
   /**
@@ -53,33 +48,31 @@ public class FiscalCode {
    * @return Null if valid, or string describing why this CF must be rejected.
    */
   private static Response validateRegular(String cf) {
-
-    //This array stores the presence of substitution codes in the last 3 digits in case of homocody.
+    // This array stores the presence of substitution codes in the last 3 digits in
+    // case of homocody.
     // This routine doesn't allow homocodic codes further than 3 digits!
     boolean[] homocode = new boolean[3];
-
-    if (!cf.matches(
-        "^[A-Z]{6}[0-9]{2}[ABCDEHLMPRST]{1}[0-9]{2}[A-Z]{1}[0-9LMNPQRSTUV]{3}[A-Z]{1}$")) {
+    if (!cf.matches("^[A-Z]{6}\\d{2}[ABCDEHLMPRST]\\d{2}[0-9A-Z]{4}[A-Z]$")) {
       return Response.INVALID_CHARACTERS;
     }
+
     int s = 0;
     String evenMap = "BAFHJNPRTVCESULDGIMOQKWZYX";
     for (int i = 0; i < 15; i++) {
       int c = cf.charAt(i);
+      int n;
 
-      if (i >= 12) {
-        if (String.valueOf(cf.charAt(i)).matches("[LMN]")) {
-          c = cf.charAt(i) - 'L' + '0';
-          homocode[i - 12] = true;
-        }
-        //The substitution characters skips the O
-        if (String.valueOf(cf.charAt(i)).matches("[PQRSTUV]")) {
-          c = cf.charAt(i) - 'L' - 1 + '0';
-          homocode[i - 12] = true;
-        }
+      if ((i >= 12) && String.valueOf(cf.charAt(i)).matches("[LMN]")) {
+        c = cf.charAt(i) - 'L' + '0';
+        homocode[i - 12] = true;
       }
 
-      int n;
+      // The substitution characters skips the O
+      if ((i >= 12) && String.valueOf(cf.charAt(i)).matches("[PQRSTUV]")) {
+        c = cf.charAt(i) - 'L' - 1 + '0';
+        homocode[i - 12] = true;
+      }
+
       if ('0' <= c && c <= '9') {
         n = c - '0';
       } else {
@@ -105,7 +98,7 @@ public class FiscalCode {
    * @return Null if valid, or string describing why this CF must be rejected.
    */
   private static Response validateTemporary(String cf) {
-    if (!cf.matches("^[0-9]{11}$")) {
+    if (!cf.matches("^\\d{11}$")) {
       return Response.INVALID_CHARACTERS;
     }
     int s = 0;
@@ -145,7 +138,7 @@ public class FiscalCode {
   }
 
   private static Response validHomocode(boolean[] homocode) {
-    //Check for the order of the omocodic substitution characters
+    // Check for the order of the omocodic substitution characters
     if (homocode[0]) {
       if (homocode[1]) {
         if (!homocode[2]) {

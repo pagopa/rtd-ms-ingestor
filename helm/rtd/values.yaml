@@ -4,6 +4,7 @@ microservice-chart:
   fullnameOverride: ""
 
   livenessProbe:
+    handlerType: httpGet
     httpGet:
       path: /actuator/health/liveness
       port: 8080
@@ -12,6 +13,7 @@ microservice-chart:
     periodSeconds: 10
 
   readinessProbe:
+    handlerType: httpGet
     httpGet:
       path: /actuator/health/readiness
       port: 8080
@@ -42,20 +44,32 @@ microservice-chart:
   securityContext:
     allowPrivilegeEscalation: false
 
+  envConfig:
+    APPLICATIONINSIGHTS_PREVIEW_PROFILER_ENABLED: "false"
+
   envSecret:
     APPLICATIONINSIGHTS_CONNECTION_STRING: appinsights-instrumentation-key
     KAFKA_SASL_JAAS_CONFIG_CONSUMER_BLOB_STORAGE_EVENTS: evh-rtd-platform-events-rtd-platform-events-sub-key
-    KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_TRX: evh-rtd-trx-rtd-trx-producer-key
+    KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_TRX: evh-rtd-trx-rtd-trx-producer-rtd
+    KAFKA_SASL_JAAS_CONFIG_CONSUMER_RTD_DLQ_TRX: evh-rtd-dlq-trx-rtd-dlq-trx-consumer-policy-rtd
+    KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_DLQ_TRX: evh-rtd-dlq-trx-rtd-dlq-trx-producer-policy-rtd
     INTERNAL_SERVICES_API_KEY: rtd-internal-api-product-subscription-key
+    MONGODB_CONNECTION_URI: mongo-db-connection-uri
 
   envConfigMapExternals:
     rtdingestor:
       JAVA_TOOL_OPTIONS: JAVA_TOOL_OPTIONS
       CSV_INGESTOR_HOST: CSV_INGESTOR_HOST
+      MONGODB_NAME: MONGODB_NAME
+      APPLICATIONINSIGHTS_ROLE_NAME: APPLICATIONINSIGHTS_ROLE_NAME
+      APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL: APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL
+      APPLICATIONINSIGHTS_INSTRUMENTATION_MICROMETER_ENABLED: APPLICATIONINSIGHTS_INSTRUMENTATION_MICROMETER_ENABLED
+      KAFKA_TOPIC_RTD_DLQ_TRX: KAFKA_TOPIC_RTD_DLQ_TRX
+      KAFKA_BROKER_DLQ: KAFKA_BROKER_DLQ
 
     rtd-blob-storage-events:
       KAFKA_TOPIC_BLOB_STORAGE_EVENTS: KAFKA_TOPIC_BLOB_STORAGE_EVENTS
       KAFKA_BROKER: KAFKA_BROKER
 
     rtd-trx-producer:
-      KAFKA_TOPIC_RTD_TRX: KAFKA_TOPIC_RTD_TRX
+      KAFKA_BROKER_RTD: KAFKA_BROKER_RTD
