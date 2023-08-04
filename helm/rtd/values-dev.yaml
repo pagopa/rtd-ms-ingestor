@@ -24,7 +24,7 @@ microservice-chart:
   envConfigMapExternals:
     rtd-blob-storage-events:
       KAFKA_TOPIC_BLOB_STORAGE_EVENTS: KAFKA_TOPIC_BLOB_STORAGE_EVENTS
-      KAFKA_BROKER_PLATFORM_EVENTS: KAFKA_BROKER_RTD
+      KAFKA_BROKER_PLATFORM_EVENTS: KAFKA_BROKER # actually use old broker in prod
 
   #  autoscaling:
   #    enable: false
