@@ -68,7 +68,7 @@ spring:
                   kafka:
                     binder:
                       auto-create-topics: false
-                      brokers: ${KAFKA_BROKER_RTD://localhost:29095}
+                      brokers: ${KAFKA_BROKER_RTD_TRX://localhost:29095}
                       configuration:
                         sasl:
                           jaas:
@@ -125,7 +125,7 @@ spring:
                   kafka:
                     binder:
                       auto-create-topics: false
-                      brokers: ${KAFKA_BROKER://localhost:29095}
+                      brokers: ${KAFKA_BROKER_PLATFORM_EVENTS://localhost:29095}
                       configuration:
                         sasl:
                           jaas:

@@ -20,6 +20,11 @@ microservice-chart:
 
   envConfig:
     ANONYMIZE_PAYMENT_INSTRUMENT: "false"
+
+  envConfigMapExternals:
+    rtdingestor:
+      KAFKA_BROKER_PLATFORM_EVENTS: KAFKA_BROKER_RTD
+
   #  autoscaling:
   #    enable: false
   #    minReplica: 1
