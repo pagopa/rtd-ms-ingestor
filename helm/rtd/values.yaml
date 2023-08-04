@@ -67,5 +67,10 @@ microservice-chart:
       KAFKA_TOPIC_RTD_DLQ_TRX: KAFKA_TOPIC_RTD_DLQ_TRX
       KAFKA_BROKER_DLQ: KAFKA_BROKER_DLQ
 
+    envConfigMapExternals:
+      rtd-blob-storage-events:
+        KAFKA_TOPIC_BLOB_STORAGE_EVENTS: KAFKA_TOPIC_BLOB_STORAGE_EVENTS
+        KAFKA_BROKER_PLATFORM_EVENTS: KAFKA_BROKER_RTD
+
     rtd-trx-producer:
       KAFKA_BROKER_RTD_TRX: KAFKA_BROKER_RTD
