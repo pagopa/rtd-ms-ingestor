@@ -22,7 +22,8 @@ microservice-chart:
     ANONYMIZE_PAYMENT_INSTRUMENT: "false"
 
   envConfigMapExternals:
-    rtdingestor:
+    rtd-blob-storage-events:
+      KAFKA_TOPIC_BLOB_STORAGE_EVENTS: KAFKA_TOPIC_BLOB_STORAGE_EVENTS
       KAFKA_BROKER_PLATFORM_EVENTS: KAFKA_BROKER_RTD
   #  autoscaling:
   #    enable: false
