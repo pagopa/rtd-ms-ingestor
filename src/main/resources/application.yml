@@ -37,7 +37,7 @@ spring:
     function:
       definition: blobStorageConsumer
     stream:
-      source: rtd-trx
+      source: rtdTrxProducer
       defaultBinder: rtd-trx
       bindings:
         blobStorageConsumer-in-0: # name must match [handler name]-in-0
@@ -49,15 +49,6 @@ spring:
           destination: rtd-trx
           content-type: application/json
           binder: rtd-trx
-#        rtdDlqTrxConsumer-in-0:
-#          destination: rtd-dlq-trx
-#          group: rtd-ingestor-dlq-consumer-group
-#          content-type: application/json
-#          binder: rtd-dlq-trx-consumer
-#        rtdDlqTrxProducer-out-0:
-#          destination: rtd-dlq-trx
-#          content-type: application/json
-#          binder: rtd-dlq-trx-producer
       binders:
         rtd-trx:
           type: kafka
@@ -68,7 +59,7 @@ spring:
                   kafka:
                     binder:
                       auto-create-topics: false
-                      brokers: ${KAFKA_BROKER_RTD://localhost:29095}
+                      brokers: ${KAFKA_BROKER_RTD_TRX://localhost:29095}
                       configuration:
                         sasl:
                           jaas:
@@ -78,44 +69,6 @@ spring:
                           protocol: SASL_SSL
                         default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
                         default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-#        rtd-dlq-trx-producer:
-#          type: kafka
-#          environment:
-#            spring:
-#              cloud:
-#                stream:
-#                  kafka:
-#                    binder:
-#                      auto-create-topics: false
-#                      brokers: ${KAFKA_BROKER_DLQ://localhost:29095}
-#                      configuration:
-#                        sasl:
-#                          jaas:
-#                            config: ${KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_DLQ_TRX}
-#                          mechanism: PLAIN
-#                        security:
-#                          protocol: SASL_SSL
-#                        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-#                        default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-#        rtd-dlq-trx-consumer:
-#          type: kafka
-#          environment:
-#            spring:
-#              cloud:
-#                stream:
-#                  kafka:
-#                    binder:
-#                      auto-create-topics: false
-#                      brokers: ${KAFKA_BROKER_DLQ://localhost:29095}
-#                      configuration:
-#                        sasl:
-#                          jaas:
-#                            config: ${KAFKA_SASL_JAAS_CONFIG_CONSUMER_RTD_DLQ_TRX}
-#                          mechanism: PLAIN
-#                        security:
-#                          protocol: SASL_SSL
-#                        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-#                        default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
         blob-storage:
           type: kafka
           environment:
@@ -125,7 +78,7 @@ spring:
                   kafka:
                     binder:
                       auto-create-topics: false
-                      brokers: ${KAFKA_BROKER://localhost:29095}
+                      brokers: ${KAFKA_BROKER_PLATFORM_EVENTS://localhost:29095}
                       configuration:
                         sasl:
                           jaas:
