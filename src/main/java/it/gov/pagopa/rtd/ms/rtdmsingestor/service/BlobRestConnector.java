@@ -217,8 +217,6 @@ public class BlobRestConnector implements TransactionCheck {
         }
         numTotalTrx++;
       } catch (Exception ex) {
-        // DeadLetterQueueEvent dlqException = new DeadLetterQueueEvent(t, ex.getMessage());
-        // sb.send("rtdDlqTrxProducer-out-0", MessageBuilder.withPayload(dlqException).build());
         log.error("Error getting records : {}", ex.getMessage());
       }
     });
