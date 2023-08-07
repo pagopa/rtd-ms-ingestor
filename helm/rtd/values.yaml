@@ -49,7 +49,7 @@ microservice-chart:
 
   envSecret:
     APPLICATIONINSIGHTS_CONNECTION_STRING: appinsights-instrumentation-key
-    KAFKA_SASL_JAAS_CONFIG_CONSUMER_BLOB_STORAGE_EVENTS: evh-rtd-platform-events-rtd-platform-events-sub-key
+    KAFKA_SASL_JAAS_CONFIG_CONSUMER_BLOB_STORAGE_EVENTS: evh-rtd-platform-events-rtd-platform-events-sub-rtd
     KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_TRX: evh-rtd-trx-rtd-trx-producer-rtd
     KAFKA_SASL_JAAS_CONFIG_CONSUMER_RTD_DLQ_TRX: evh-rtd-dlq-trx-rtd-dlq-trx-consumer-policy-rtd
     KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_DLQ_TRX: evh-rtd-dlq-trx-rtd-dlq-trx-producer-policy-rtd
@@ -69,7 +69,7 @@ microservice-chart:
 
     rtd-blob-storage-events:
       KAFKA_TOPIC_BLOB_STORAGE_EVENTS: KAFKA_TOPIC_BLOB_STORAGE_EVENTS
-      KAFKA_BROKER: KAFKA_BROKER
+      KAFKA_BROKER_PLATFORM_EVENTS: KAFKA_BROKER_RTD
 
     rtd-trx-producer:
-      KAFKA_BROKER_RTD: KAFKA_BROKER_RTD
+      KAFKA_BROKER_RTD_TRX: KAFKA_BROKER_RTD
