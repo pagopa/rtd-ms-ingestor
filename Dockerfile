@@ -15,8 +15,6 @@ COPY --from=buildtime /build/target/*.jar /app/app.jar
 ADD https://github.com/microsoft/ApplicationInsights-Java/releases/download/3.4.15/applicationinsights-agent-3.4.15.jar /app/applicationinsights-agent.jar
 RUN chown -R nobody:nobody /app
 
-EXPOSE 8080
-
 USER 65534
 
 ENTRYPOINT ["java","-jar","/app/app.jar"]
