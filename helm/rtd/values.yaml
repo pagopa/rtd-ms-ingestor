@@ -44,8 +44,8 @@ microservice-chart:
   securityContext:
     allowPrivilegeEscalation: false
     runAsNonRoot: true
-    runAsUser: 65534
-    runAsGroup: 65534
+    runAsUser: 10000
+    runAsGroup: 10000
 
   envConfig:
     APPLICATIONINSIGHTS_PREVIEW_PROFILER_ENABLED: "false"
