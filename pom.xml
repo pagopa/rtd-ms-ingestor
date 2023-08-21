@@ -27,7 +27,7 @@
     <commons-text.version>1.10.0</commons-text.version>
     <awaitility.version>4.2.0</awaitility.version>
     <modelmapper.version>3.1.1</modelmapper.version>
-    <cloudevents-kafka.version>2.5.0</cloudevents-kafka.version>
+    <cloudevents-kafka.version>2.4.2</cloudevents-kafka.version>
     <mockito-inline.version>5.2.0</mockito-inline.version>
   </properties>
 
