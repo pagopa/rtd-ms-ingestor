@@ -17,9 +17,16 @@ microservice-chart:
 
   envSecret:
     aks-api-url: cstar-p-weu-prod01-aks-apiserver-url
+    KAFKA_SASL_JAAS_CONFIG_CONSUMER_BLOB_STORAGE_EVENTS: evh-rtd-platform-events-rtd-platform-events-sub-key # use old secret for prod
 
   envConfig:
     ANONYMIZE_PAYMENT_INSTRUMENT: "false"
+
+  envConfigMapExternals:
+    rtd-blob-storage-events:
+      KAFKA_TOPIC_BLOB_STORAGE_EVENTS: KAFKA_TOPIC_BLOB_STORAGE_EVENTS
+      KAFKA_BROKER_PLATFORM_EVENTS: KAFKA_BROKER # actually use old broker in prod
+
   #  autoscaling:
   #    enable: false
   #    minReplica: 1
