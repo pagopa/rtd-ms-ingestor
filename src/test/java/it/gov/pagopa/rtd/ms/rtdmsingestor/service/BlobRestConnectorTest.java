@@ -87,11 +87,18 @@ class BlobRestConnectorTest {
   @MockBean
   IngestorDAO dao;
 
-  private final String container = "rtd-transactions-decrypted";
-  private final String blobName = "CSTAR.99910.TRNLOG.20220228.103107.001.csv.pgp.0.decrypted";
+  private final String containerRtd = "rtd-transactions-decrypted";
 
-  private final BlobApplicationAware fakeBlob = new BlobApplicationAware(
-      "/blobServices/default/containers/" + container + "/blobs/" + blobName);
+  private final String containerWallet = "wallet-contracts-decrypted";
+  private final String blobNameRtd = "CSTAR.99910.TRNLOG.20220228.103107.001.csv.pgp.0.decrypted";
+
+  private final String blobNameWallet = "WALLET.CONTRACTS.20240313.174811.001.json.pgp.0.decrypted";
+
+  private final BlobApplicationAware fakeBlobRtd = new BlobApplicationAware(
+      "/blobServices/default/containers/" + containerRtd + "/blobs/" + blobNameRtd);
+
+  private final BlobApplicationAware fakeBlobWallet = new BlobApplicationAware(
+      "/blobServices/default/containers/" + containerWallet + "/blobs/" + blobNameWallet);
 
   @AfterEach
   void cleanTmpFiles() throws IOException {
@@ -107,16 +114,16 @@ class BlobRestConnectorTest {
     // for an expected content.
 
     // Create the mocked output stream to simulate the blob get
-    File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
+    File decryptedFile = Path.of(tmpDirectory, blobNameRtd).toFile();
     decryptedFile.getParentFile().mkdirs();
     decryptedFile.createNewFile();
-    fakeBlob.setTargetDir(tmpDirectory);
+    fakeBlobRtd.setTargetDir(tmpDirectory);
     OutputStream mockedOutputStream = mock(OutputStream.class);
 
     doReturn(mockedOutputStream).when(client).execute(any(HttpGet.class),
         any(BlobRestConnector.FileDownloadResponseHandler.class));
 
-    BlobApplicationAware blobOut = blobRestConnector.get(fakeBlob);
+    BlobApplicationAware blobOut = blobRestConnector.get(fakeBlobRtd);
 
     verify(client, times(1)).execute(any(HttpUriRequest.class),
         ArgumentMatchers.<ResponseHandler<OutputStream>>any());
@@ -129,7 +136,7 @@ class BlobRestConnectorTest {
     doThrow(IOException.class).when(client).execute(any(HttpGet.class),
         any(BlobRestConnector.FileDownloadResponseHandler.class));
 
-    BlobApplicationAware blobOut = blobRestConnector.get(fakeBlob);
+    BlobApplicationAware blobOut = blobRestConnector.get(fakeBlobRtd);
 
     verify(client, times(1)).execute(any(HttpUriRequest.class),
         ArgumentMatchers.<ResponseHandler<OutputStream>>any());
@@ -145,38 +152,58 @@ class BlobRestConnectorTest {
         .hashPan("b50245d5fee9fa11bead50e7d0afb6c269c77f59474a87442f867ba9643021fc").build()));
 
     // Create fake file to process
-    File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
+    File decryptedFile = Path.of(tmpDirectory, blobNameRtd).toFile();
     decryptedFile.getParentFile().mkdirs();
     decryptedFile.createNewFile();
 
-    FileOutputStream blobDst = new FileOutputStream(Path.of(tmpDirectory, blobName).toString());
+    FileOutputStream blobDst = new FileOutputStream(Path.of(tmpDirectory, blobNameRtd).toString());
     Files.copy(Path.of(resources, transactions), blobDst);
 
-    fakeBlob.setTargetDir(tmpDirectory);
-    fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
+    fakeBlobRtd.setTargetDir(tmpDirectory);
+    fakeBlobRtd.setStatus(BlobApplicationAware.Status.DOWNLOADED);
 
-    blobProcessor.process(fakeBlob);
+    blobProcessor.process(fakeBlobRtd);
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
       assertEquals(blobProcessor.getNumTotalTrx(), blobProcessor.getNumCorrectTrx());
       assertEquals(5, blobProcessor.getNumTotalTrx());
       assertEquals(5, blobProcessor.getNumCorrectTrx());
-      assertEquals(Status.PROCESSED, fakeBlob.getStatus());
+      assertEquals(Status.PROCESSED, fakeBlobRtd.getStatus());
+    });
+  }
+
+  @Test
+  void shouldProcessWalletEvent() throws IOException {
+
+    // Create fake file to process
+    File decryptedFile = Path.of(tmpDirectory, blobNameWallet).toFile();
+    decryptedFile.getParentFile().mkdirs();
+    decryptedFile.createNewFile();
+
+    FileOutputStream blobDst = new FileOutputStream(Path.of(tmpDirectory, blobNameWallet).toString());
+    Files.copy(Path.of(resources, blobNameWallet), blobDst);
+
+    fakeBlobWallet.setTargetDir(tmpDirectory);
+    fakeBlobWallet.setStatus(BlobApplicationAware.Status.DOWNLOADED);
+
+    blobProcessor.process(fakeBlobWallet);
+    await().atMost(Duration.ofSeconds(1)).untilAsserted(() -> {
+      assertEquals(Status.PROCESSED, fakeBlobWallet.getStatus());
     });
   }
 
   @Test
   void shouldNotProcessForMissingFile(CapturedOutput output) {
 
-    fakeBlob.setTargetDir(resources);
-    fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
-    fakeBlob.setBlob(blobName + ".missing");
+    fakeBlobRtd.setTargetDir(resources);
+    fakeBlobRtd.setStatus(BlobApplicationAware.Status.DOWNLOADED);
+    fakeBlobRtd.setBlob(blobNameRtd + ".missing");
 
-    blobProcessor.process(fakeBlob);
+    blobProcessor.process(fakeBlobRtd);
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
       assertThat(output.getOut(), containsString("Extracting transactions from:"));
       assertThat(output.getOut(), containsString("Missing blob file:"));
       assertThat(output.getOut(), not(containsString("Extracted")));
-      assertNotEquals(Status.PROCESSED, fakeBlob.getStatus());
+      assertNotEquals(Status.PROCESSED, fakeBlobRtd.getStatus());
     });
   }
 
@@ -190,16 +217,16 @@ class BlobRestConnectorTest {
         .hashPan("c3141e7c87d0bf7faac1ea3c79b2312279303b87781eedbb47ec8892f63df3e9").build()));
 
     // Create fake file to process
-    File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
+    File decryptedFile = Path.of(tmpDirectory, blobNameRtd).toFile();
     decryptedFile.getParentFile().mkdirs();
     decryptedFile.createNewFile();
-    FileOutputStream blobDst = new FileOutputStream(Path.of(tmpDirectory, blobName).toString());
+    FileOutputStream blobDst = new FileOutputStream(Path.of(tmpDirectory, blobNameRtd).toString());
     Files.copy(Path.of(resources, transactions), blobDst);
 
-    fakeBlob.setTargetDir(tmpDirectory);
-    fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
+    fakeBlobRtd.setTargetDir(tmpDirectory);
+    fakeBlobRtd.setStatus(BlobApplicationAware.Status.DOWNLOADED);
 
-    blobProcessor.process(fakeBlob);
+    blobProcessor.process(fakeBlobRtd);
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
 
       assertEquals(3, blobProcessor.getNumCorrectTrx());
@@ -209,7 +236,7 @@ class BlobRestConnectorTest {
       assertThat(output.getOut(), containsString("Invalid character for Fiscal Code "));
       assertThat(output.getOut(), containsString("Invalid length for Fiscal Code "));
       assertThat(output.getOut(), containsString("Invalid checksum for Fiscal Code "));
-      assertEquals(Status.PROCESSED, fakeBlob.getStatus());
+      assertEquals(Status.PROCESSED, fakeBlobRtd.getStatus());
     });
   }
 
@@ -229,21 +256,21 @@ class BlobRestConnectorTest {
         .thenReturn(Optional.of(EPIItem.builder().hashPan(hashpan).build()));
 
     // Create fake file to process
-    File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
+    File decryptedFile = Path.of(tmpDirectory, blobNameRtd).toFile();
     decryptedFile.getParentFile().mkdirs();
     decryptedFile.createNewFile();
-    FileOutputStream blobDst = new FileOutputStream(Path.of(tmpDirectory, blobName).toString());
+    FileOutputStream blobDst = new FileOutputStream(Path.of(tmpDirectory, blobNameRtd).toString());
     Files.copy(Path.of(resources, transactions), blobDst);
 
-    fakeBlob.setTargetDir(tmpDirectory);
-    fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
+    fakeBlobRtd.setTargetDir(tmpDirectory);
+    fakeBlobRtd.setStatus(BlobApplicationAware.Status.DOWNLOADED);
 
-    blobProcessor.process(fakeBlob);
+    blobProcessor.process(fakeBlobRtd);
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
       assertEquals(0, blobProcessor.getNumCorrectTrx());
       assertEquals(1, blobProcessor.getNumTotalTrx());
       assertEquals(0, blobProcessor.getNumNotEnrolledCards());
-      assertEquals(Status.PROCESSED, fakeBlob.getStatus());
+      assertEquals(Status.PROCESSED, fakeBlobRtd.getStatus());
     });
   }
 
@@ -254,16 +281,16 @@ class BlobRestConnectorTest {
     when(repository.findItemByHash(any())).thenReturn(Optional.of(EPIItem.builder()
         .hashPan("b50245d5fee9fa11bead50e7d0afb6c269c77f59474a87442f867ba9643021fc").build()));
 
-    File decryptedFile = Path.of(tmpDirectory, blobName).toFile();
+    File decryptedFile = Path.of(tmpDirectory, blobNameRtd).toFile();
     decryptedFile.getParentFile().mkdirs();
     decryptedFile.createNewFile();
-    FileOutputStream blobDst = new FileOutputStream(Path.of(tmpDirectory, blobName).toString());
+    FileOutputStream blobDst = new FileOutputStream(Path.of(tmpDirectory, blobNameRtd).toString());
     Files.copy(Path.of(resources, transactions), blobDst);
 
-    fakeBlob.setTargetDir(tmpDirectory);
-    fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
+    fakeBlobRtd.setTargetDir(tmpDirectory);
+    fakeBlobRtd.setStatus(BlobApplicationAware.Status.DOWNLOADED);
 
-    blobProcessor.process(fakeBlob);
+    blobProcessor.process(fakeBlobRtd);
 
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
       assertEquals(0, blobProcessor.getNumCorrectTrx());
@@ -280,12 +307,12 @@ class BlobRestConnectorTest {
 
     doReturn(mockedResponse).when(client).execute(any(HttpDelete.class));
 
-    blobRestConnector.deleteRemote(fakeBlob);
+    blobRestConnector.deleteRemote(fakeBlobRtd);
 
     verify(client, times(1)).execute(any(HttpUriRequest.class));
-    assertEquals(Status.REMOTELY_DELETED, fakeBlob.getStatus());
+    assertEquals(Status.REMOTELY_DELETED, fakeBlobRtd.getStatus());
     assertThat(output.getOut(), not(containsString("Can't delete blob")));
-    assertThat(output.getOut(), containsString(fakeBlob.getBlob() + " deleted successfully"));
+    assertThat(output.getOut(), containsString(fakeBlobRtd.getBlob() + " deleted successfully"));
   }
 
   @Test
@@ -293,10 +320,10 @@ class BlobRestConnectorTest {
 
     doThrow(new IOException("Connection problem.")).when(client).execute(any(HttpDelete.class));
 
-    blobRestConnector.deleteRemote(fakeBlob);
+    blobRestConnector.deleteRemote(fakeBlobRtd);
 
     verify(client, times(1)).execute(any(HttpUriRequest.class));
-    assertNotEquals(Status.REMOTELY_DELETED, fakeBlob.getStatus());
+    assertNotEquals(Status.REMOTELY_DELETED, fakeBlobRtd.getStatus());
     assertThat(output.getOut(), containsString("Unexpected error:"));
   }
 
@@ -309,10 +336,10 @@ class BlobRestConnectorTest {
 
     doReturn(mockedResponse).when(client).execute(any(HttpDelete.class));
 
-    blobRestConnector.deleteRemote(fakeBlob);
+    blobRestConnector.deleteRemote(fakeBlobRtd);
 
     verify(client, times(1)).execute(any(HttpUriRequest.class));
-    assertNotEquals(Status.REMOTELY_DELETED, fakeBlob.getStatus());
+    assertNotEquals(Status.REMOTELY_DELETED, fakeBlobRtd.getStatus());
     assertThat(output.getOut(), containsString("Invalid HTTP response:"));
   }
 

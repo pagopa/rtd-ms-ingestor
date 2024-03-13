@@ -1,16 +1,28 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.service;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.opencsv.bean.BeanVerifier;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.exceptions.CsvException;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Application;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.model.WalletContract;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -35,8 +47,20 @@ public class EventProcessor {
   private int numCorrectTrx;
   private int numTotalTrx;
 
+  private int numCorrectlyExportedContracts;
+
+  private int numFailedContracts;
+
+  private int numTotalContracts;
+
   public BlobApplicationAware process(BlobApplicationAware blob) {
-    return processRtdTransaction(blob);
+    Path blobPath = Path.of(blob.getTargetDir(), blob.getBlob());
+    if (Application.RTD.equals(blob.getApp())) {
+      return processRtdTransaction(blob, blobPath);
+    } else if (Application.WALLET.equals(blob.getApp())) {
+      return processWalletContracts(blob, blobPath);
+    }
+    return blob;
   }
 
   /**
@@ -45,7 +69,7 @@ public class EventProcessor {
    *
    * @param blob the blob of the transaction.
    */
-  private BlobApplicationAware processRtdTransaction(BlobApplicationAware blob) {
+  private BlobApplicationAware processRtdTransaction(BlobApplicationAware blob, Path blobPath) {
     log.info("Extracting transactions from:{}", blob.getBlobUri());
 
     numNotEnrolledCards = 0;
@@ -55,7 +79,7 @@ public class EventProcessor {
     FileReader fileReader;
 
     try {
-      fileReader = new FileReader(Path.of(blob.getTargetDir(), blob.getBlob()).toFile());
+      fileReader = new FileReader(blobPath.toFile());
     } catch (FileNotFoundException e) {
       log.error("Missing blob file: {}", blob.getBlob());
       return blob;
@@ -92,6 +116,48 @@ public class EventProcessor {
           "Extraction result: {} well formed transactions and {} "
               + "not enrolled cards out of {} rows extracted from:{}",
           numCorrectTrx, numNotEnrolledCards, numTotalTrx, blob.getBlobUri());
+    }
+
+    blob.setStatus(Status.PROCESSED);
+    return blob;
+  }
+
+  private BlobApplicationAware processWalletContracts(BlobApplicationAware blob, Path blobPath) {
+    log.info("Extracting contracts from:{}", blob.getBlobUri());
+
+    numCorrectlyExportedContracts = 0;
+    numFailedContracts = 0;
+    numTotalContracts = 0;
+
+    ObjectMapper objectMapper = new ObjectMapper();
+    JsonFactory jsonFactory = new JsonFactory();
+
+    try (InputStream inputStream = new FileInputStream(blobPath.toFile())) {
+      JsonParser jsonParser = jsonFactory.createParser(inputStream);
+
+      if (jsonParser.nextToken() != JsonToken.START_ARRAY) {
+        log.error("Validation error: expected wallet export contracts array");
+        return blob;
+      }
+
+      while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
+        try {
+          WalletContract contract = objectMapper.readValue(jsonParser, WalletContract.class);
+          if (contract == null) {
+            return blob;
+          }
+          numTotalContracts++;
+
+        } catch (IOException e) {
+          log.error("Failed to deserialize the contract {}: {}", numCorrectTrx - 1, e.getMessage());
+        }
+      }
+    } catch (JsonParseException | MismatchedInputException e) {
+      log.error("Validation error: malformed wallet export");
+      return blob;
+    } catch (IOException e) {
+      log.error("Missing blob file:{}", blobPath);
+      return blob;
     }
 
     blob.setStatus(Status.PROCESSED);
