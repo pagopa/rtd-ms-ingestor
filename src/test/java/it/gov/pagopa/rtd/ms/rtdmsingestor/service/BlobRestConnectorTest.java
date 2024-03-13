@@ -77,6 +77,9 @@ class BlobRestConnectorTest {
   @SpyBean
   private BlobRestConnector blobRestConnector;
 
+  @SpyBean
+  private EventProcessor blobProcessor;
+
   @MockBean
   CloseableHttpClient client;
   @MockBean
@@ -152,11 +155,11 @@ class BlobRestConnectorTest {
     fakeBlob.setTargetDir(tmpDirectory);
     fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
 
-    blobRestConnector.process(fakeBlob);
+    blobProcessor.process(fakeBlob);
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-      assertEquals(blobRestConnector.getNumTotalTrx(), blobRestConnector.getNumCorrectTrx());
-      assertEquals(5, blobRestConnector.getNumTotalTrx());
-      assertEquals(5, blobRestConnector.getNumCorrectTrx());
+      assertEquals(blobProcessor.getNumTotalTrx(), blobProcessor.getNumCorrectTrx());
+      assertEquals(5, blobProcessor.getNumTotalTrx());
+      assertEquals(5, blobProcessor.getNumCorrectTrx());
       assertEquals(Status.PROCESSED, fakeBlob.getStatus());
     });
   }
@@ -168,7 +171,7 @@ class BlobRestConnectorTest {
     fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
     fakeBlob.setBlob(blobName + ".missing");
 
-    blobRestConnector.process(fakeBlob);
+    blobProcessor.process(fakeBlob);
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
       assertThat(output.getOut(), containsString("Extracting transactions from:"));
       assertThat(output.getOut(), containsString("Missing blob file:"));
@@ -196,12 +199,12 @@ class BlobRestConnectorTest {
     fakeBlob.setTargetDir(tmpDirectory);
     fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
 
-    blobRestConnector.process(fakeBlob);
+    blobProcessor.process(fakeBlob);
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
 
-      assertEquals(3, blobRestConnector.getNumCorrectTrx());
-      assertEquals(0, blobRestConnector.getNumNotEnrolledCards());
-      assertEquals(53, blobRestConnector.getNumTotalTrx());
+      assertEquals(3, blobProcessor.getNumCorrectTrx());
+      assertEquals(0, blobProcessor.getNumNotEnrolledCards());
+      assertEquals(53, blobProcessor.getNumTotalTrx());
 
       assertThat(output.getOut(), containsString("Invalid character for Fiscal Code "));
       assertThat(output.getOut(), containsString("Invalid length for Fiscal Code "));
@@ -235,12 +238,11 @@ class BlobRestConnectorTest {
     fakeBlob.setTargetDir(tmpDirectory);
     fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
 
-    blobRestConnector.process(fakeBlob);
+    blobProcessor.process(fakeBlob);
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-
-      assertEquals(0, blobRestConnector.getNumCorrectTrx());
-      assertEquals(1, blobRestConnector.getNumTotalTrx());
-      assertEquals(0, blobRestConnector.getNumNotEnrolledCards());
+      assertEquals(0, blobProcessor.getNumCorrectTrx());
+      assertEquals(1, blobProcessor.getNumTotalTrx());
+      assertEquals(0, blobProcessor.getNumNotEnrolledCards());
       assertEquals(Status.PROCESSED, fakeBlob.getStatus());
     });
   }
@@ -261,10 +263,10 @@ class BlobRestConnectorTest {
     fakeBlob.setTargetDir(tmpDirectory);
     fakeBlob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
 
-    blobRestConnector.process(fakeBlob);
+    blobProcessor.process(fakeBlob);
 
     await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
-      assertEquals(0, blobRestConnector.getNumCorrectTrx());
+      assertEquals(0, blobProcessor.getNumCorrectTrx());
     });
   }
 
