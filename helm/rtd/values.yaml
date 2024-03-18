@@ -55,6 +55,7 @@ microservice-chart:
     KAFKA_SASL_JAAS_CONFIG_CONSUMER_BLOB_STORAGE_EVENTS: evh-rtd-platform-events-rtd-platform-events-sub-rtd
     KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_TRX: evh-rtd-trx-rtd-trx-producer-rtd
     INTERNAL_SERVICES_API_KEY: rtd-internal-api-product-subscription-key
+    WALLET_API_KEY: wallet-api-product-subscription-key
     MONGODB_CONNECTION_URI: mongo-db-connection-uri
 
   envConfigMapExternals:
