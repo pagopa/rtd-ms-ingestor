@@ -1,24 +1,16 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.service;
 
-import com.opencsv.bean.BeanVerifier;
-import com.opencsv.bean.CsvToBean;
-import com.opencsv.bean.CsvToBeanBuilder;
-import com.opencsv.exceptions.CsvException;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
-import java.io.FileNotFoundException;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.model.WalletContract;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpResponse;
@@ -27,11 +19,12 @@ import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicHeader;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.stream.function.StreamBridge;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 import org.springframework.validation.annotation.Validated;
@@ -48,13 +41,24 @@ public class BlobRestConnector {
   @Value("${ingestor.api.baseurl}")
   private String baseUrl;
 
+  @Value("${ingestor.api.wallet.baseurl}")
+  private String walletBaseUrl;
+
+  @Value("${ingestor.api.wallet.updateContracts}")
+  private String updateContractsEndpoint;
+
   @Value("${ingestor.blobclient.apikey}")
   private String blobApiKey;
+
+  @Value("${ingestor.api.wallet.apikey}")
+  private String walletApiKey;
 
   @Value("${ingestor.blobclient.basepath}")
   private String blobBasePath;
 
   private final CloseableHttpClient httpClient;
+
+  private static final String APIM_SUBSCRIPTION_HEADER = "Ocp-Apim-Subscription-Key";
 
 
   /**
@@ -66,7 +70,7 @@ public class BlobRestConnector {
   public BlobApplicationAware get(BlobApplicationAware blob) {
     String uri = baseUrl + "/" + blobBasePath + "/" + blob.getContainer() + "/" + blob.getBlob();
     final HttpGet getBlob = new HttpGet(uri);
-    getBlob.setHeader(new BasicHeader("Ocp-Apim-Subscription-Key", blobApiKey));
+    getBlob.setHeader(new BasicHeader(APIM_SUBSCRIPTION_HEADER, blobApiKey));
 
     try {
       OutputStream result = httpClient.execute(getBlob, new FileDownloadResponseHandler(
@@ -91,7 +95,7 @@ public class BlobRestConnector {
   public BlobApplicationAware deleteRemote(BlobApplicationAware blob) {
     String uri = baseUrl + "/" + blobBasePath + "/" + blob.getContainer() + "/" + blob.getBlob();
     final HttpDelete deleteBlob = new HttpDelete(uri);
-    deleteBlob.setHeader(new BasicHeader("Ocp-Apim-Subscription-Key", blobApiKey));
+    deleteBlob.setHeader(new BasicHeader(APIM_SUBSCRIPTION_HEADER, blobApiKey));
     deleteBlob.setHeader(new BasicHeader("x-ms-version", "2021-04-10"));
 
     try (CloseableHttpResponse myResponse = httpClient.execute(deleteBlob)) {
@@ -125,6 +129,32 @@ public class BlobRestConnector {
     }
   }
 
+  public boolean postContract(WalletContract contract) throws JsonProcessingException {
+    ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+    String contractJson = ow.writeValueAsString(contract.getMethodAttributes());
+    StringEntity contractEntity = new StringEntity(
+        contractJson,
+        ContentType.APPLICATION_JSON);
 
+    String uri = walletBaseUrl + updateContractsEndpoint;
+    final HttpPost postContract = new HttpPost(uri);
+    postContract.setEntity(contractEntity);
+    postContract.setHeader(new BasicHeader(APIM_SUBSCRIPTION_HEADER, walletApiKey));
+
+    try (CloseableHttpResponse myResponse = httpClient.execute(postContract)) {
+      int statusCode = myResponse.getStatusLine().getStatusCode();
+      if (statusCode == HttpStatus.SC_OK) {
+        log.info("Successfully POST contract {}", contract);
+        return true;
+      } else {
+        log.error("Can't POST contract {}. Invalid HTTP response: {}, {}", contract, statusCode,
+            myResponse.getStatusLine().getReasonPhrase());
+        return false;
+      }
+    } catch (Exception ex) {
+      log.error("Can't POST contract {}. Unexpected error: {}", contract, ex.getMessage());
+      return false;
+    }
+  }
 
 }

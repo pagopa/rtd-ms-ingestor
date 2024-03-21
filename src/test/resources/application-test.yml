@@ -10,7 +10,8 @@ ingestor:
   api:
     baseurl: https://${CSV_TRANSACTION_DECRYPT_HOST:internal.it}
     wallet:
-      updateContracts: https://{WALLET_HOST}/payment-wallet-migrations/v1/migrations/wallets/updateDetails
+      baseurl: https://${WALLET_HOST:wallet.it}
+      updateContracts: /payment-wallet-migrations/v1/migrations/wallets/updateDetails
       apikey: ${WALLET_API_KEY:myapikey}
   blobclient:
     basepath: storage
