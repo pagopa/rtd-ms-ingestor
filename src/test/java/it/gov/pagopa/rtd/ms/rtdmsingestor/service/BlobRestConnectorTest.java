@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -14,10 +15,14 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.repositories.IngestorDAO;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.model.WalletContract;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -34,6 +39,7 @@ import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicStatusLine;
@@ -43,6 +49,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
@@ -145,6 +152,24 @@ class BlobRestConnectorTest {
   }
 
   @Test
+  void shouldPostContract() throws IOException {
+
+    String serializedContract = "{ \"action\": \"CREATE\", \"import_outcome\": \"OK\", \"payment_method\": \"CARD\", \"method_attributes\": { \"pan_tail\": \"6295\", \"expdate\": \"04/28\", \"card_id_4\": \"6b4d345a594e69654478796546556c384c6955765a42794a345139305457424c394d794e4b4566466c44593d\", \"card_payment_circuit\": \"MC\", \"new_contract_identifier\": \"1e04de1f762b440fa5c444464603bc7c\", \"original_contract_identifier\": \"3b1288edc1f14e0a97129d84fbf1f01e\", \"card_bin\": \"459521\" } }";
+    ObjectMapper objectMapper = new ObjectMapper();
+    JsonParser jsonParser = new JsonFactory().createJsonParser(serializedContract);
+    WalletContract contract = objectMapper.readValue(jsonParser, WalletContract.class);
+
+    CloseableHttpResponse mockedResponse = Mockito.mock(CloseableHttpResponse.class);
+
+    doReturn(mockedResponse).when(client).execute(any(HttpPost.class));
+    when(mockedResponse.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1,
+        HttpStatus.SC_OK, contract.getOriginalContractIdentifier()));
+
+    assertTrue(blobRestConnector.postContract(contract));
+    verify(client, times(1)).execute(any(HttpPost.class));
+  }
+
+  @Test
   void shouldProcess() throws IOException {
     final String transactions = "testTransactions.csv";
 
@@ -179,7 +204,8 @@ class BlobRestConnectorTest {
     decryptedFile.getParentFile().mkdirs();
     decryptedFile.createNewFile();
 
-    FileOutputStream blobDst = new FileOutputStream(Path.of(tmpDirectory, blobNameWallet).toString());
+    FileOutputStream blobDst = new FileOutputStream(
+        Path.of(tmpDirectory, blobNameWallet).toString());
     Files.copy(Path.of(resources, blobNameWallet), blobDst);
 
     fakeBlobWallet.setTargetDir(tmpDirectory);
