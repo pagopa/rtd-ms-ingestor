@@ -10,6 +10,7 @@ import com.opencsv.bean.BeanVerifier;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.exceptions.CsvException;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.adapter.ContractAdapter;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Application;
@@ -20,7 +21,6 @@ import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -40,6 +40,9 @@ import org.springframework.validation.annotation.Validated;
 @RequiredArgsConstructor
 public class EventProcessor {
 
+  private final String CREATE_ACTION = "CREATE";
+  private final String DELETE_ACTION = "DELETE";
+
   private final StreamBridge sb;
 
   private final IngestorRepository repository;
@@ -52,6 +55,10 @@ public class EventProcessor {
   private int numFailedContracts;
 
   private int numTotalContracts;
+
+  private final BlobRestConnector connector;
+
+  private final ContractAdapter adapter;
 
   public BlobApplicationAware process(BlobApplicationAware blob) {
     Path blobPath = Path.of(blob.getTargetDir(), blob.getBlob());
@@ -148,8 +155,29 @@ public class EventProcessor {
           }
           numTotalContracts++;
 
+          contract = adapter.adapt(contract);
+          if (contract.getAction().equals(CREATE_ACTION)) {
+            log.debug("Saving contract {}", contract);
+            if (!connector.postContract(contract)) {
+              log.error("Failed saving contract {}", contract);
+              numFailedContracts++;
+            } else {
+              numCorrectlyExportedContracts++;
+            }
+          }
+          if (contract.getAction().equals(DELETE_ACTION)) {
+            log.debug("Deleting contract {}", contract);
+//            if (!connector.delete(contract)) {
+            if (false) {
+              log.error("Failed deleting contract {}", contract);
+              numFailedContracts++;
+            } else {
+              numCorrectlyExportedContracts++;
+            }
+          }
         } catch (IOException e) {
           log.error("Failed to deserialize the contract {}: {}", numCorrectTrx - 1, e.getMessage());
+          numFailedContracts++;
         }
       }
     } catch (JsonParseException | MismatchedInputException e) {
@@ -160,7 +188,11 @@ public class EventProcessor {
       return blob;
     }
 
-    blob.setStatus(Status.PROCESSED);
+    if (numFailedContracts == 0) {
+      log.info("Blob {} processed successfully", blob.getBlob());
+      blob.setStatus(Status.PROCESSED);
+    }
+
     return blob;
   }
 
