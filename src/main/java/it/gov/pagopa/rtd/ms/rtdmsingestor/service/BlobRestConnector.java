@@ -47,6 +47,9 @@ public class BlobRestConnector {
   @Value("${ingestor.api.wallet.updateContracts}")
   private String updateContractsEndpoint;
 
+  @Value("${ingestor.api.wallet.deleteContracts}")
+  private String deleteContractsEndpoint;
+
   @Value("${ingestor.blobclient.apikey}")
   private String blobApiKey;
 
@@ -153,6 +156,35 @@ public class BlobRestConnector {
       }
     } catch (Exception ex) {
       log.error("Can't POST contract {}. Unexpected error: {}", contract, ex.getMessage());
+      return false;
+    }
+  }
+
+  public boolean deleteContract(String newContractIdentifier) throws JsonProcessingException {
+    String uri = walletBaseUrl + deleteContractsEndpoint;
+    final HttpPost deleteContract = new HttpPost(uri);
+    deleteContract.setHeader(new BasicHeader(APIM_SUBSCRIPTION_HEADER, walletApiKey));
+    ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+    String newContractIdentifierJson = ow.writeValueAsString(newContractIdentifier);
+    StringEntity newContractIdentifierEntity = new StringEntity(
+        newContractIdentifierJson,
+        ContentType.APPLICATION_JSON);
+    deleteContract.setEntity(newContractIdentifierEntity);
+
+    try (CloseableHttpResponse myResponse = httpClient.execute(deleteContract)) {
+      int statusCode = myResponse.getStatusLine().getStatusCode();
+      if (statusCode == HttpStatus.SC_OK) {
+        log.info("Successfully delete contract {}", newContractIdentifier);
+        return true;
+      } else {
+        log.error("Can't delete contract {}. Invalid HTTP response: {}, {}", newContractIdentifier,
+            statusCode,
+            myResponse.getStatusLine().getReasonPhrase());
+        return false;
+      }
+    } catch (Exception ex) {
+      log.error("Can't delete contract {}. Unexpected error: {}", newContractIdentifier,
+          ex.getMessage());
       return false;
     }
   }
