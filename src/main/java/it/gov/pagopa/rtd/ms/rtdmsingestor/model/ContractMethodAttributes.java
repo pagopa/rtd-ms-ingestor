@@ -40,6 +40,6 @@ public class ContractMethodAttributes {
 
   @JsonAlias("card_bin")
   @NotNull
-  @Pattern(regexp = "\\d{6}")
+  @Pattern(regexp = "\\d{6}|\\d{8}")
   private String cardBin;
 }
