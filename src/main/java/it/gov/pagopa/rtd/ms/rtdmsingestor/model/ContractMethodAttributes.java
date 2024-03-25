@@ -16,19 +16,19 @@ public class ContractMethodAttributes {
 
   @JsonAlias("pan_tail")
   @Pattern(regexp = "\\d{4}")
-  private String panTail;
+  private String lastFourDigits;
 
   @JsonAlias("expdate")
   @NotNull
-  private String expdate;
+  private String expiryDate;
 
   @JsonAlias("card_id_4")
   @NotNull
-  private String cardId4;
+  private String paymentGatewayCardId;
 
   @JsonAlias("card_payment_circuit")
   @NotNull
-  private String cardPaymentCircuit;
+  private String paymentCircuit;
 
   @JsonAlias("new_contract_identifier")
   @NotNull
