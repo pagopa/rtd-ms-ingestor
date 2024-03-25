@@ -158,7 +158,7 @@ public class EventProcessor {
           contract = adapter.adapt(contract);
           if (contract.getAction().equals(CREATE_ACTION)) {
             log.debug("Saving contract {}", contract);
-            if (!connector.postContract(contract)) {
+            if (!connector.postContract(contract.getMethodAttributes())) {
               log.error("Failed saving contract {}", contract);
               numFailedContracts++;
             } else {

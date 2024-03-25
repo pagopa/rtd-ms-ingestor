@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.model.WalletContract;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.model.ContractMethodAttributes;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -129,9 +129,9 @@ public class BlobRestConnector {
     }
   }
 
-  public boolean postContract(WalletContract contract) throws JsonProcessingException {
+  public boolean postContract(ContractMethodAttributes contract) throws JsonProcessingException {
     ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
-    String contractJson = ow.writeValueAsString(contract.getMethodAttributes());
+    String contractJson = ow.writeValueAsString(contract);
     StringEntity contractEntity = new StringEntity(
         contractJson,
         ContentType.APPLICATION_JSON);

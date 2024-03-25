@@ -8,7 +8,7 @@ import static org.mockito.Mockito.doReturn;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.repositories.IngestorDAO;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.model.WalletContract;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.model.ContractMethodAttributes;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -83,7 +83,7 @@ class EventProcessorTest {
     fakeBlobWallet.setTargetDir(tmpDirectory);
     fakeBlobWallet.setStatus(BlobApplicationAware.Status.DOWNLOADED);
 
-    doReturn(true).when(connector).postContract(any(WalletContract.class));
+    doReturn(true).when(connector).postContract(any(ContractMethodAttributes.class));
 
     blobProcessor.process(fakeBlobWallet);
     await().atMost(Duration.ofSeconds(1)).untilAsserted(() -> {

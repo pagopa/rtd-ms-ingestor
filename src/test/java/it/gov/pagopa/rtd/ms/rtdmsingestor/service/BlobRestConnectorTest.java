@@ -165,7 +165,7 @@ class BlobRestConnectorTest {
     when(mockedResponse.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1,
         HttpStatus.SC_OK, contract.getOriginalContractIdentifier()));
 
-    assertTrue(blobRestConnector.postContract(contract));
+    assertTrue(blobRestConnector.postContract(contract.getMethodAttributes()));
     verify(client, times(1)).execute(any(HttpPost.class));
   }
 
