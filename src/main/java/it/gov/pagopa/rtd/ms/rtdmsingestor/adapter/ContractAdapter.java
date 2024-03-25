@@ -8,11 +8,6 @@ import org.springframework.stereotype.Service;
 public class ContractAdapter {
 
   public WalletContract adapt(WalletContract contract) {
-    ContractMethodAttributes methodAttributes = contract.getMethodAttributes();
-    if (methodAttributes != null && (methodAttributes.getCardPaymentCircuit().equals("MC"))) {
-      methodAttributes.setCardPaymentCircuit("MASTERCARD");
-      contract.setMethodAttributes(methodAttributes);
-    }
     return contract;
   }
 
