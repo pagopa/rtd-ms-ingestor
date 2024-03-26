@@ -147,15 +147,15 @@ public class BlobRestConnector {
     try (CloseableHttpResponse myResponse = httpClient.execute(postContract)) {
       int statusCode = myResponse.getStatusLine().getStatusCode();
       if (statusCode == HttpStatus.SC_OK) {
-        log.info("Successfully POST contract {}", contract);
+        log.info("Successfully updated contract {}", contract);
         return true;
       } else {
-        log.error("Can't POST contract {}. Invalid HTTP response: {}, {}", contract, statusCode,
+        log.error("Can't update contract {}. Invalid HTTP response: {}, {}", contract, statusCode,
             myResponse.getStatusLine().getReasonPhrase());
         return false;
       }
     } catch (Exception ex) {
-      log.error("Can't POST contract {}. Unexpected error: {}", contract, ex.getMessage());
+      log.error("Can't update contract {}. Unexpected error: {}", contract, ex.getMessage());
       return false;
     }
   }
