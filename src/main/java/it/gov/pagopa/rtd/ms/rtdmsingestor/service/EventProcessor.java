@@ -167,8 +167,7 @@ public class EventProcessor {
           }
           if (contract.getAction().equals(DELETE_ACTION)) {
             log.debug("Deleting contract {}", contract);
-//            if (!connector.delete(contract)) {
-            if (false) {
+            if (!connector.deleteContract(contract.getOriginalContractIdentifier())) {
               log.error("Failed deleting contract {}", contract);
               numFailedContracts++;
             } else {
