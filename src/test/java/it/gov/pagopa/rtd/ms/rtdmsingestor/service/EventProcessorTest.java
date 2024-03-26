@@ -90,4 +90,27 @@ class EventProcessorTest {
       assertEquals(Status.PROCESSED, fakeBlobWallet.getStatus());
     });
   }
+
+  @Test
+  void shouldNotProcessWalletEventFailedRequest() throws IOException {
+
+    // Create fake file to process
+    File decryptedFile = Path.of(tmpDirectory, blobNameWallet).toFile();
+    decryptedFile.getParentFile().mkdirs();
+    decryptedFile.createNewFile();
+
+    FileOutputStream blobDst = new FileOutputStream(
+        Path.of(tmpDirectory, blobNameWallet).toString());
+    Files.copy(Path.of(resources, blobNameWallet), blobDst);
+
+    fakeBlobWallet.setTargetDir(tmpDirectory);
+    fakeBlobWallet.setStatus(BlobApplicationAware.Status.DOWNLOADED);
+
+    doReturn(false).when(connector).postContract(any(ContractMethodAttributes.class));
+
+    blobProcessor.process(fakeBlobWallet);
+    await().atMost(Duration.ofSeconds(1)).untilAsserted(() -> {
+      assertEquals(Status.PROCESSED, fakeBlobWallet.getStatus());
+    });
+  }
 }

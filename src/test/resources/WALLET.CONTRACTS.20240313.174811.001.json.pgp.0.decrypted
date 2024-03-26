@@ -1,131 +1,35 @@
-[ {
-  "action" : "CREATE",
-  "import_outcome" : "OK",
-  "payment_method" : "CARD",
-  "method_attributes" : {
-    "pan_tail" : "9883",
-    "expdate" : "03/31",
-    "card_id_4" : "4e5a7161726e704459694a325038624a796d585575707a70366d366978523446574b52665a31794a5771633d",
-    "card_payment_circuit" : "MASTERCARD",
-    "new_contract_identifier" : "f94b8c8ad0104685891fa682a611e5c4",
-    "original_contract_identifier" : "1f09906ba3b04adf88ad8f31f312542d",
-    "card_bin" : "3742"
+[
+  {
+    "action" : "CREATE",
+    "import_outcome" : "OK",
+    "payment_method" : "CARD",
+    "method_attributes" : {
+      "pan_tail" : "9883",
+      "expdate" : "03/31",
+      "card_id_4" : "4e5a7161726e704459694a325038624a796d585575707a70366d366978523446574b52665a31794a5771633d",
+      "card_payment_circuit" : "MASTERCARD",
+      "new_contract_identifier" : "f94b8c8ad0104685891fa682a611e5c4",
+      "original_contract_identifier" : "1f09906ba3b04adf88ad8f31f312542d",
+      "card_bin" : "3742"
+    }
+  },
+  {
+    "action" : "CREATE",
+    "import_outcome" : "OK",
+    "payment_method" : "CARD",
+    "method_attributes" : {
+      "pan_tail" : "1434",
+      "expdate" : "11/30",
+      "card_id_4" : "437137744c3051724473597579796f755a4e774731705a4b5946305a4a62784a4c4a376f723734354248493d",
+      "card_payment_circuit" : "VISA",
+      "new_contract_identifier" : "f07d9884898847f787726c86ee78f34f",
+      "original_contract_identifier" : "e386404adca94111b6d91508d2758bb2",
+      "card_bin" : "5555"
+    }
+  },
+  {
+    "import_outcome" : "OK",
+    "action" : "DELETE",
+    "original_contract_identifier" : "W1710350703035tZlo"
   }
-}, {
-  "action" : "CREATE",
-  "import_outcome" : "OK",
-  "payment_method" : "CARD",
-  "method_attributes" : {
-    "pan_tail" : "1434",
-    "expdate" : "11/30",
-    "card_id_4" : "437137744c3051724473597579796f755a4e774731705a4b5946305a4a62784a4c4a376f723734354248493d",
-    "card_payment_circuit" : "MAESTRO",
-    "new_contract_identifier" : "f07d9884898847f787726c86ee78f34f",
-    "original_contract_identifier" : "e386404adca94111b6d91508d2758bb2",
-    "card_bin" : "5555"
-  }
-}, {
-  "action" : "CREATE",
-  "import_outcome" : "OK",
-  "payment_method" : "CARD",
-  "method_attributes" : {
-    "pan_tail" : "3908",
-    "expdate" : "07/27",
-    "card_id_4" : "4355324e374479475665705033645432344b582f4a4f777a62684b4659644e714235544d33596a6a4d50413d",
-    "card_payment_circuit" : "MAESTRO",
-    "new_contract_identifier" : "d0f192acafc2474c9fcfb39eafd9d7ef",
-    "original_contract_identifier" : "a2f449580f5048efb1a5c7e4c8defa6a",
-    "card_bin" : "5020"
-  }
-}, {
-  "action" : "CREATE",
-  "import_outcome" : "OK",
-  "payment_method" : "CARD",
-  "method_attributes" : {
-    "pan_tail" : "1014",
-    "expdate" : "05/25",
-    "card_id_4" : "587437437567784b4a396a61315645754d2f455375564651624a7656344a7849706c454d4e5034436474453d",
-    "card_payment_circuit" : "MAESTRO",
-    "new_contract_identifier" : "6ac20e8a92564c90801654d9a495710f",
-    "original_contract_identifier" : "c263fb5f6b4446368e6631831e8bbf6f",
-    "card_bin" : "5018"
-  }
-}, {
-  "action" : "CREATE",
-  "import_outcome" : "OK",
-  "payment_method" : "CARD",
-  "method_attributes" : {
-    "pan_tail" : "5521",
-    "expdate" : "10/30",
-    "card_id_4" : "684231346530386f5445765743534a4732785170396361786e344b7159645061416334363536776f426f553d",
-    "card_payment_circuit" : "VISA",
-    "new_contract_identifier" : "4397f6d906e34ccd96b61eab82df1d6d",
-    "original_contract_identifier" : "63c10f1f64fa4e49a91ac719375fde89",
-    "card_bin" : "4251"
-  }
-}, {
-  "action" : "CREATE",
-  "import_outcome" : "OK",
-  "payment_method" : "CARD",
-  "method_attributes" : {
-    "pan_tail" : "4430",
-    "expdate" : "07/32",
-    "card_id_4" : "436b37364e7a46557479564a4f5557484865796a446e4e6332663249704238495751565a59715239772b343d",
-    "card_payment_circuit" : "MASTERCARD",
-    "new_contract_identifier" : "6a837da356eb4d6f840038b3b240ca12",
-    "original_contract_identifier" : "6d4f278b06bc4e04a65e2ff2247a7df8",
-    "card_bin" : "5825"
-  }
-}, {
-  "action" : "CREATE",
-  "import_outcome" : "OK",
-  "payment_method" : "CARD",
-  "method_attributes" : {
-    "pan_tail" : "1586",
-    "expdate" : "12/25",
-    "card_id_4" : "6d4878463737306653744b52737459457773644f6b2b662f7a39624c38772b6e794566686841704e5036733d",
-    "card_payment_circuit" : "MASTERCARD",
-    "new_contract_identifier" : "db3bd057805541f8815604c4128813a8",
-    "original_contract_identifier" : "0d3f7e19135a4bdbad802804dba4925f",
-    "card_bin" : "4711"
-  }
-}, {
-  "action" : "CREATE",
-  "import_outcome" : "OK",
-  "payment_method" : "CARD",
-  "method_attributes" : {
-    "pan_tail" : "3669",
-    "expdate" : "12/25",
-    "card_id_4" : "5038533543473479357a4e6448614531515278663437486e697234495a6d546e392f72556768424d36356b3d",
-    "card_payment_circuit" : "MAESTRO",
-    "new_contract_identifier" : "8e7cf7f5179f4a89b464bc8ca38d4759",
-    "original_contract_identifier" : "376ee9c690d0480a900811ec582a57dc",
-    "card_bin" : "6759"
-  }
-}, {
-  "action" : "CREATE",
-  "import_outcome" : "OK",
-  "payment_method" : "CARD",
-  "method_attributes" : {
-    "pan_tail" : "9537",
-    "expdate" : "08/32",
-    "card_id_4" : "77564e537a4875557864326f4359643158436b39344e5637357a664749586e4c734b6367796a35734874733d",
-    "card_payment_circuit" : "MASTERCARD",
-    "new_contract_identifier" : "2a148394ad7b41f4aad8b76ded3cdc65",
-    "original_contract_identifier" : "e53171a352434401945f5f76b029ab47",
-    "card_bin" : "5018"
-  }
-}, {
-  "action" : "CREATE",
-  "import_outcome" : "OK",
-  "payment_method" : "CARD",
-  "method_attributes" : {
-    "pan_tail" : "7885",
-    "expdate" : "06/31",
-    "card_id_4" : "776a353165696b4e78504d4534656265397a48664932517153434d424b696a68427a6d75384950674535513d",
-    "card_payment_circuit" : "AMEX",
-    "new_contract_identifier" : "3a8b8fb4889b41d39a364c3f47bc06fc",
-    "original_contract_identifier" : "f0075d98328d44e780681a38cbbd93c4",
-    "card_bin" : "2645"
-  }
-} ]
+]
