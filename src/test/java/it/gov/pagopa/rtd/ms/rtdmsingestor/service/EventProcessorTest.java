@@ -84,6 +84,8 @@ class EventProcessorTest {
     fakeBlobWallet.setStatus(BlobApplicationAware.Status.DOWNLOADED);
 
     doReturn(true).when(connector).postContract(any(ContractMethodAttributes.class));
+    doReturn(true).when(connector).deleteContract(any(String.class));
+
 
     blobProcessor.process(fakeBlobWallet);
     await().atMost(Duration.ofSeconds(1)).untilAsserted(() -> {
@@ -110,7 +112,7 @@ class EventProcessorTest {
 
     blobProcessor.process(fakeBlobWallet);
     await().atMost(Duration.ofSeconds(1)).untilAsserted(() -> {
-      assertEquals(Status.PROCESSED, fakeBlobWallet.getStatus());
+      assertEquals(Status.DOWNLOADED, fakeBlobWallet.getStatus());
     });
   }
 }
