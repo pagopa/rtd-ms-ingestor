@@ -164,7 +164,7 @@ class BlobRestConnectorTest {
 
     doReturn(mockedResponse).when(client).execute(any(HttpPost.class));
     when(mockedResponse.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1,
-        HttpStatus.SC_OK, contract.getOriginalContractIdentifier()));
+        HttpStatus.SC_OK, contract.getContractIdentifier()));
 
     assertTrue(blobRestConnector.postContract(contract.getMethodAttributes()));
     verify(client, times(1)).execute(any(HttpPost.class));
@@ -182,9 +182,9 @@ class BlobRestConnectorTest {
 
     doReturn(mockedResponse).when(client).execute(any(HttpPost.class));
     when(mockedResponse.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1,
-        HttpStatus.SC_OK, contract.getOriginalContractIdentifier()));
+        HttpStatus.SC_OK, contract.getContractIdentifier()));
 
-    assertTrue(blobRestConnector.deleteContract(contract.getOriginalContractIdentifier()));
+    assertTrue(blobRestConnector.deleteContract(contract.getContractIdentifier()));
     verify(client, times(1)).execute(any(HttpPost.class));
   }
 
@@ -220,7 +220,7 @@ class BlobRestConnectorTest {
     when(mockedResponse.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1,
         HttpStatus.SC_NOT_FOUND, "Contract not found"));
 
-    assertFalse(blobRestConnector.deleteContract(contract.getOriginalContractIdentifier()));
+    assertFalse(blobRestConnector.deleteContract(contract.getContractIdentifier()));
     verify(client, times(1)).execute(any(HttpPost.class));
   }
 

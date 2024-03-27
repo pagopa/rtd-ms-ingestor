@@ -30,13 +30,13 @@ public class ContractMethodAttributes {
   @NotNull
   private String paymentCircuit;
 
+  @JsonAlias("original_contract_identifier")
+  @NotNull
+  private String contractIdentifier;
+
   @JsonAlias("new_contract_identifier")
   @NotNull
   private String newContractIdentifier;
-
-  @JsonAlias("original_contract_identifier")
-  @NotNull
-  private String originalContractIdentifier;
 
   @JsonAlias("card_bin")
   @NotNull

@@ -44,5 +44,5 @@ public class WalletContract {
 
   @JsonAlias("original_contract_identifier")
   @JsonInclude(Include.NON_NULL)
-  private String originalContractIdentifier;
+  private String contractIdentifier;
 }
