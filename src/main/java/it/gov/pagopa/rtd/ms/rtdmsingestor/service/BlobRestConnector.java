@@ -10,7 +10,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -145,8 +144,6 @@ public class BlobRestConnector {
     postContract.setEntity(contractEntity);
     postContract.setHeader(new BasicHeader(APIM_SUBSCRIPTION_HEADER, walletApiKey));
 
-    log.info(Arrays.toString(postContract.getAllHeaders()));
-
     try (CloseableHttpResponse myResponse = httpClient.execute(postContract)) {
       int statusCode = myResponse.getStatusLine().getStatusCode();
       if (statusCode == HttpStatus.SC_OK) {
@@ -173,8 +170,6 @@ public class BlobRestConnector {
         newContractIdentifierJson,
         ContentType.APPLICATION_JSON);
     deleteContract.setEntity(newContractIdentifierEntity);
-
-    log.info(Arrays.toString(deleteContract.getAllHeaders()));
 
     try (CloseableHttpResponse myResponse = httpClient.execute(deleteContract)) {
       int statusCode = myResponse.getStatusLine().getStatusCode();
