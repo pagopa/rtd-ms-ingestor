@@ -164,10 +164,8 @@ public class BlobRestConnector {
     String uri = walletBaseUrl + deleteContractsEndpoint;
     final HttpPost deleteContract = new HttpPost(uri);
     deleteContract.setHeader(new BasicHeader(APIM_SUBSCRIPTION_HEADER, walletApiKey));
-    ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
-    String newContractIdentifierJson = ow.writeValueAsString(contractIdentifier);
     StringEntity newContractIdentifierEntity = new StringEntity(
-        newContractIdentifierJson,
+        "{\"newContractIdentifier\": \"" + contractIdentifier + "\"}",
         ContentType.APPLICATION_JSON);
     deleteContract.setEntity(newContractIdentifierEntity);
 
