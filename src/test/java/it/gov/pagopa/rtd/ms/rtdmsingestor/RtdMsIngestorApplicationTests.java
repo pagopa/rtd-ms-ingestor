@@ -13,6 +13,7 @@ import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.EventGridEvent;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.service.BlobRestConnector;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.service.EventProcessor;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -52,6 +53,9 @@ class RtdMsIngestorApplicationTests {
 
   @SpyBean
   private BlobRestConnector blobRestConnector;
+
+  @SpyBean
+  private EventProcessor blobProcessor;
 
   @MockBean
   CloseableHttpClient client;
@@ -104,7 +108,7 @@ class RtdMsIngestorApplicationTests {
 
     // Mock every step of the message handling
     doReturn(blobDownloaded).when(blobRestConnector).get(any(BlobApplicationAware.class));
-    doReturn(blobProcessed).when(blobRestConnector).process(any(BlobApplicationAware.class));
+    doReturn(blobProcessed).when(blobProcessor).process(any(BlobApplicationAware.class));
     doReturn(blobApplicationAware).when(blobRestConnector)
         .deleteRemote(any(BlobApplicationAware.class));
 
@@ -115,7 +119,7 @@ class RtdMsIngestorApplicationTests {
     inputDestination.send(MessageBuilder.withPayload(myList).build());
 
     verify(blobRestConnector, times(1)).get(any());
-    verify(blobRestConnector, times(1)).process(any());
+    verify(blobProcessor, times(1)).process(any());
     verify(blobRestConnector, times(1)).deleteRemote(any());
     verify(blobApplicationAware, times(1)).localCleanup();
 
@@ -131,7 +135,7 @@ class RtdMsIngestorApplicationTests {
     inputDestination.send(MessageBuilder.withPayload(myList).build());
 
     verify(blobRestConnector, times(0)).get(any());
-    verify(blobRestConnector, times(0)).process(any());
+    verify(blobProcessor, times(0)).process(any());
     verify(blobRestConnector, times(0)).deleteRemote(any());
     verify(blobApplicationAware, times(0)).localCleanup();
     assertThat(output.getOut(), containsString("Wrong name format:"));
@@ -146,7 +150,7 @@ class RtdMsIngestorApplicationTests {
     inputDestination.send(MessageBuilder.withPayload(myList).build());
 
     verify(blobRestConnector, times(1)).get(any());
-    verify(blobRestConnector, times(0)).process(any());
+    verify(blobProcessor, times(0)).process(any());
     verify(blobRestConnector, times(0)).deleteRemote(any());
     verify(blobApplicationAware, times(0)).localCleanup();
   }
@@ -156,12 +160,12 @@ class RtdMsIngestorApplicationTests {
 
     // Mock the get step of the message handling
     doReturn(blobDownloaded).when(blobRestConnector).get(any(BlobApplicationAware.class));
-    doReturn(blobDownloaded).when(blobRestConnector).process(any(BlobApplicationAware.class));
+    doReturn(blobDownloaded).when(blobProcessor).process(any(BlobApplicationAware.class));
 
     inputDestination.send(MessageBuilder.withPayload(myList).build());
 
     verify(blobRestConnector, times(1)).get(any());
-    verify(blobRestConnector, times(1)).process(any());
+    verify(blobProcessor, times(1)).process(any());
     verify(blobRestConnector, times(0)).deleteRemote(any());
     verify(blobApplicationAware, times(0)).localCleanup();
   }
@@ -171,13 +175,13 @@ class RtdMsIngestorApplicationTests {
 
     // Mock the get step of the message handling
     doReturn(blobDownloaded).when(blobRestConnector).get(any(BlobApplicationAware.class));
-    doReturn(blobProcessed).when(blobRestConnector).process(any(BlobApplicationAware.class));
+    doReturn(blobProcessed).when(blobProcessor).process(any(BlobApplicationAware.class));
     doReturn(blobProcessed).when(blobRestConnector).deleteRemote(any(BlobApplicationAware.class));
 
     inputDestination.send(MessageBuilder.withPayload(myList).build());
 
     verify(blobRestConnector, times(1)).get(any());
-    verify(blobRestConnector, times(1)).process(any());
+    verify(blobProcessor, times(1)).process(any());
     verify(blobRestConnector, times(1)).deleteRemote(any());
     verify(blobApplicationAware, times(0)).localCleanup();
   }

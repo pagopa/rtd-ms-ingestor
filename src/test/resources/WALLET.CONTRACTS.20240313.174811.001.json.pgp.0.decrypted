@@ -1,0 +1,35 @@
+[
+  {
+    "action" : "CREATE",
+    "import_outcome" : "OK",
+    "payment_method" : "CARD",
+    "method_attributes" : {
+      "pan_tail" : "9883",
+      "expdate" : "03/31",
+      "card_id_4" : "4e5a7161726e704459694a325038624a796d585575707a70366d366978523446574b52665a31794a5771633d",
+      "card_payment_circuit" : "MASTERCARD",
+      "new_contract_identifier" : "f94b8c8ad0104685891fa682a611e5c4",
+      "original_contract_identifier" : "1f09906ba3b04adf88ad8f31f312542d",
+      "card_bin" : "3742"
+    }
+  },
+  {
+    "action" : "CREATE",
+    "import_outcome" : "OK",
+    "payment_method" : "CARD",
+    "method_attributes" : {
+      "pan_tail" : "1434",
+      "expdate" : "11/30",
+      "card_id_4" : "437137744c3051724473597579796f755a4e774731705a4b5946305a4a62784a4c4a376f723734354248493d",
+      "card_payment_circuit" : "VISA",
+      "new_contract_identifier" : "f07d9884898847f787726c86ee78f34f",
+      "original_contract_identifier" : "e386404adca94111b6d91508d2758bb2",
+      "card_bin" : "5555"
+    }
+  },
+  {
+    "import_outcome" : "OK",
+    "action" : "DELETE",
+    "original_contract_identifier" : "W1710350703035tZlo"
+  }
+]
