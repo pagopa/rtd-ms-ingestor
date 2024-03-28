@@ -182,7 +182,7 @@ class BlobRestConnectorTest {
 
     doReturn(mockedResponse).when(client).execute(any(HttpPost.class));
     when(mockedResponse.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1,
-        HttpStatus.SC_OK, contract.getContractIdentifier()));
+        HttpStatus.SC_NO_CONTENT, contract.getContractIdentifier()));
 
     assertTrue(blobRestConnector.deleteContract(contract.getContractIdentifier()));
     verify(client, times(1)).execute(any(HttpPost.class));

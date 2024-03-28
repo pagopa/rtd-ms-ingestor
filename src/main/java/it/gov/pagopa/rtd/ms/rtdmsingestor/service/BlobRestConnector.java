@@ -171,7 +171,7 @@ public class BlobRestConnector {
 
     try (CloseableHttpResponse myResponse = httpClient.execute(deleteContract)) {
       int statusCode = myResponse.getStatusLine().getStatusCode();
-      if (statusCode == HttpStatus.SC_OK) {
+      if (statusCode == HttpStatus.SC_NO_CONTENT) {
         log.info("Successfully delete contract {}", contractIdentifier);
         return true;
       } else {
