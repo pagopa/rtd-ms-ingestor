@@ -3,6 +3,7 @@ package it.gov.pagopa.rtd.ms.rtdmsingestor.service;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
@@ -25,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -148,36 +150,15 @@ public class EventProcessor {
       }
 
       while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
-        try {
-          WalletContract contract = objectMapper.readValue(jsonParser, WalletContract.class);
-          if (contract == null) {
-            return blob;
-          }
-          numTotalContracts++;
+        numTotalContracts++;
 
-          contract = adapter.adapt(contract);
-          if (contract.getAction().equals(CREATE_ACTION)) {
-            log.debug("Saving contract {}", contract);
-            if (!connector.postContract(contract.getMethodAttributes())) {
-              log.error("Failed saving contract {}", contract);
-              numFailedContracts++;
-            } else {
-              numCorrectlyExportedContracts++;
-            }
-          }
-          if (contract.getAction().equals(DELETE_ACTION)) {
-            log.debug("Deleting contract {}", contract);
-            if (!connector.deleteContract(contract.getContractIdentifier())) {
-              log.error("Failed deleting contract {}", contract);
-              numFailedContracts++;
-            } else {
-              numCorrectlyExportedContracts++;
-            }
-          }
-        } catch (IOException e) {
-          log.error("Failed to deserialize the contract {}: {}", numCorrectTrx - 1, e.getMessage());
+        WalletContract contract = objectMapper.readValue(jsonParser, WalletContract.class);
+        if (processContract(contract)) {
+          numCorrectlyExportedContracts++;
+        } else {
           numFailedContracts++;
         }
+
       }
     } catch (JsonParseException | MismatchedInputException e) {
       log.error("Validation error: malformed wallet export");
@@ -211,6 +192,42 @@ public class EventProcessor {
         log.error("Error getting records : {}", ex.getMessage());
       }
     });
+  }
+
+  private boolean processContract(WalletContract contract)
+      throws JsonProcessingException {
+
+    if (contract == null) {
+      log.error("Failed deserializing contract {}", numTotalContracts + 1);
+      return false;
+    }
+
+    contract = adapter.adapt(contract);
+
+    if (!"OK".equals(contract.getImportOutcome())) {
+      log.error("Import outcome not OK on contract {}", contract);
+      return false;
+    }
+
+    if (contract.getAction().equals(CREATE_ACTION)) {
+      log.debug("Saving contract {}", contract);
+      if (!connector.postContract(contract.getMethodAttributes())) {
+        log.error("Failed saving contract {}", contract);
+        return false;
+      } else {
+        return true;
+      }
+    } else if (contract.getAction().equals(DELETE_ACTION)) {
+      log.debug("Deleting contract {}", contract);
+      if (!connector.deleteContract(contract.getContractIdentifier())) {
+        log.error("Failed deleting contract {}", contract);
+        return false;
+      } else {
+        return true;
+      }
+    }
+    log.error("Unrecognized action on contract {}", contract);
+    return false;
   }
 
   protected int getNumNotEnrolledCards() {

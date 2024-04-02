@@ -53,8 +53,13 @@ class EventProcessorTest {
 
   private final String blobNameWallet = "WALLET.CONTRACTS.20240313.174811.001.json.pgp.0.decrypted";
 
+  private final String blobNameWalletMalformed = "WALLET.CONTRACTS.20240402.103010.001.json.pgp.0.decrypted";
+
   private final BlobApplicationAware fakeBlobWallet = new BlobApplicationAware(
       "/blobServices/default/containers/" + containerWallet + "/blobs/" + blobNameWallet);
+
+  private final BlobApplicationAware fakeBlobWalletMalformed = new BlobApplicationAware(
+      "/blobServices/default/containers/" + containerWallet + "/blobs/" + blobNameWalletMalformed);
 
   @MockBean
   CloseableHttpClient client;
@@ -97,7 +102,7 @@ class EventProcessorTest {
   void shouldNotProcessWalletEventFailedRequest() throws IOException {
 
     // Create fake file to process
-    File decryptedFile = Path.of(tmpDirectory, blobNameWallet).toFile();
+    File decryptedFile = Path.of(tmpDirectory, blobNameWalletMalformed).toFile();
     decryptedFile.getParentFile().mkdirs();
     decryptedFile.createNewFile();
 
@@ -113,6 +118,29 @@ class EventProcessorTest {
     blobProcessor.process(fakeBlobWallet);
     await().atMost(Duration.ofSeconds(1)).untilAsserted(() -> {
       assertEquals(Status.DOWNLOADED, fakeBlobWallet.getStatus());
+    });
+  }
+
+  @Test
+  void shouldNotProcessWalletEventMalformedContracts() throws IOException {
+
+    // Create fake file to process
+    File decryptedFile = Path.of(tmpDirectory, blobNameWalletMalformed).toFile();
+    decryptedFile.getParentFile().mkdirs();
+    decryptedFile.createNewFile();
+
+    FileOutputStream blobDst = new FileOutputStream(
+        Path.of(tmpDirectory, blobNameWalletMalformed).toString());
+    Files.copy(Path.of(resources, blobNameWalletMalformed), blobDst);
+
+    fakeBlobWalletMalformed.setTargetDir(tmpDirectory);
+    fakeBlobWalletMalformed.setStatus(BlobApplicationAware.Status.DOWNLOADED);
+
+    doReturn(false).when(connector).postContract(any(ContractMethodAttributes.class));
+
+    blobProcessor.process(fakeBlobWalletMalformed);
+    await().atMost(Duration.ofSeconds(1)).untilAsserted(() -> {
+      assertEquals(Status.DOWNLOADED, fakeBlobWalletMalformed.getStatus());
     });
   }
 }
