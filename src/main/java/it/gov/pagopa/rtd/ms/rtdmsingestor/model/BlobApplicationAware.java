@@ -23,24 +23,43 @@ import lombok.extern.slf4j.Slf4j;
 public class BlobApplicationAware {
 
   /**
+   * Enumeration of managed applications (i.e. 'verticals')
+   */
+  public enum Application {
+    RTD,
+    WALLET,
+    NOAPP
+  }
+
+  /**
    * File lifecycle statuses.
    */
   public enum Status {
-    INIT, RECEIVED, DOWNLOADED, PROCESSED, REMOTELY_DELETED, LOCALLY_DELETED,
+    INIT,
+    RECEIVED,
+    DOWNLOADED,
+    PROCESSED,
+    REMOTELY_DELETED,
+    LOCALLY_DELETED
   }
 
   private String blobUri;
   private String container;
   private String blob;
+  private Application app;
   private Status status;
   private String targetContainer;
 
   private String targetContainerRtd = "rtd-transactions-decrypted";
+  private String targetContainerWallet = "wallet-contracts-processed";
 
   private String targetDir = "/tmp";
 
-  private Pattern uriPattern =
-      Pattern.compile("^.*containers/((rtd)-transactions-decrypted)/blobs/(.*)");
+  private Pattern uriRtdPattern = Pattern.compile(
+      "^.*containers/((rtd)-transactions-decrypted)/blobs/(.*)");
+
+  private Pattern uriWalletPattern = Pattern.compile(
+      "^.*containers/(wallet-contracts-decrypted)/blobs/(.*)");
 
   private static final String WRONG_FORMAT_NAME_WARNING_MSG = "Wrong name format:";
   private static final String EVENT_NOT_OF_INTEREST_WARNING_MSG = "Event not of interest:";
@@ -56,11 +75,12 @@ public class BlobApplicationAware {
     blobUri = uri;
     status = Status.INIT;
 
-    Matcher matcher = uriPattern.matcher(uri);
+    Matcher matcherRtd = uriRtdPattern.matcher(uri);
+    Matcher matcherWallet = uriWalletPattern.matcher(uri);
 
-    if (matcher.matches()) {
-      container = matcher.group(1);
-      blob = matcher.group(3);
+    if (matcherRtd.matches()) {
+      container = matcherRtd.group(1);
+      blob = matcherRtd.group(3);
 
       // Tokenized blob name for checking compliance
       String[] blobNameTokenized = blob.split("\\.");
@@ -68,12 +88,26 @@ public class BlobApplicationAware {
       if (checkNameFormat(blobNameTokenized)) {
         targetContainer = targetContainerRtd;
         status = Status.RECEIVED;
+        app = Application.RTD;
       } else {
         log.warn(WRONG_FORMAT_NAME_WARNING_MSG + blobUri);
+        app = Application.NOAPP;
       }
-    } else {
-      log.info(EVENT_NOT_OF_INTEREST_WARNING_MSG + blobUri);
+      return;
     }
+
+    if (matcherWallet.matches()) {
+      container = matcherWallet.group(1);
+      blob = matcherWallet.group(2);
+
+      status = Status.RECEIVED;
+      app = Application.WALLET;
+      targetContainer = targetContainerWallet;
+      return;
+    }
+
+    log.info(EVENT_NOT_OF_INTEREST_WARNING_MSG + blobUri);
+    app = Application.NOAPP;
   }
 
   /**
