@@ -26,11 +26,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
@@ -153,12 +153,18 @@ public class EventProcessor {
         numTotalContracts++;
 
         WalletContract contract = objectMapper.readValue(jsonParser, WalletContract.class);
-        if (processContract(contract)) {
+        boolean updateOutcome = processContract(contract);
+        if (updateOutcome) {
           numCorrectlyExportedContracts++;
         } else {
           numFailedContracts++;
         }
-
+        MDC.put("Filename", blob.getBlob());
+        MDC.put("Position", String.valueOf(numTotalContracts));
+        MDC.put("Action", contract.getAction());
+        MDC.put("Successful", String.valueOf(updateOutcome));
+        log.info("");
+        MDC.clear();
       }
     } catch (JsonParseException | MismatchedInputException e) {
       log.error("Validation error: malformed wallet export");
@@ -211,6 +217,7 @@ public class EventProcessor {
 
     if (contract.getAction().equals(CREATE_ACTION)) {
       log.debug("Saving contract {}", contract);
+      MDC.put("ContractID", contract.getMethodAttributes().getContractIdentifier());
       if (!connector.postContract(contract.getMethodAttributes())) {
         log.error("Failed saving contract {}", contract);
         return false;
@@ -219,6 +226,7 @@ public class EventProcessor {
       }
     } else if (contract.getAction().equals(DELETE_ACTION)) {
       log.debug("Deleting contract {}", contract);
+      MDC.put("ContractID", contract.getContractIdentifier());
       if (!connector.deleteContract(contract.getContractIdentifier())) {
         log.error("Failed deleting contract {}", contract);
         return false;
