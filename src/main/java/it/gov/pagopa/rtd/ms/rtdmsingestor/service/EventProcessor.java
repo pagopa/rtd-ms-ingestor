@@ -19,6 +19,7 @@ import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.WalletContract;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.utils.Anonymizer;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -42,8 +43,8 @@ import org.springframework.validation.annotation.Validated;
 @RequiredArgsConstructor
 public class EventProcessor {
 
-  private final String CREATE_ACTION = "CREATE";
-  private final String DELETE_ACTION = "DELETE";
+  private static final String CREATE_ACTION = "CREATE";
+  private static final String DELETE_ACTION = "DELETE";
 
   private final StreamBridge sb;
 
@@ -52,15 +53,13 @@ public class EventProcessor {
   private int numCorrectTrx;
   private int numTotalTrx;
 
-  private int numCorrectlyExportedContracts;
-
-  private int numFailedContracts;
-
   private int numTotalContracts;
 
   private final BlobRestConnector connector;
 
   private final ContractAdapter adapter;
+
+  private final Anonymizer anonymizer;
 
   public BlobApplicationAware process(BlobApplicationAware blob) {
     Path blobPath = Path.of(blob.getTargetDir(), blob.getBlob());
@@ -134,8 +133,8 @@ public class EventProcessor {
   private BlobApplicationAware processWalletContracts(BlobApplicationAware blob, Path blobPath) {
     log.info("Extracting contracts from:{}", blob.getBlobUri());
 
-    numCorrectlyExportedContracts = 0;
-    numFailedContracts = 0;
+    int numCorrectlyExportedContracts = 0;
+    int numFailedContracts = 0;
     numTotalContracts = 0;
 
     ObjectMapper objectMapper = new ObjectMapper();
@@ -217,7 +216,8 @@ public class EventProcessor {
 
     if (contract.getAction().equals(CREATE_ACTION)) {
       log.debug("Saving contract {}", contract);
-      MDC.put("ContractID", contract.getMethodAttributes().getContractIdentifier());
+      MDC.put("ContractID",
+          anonymizer.anonymize(contract.getMethodAttributes().getContractIdentifier()));
       if (!connector.postContract(contract.getMethodAttributes())) {
         log.error("Failed saving contract {}", contract);
         return false;
@@ -226,7 +226,7 @@ public class EventProcessor {
       }
     } else if (contract.getAction().equals(DELETE_ACTION)) {
       log.debug("Deleting contract {}", contract);
-      MDC.put("ContractID", contract.getContractIdentifier());
+      MDC.put("ContractID", anonymizer.anonymize(contract.getContractIdentifier()));
       if (!connector.deleteContract(contract.getContractIdentifier())) {
         log.error("Failed deleting contract {}", contract);
         return false;
