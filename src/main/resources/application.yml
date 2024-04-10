@@ -15,6 +15,7 @@ management:
 
 ingestor:
   anonymizePaymentInstrument: ${ANONYMIZE_PAYMENT_INSTRUMENT:true}
+  contractIdObfuscationHmacKey: ${CONTRACT_ID_OBFUSCATION_HMAC_KEY:mykey}
   resources:
     base:
       path: src/test/resources
