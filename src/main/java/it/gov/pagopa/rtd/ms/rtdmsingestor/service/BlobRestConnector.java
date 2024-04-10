@@ -147,15 +147,15 @@ public class BlobRestConnector {
     try (CloseableHttpResponse myResponse = httpClient.execute(postContract)) {
       int statusCode = myResponse.getStatusLine().getStatusCode();
       if (statusCode == HttpStatus.SC_OK) {
-        log.info("Successfully updated contract {}", contract);
+        log.debug("Successfully updated contract");
         return true;
       } else {
-        log.error("Can't update contract {}. Invalid HTTP response: {}, {}", contract, statusCode,
+        log.error("Can't update contract. Invalid HTTP response: {}, {}", statusCode,
             myResponse.getStatusLine().getReasonPhrase());
         return false;
       }
     } catch (Exception ex) {
-      log.error("Can't update contract {}. Unexpected error: {}", contract, ex.getMessage());
+      log.error("Can't update contract. Unexpected error: {}", ex.getMessage());
       return false;
     }
   }
@@ -172,17 +172,15 @@ public class BlobRestConnector {
     try (CloseableHttpResponse myResponse = httpClient.execute(deleteContract)) {
       int statusCode = myResponse.getStatusLine().getStatusCode();
       if (statusCode == HttpStatus.SC_NO_CONTENT) {
-        log.info("Successfully delete contract {}", contractIdentifier);
+        log.debug("Successfully updated contract");
         return true;
       } else {
-        log.error("Can't delete contract {}. Invalid HTTP response: {}, {}", contractIdentifier,
-            statusCode,
+        log.error("Can't delete contract. Invalid HTTP response: {}, {}", statusCode,
             myResponse.getStatusLine().getReasonPhrase());
         return false;
       }
     } catch (Exception ex) {
-      log.error("Can't delete contract {}. Unexpected error: {}", contractIdentifier,
-          ex.getMessage());
+      log.error("Can't delete contract. Unexpected error: {}", ex.getMessage());
       return false;
     }
   }
