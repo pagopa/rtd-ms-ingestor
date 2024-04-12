@@ -2,6 +2,7 @@ package it.gov.pagopa.rtd.ms.rtdmsingestor.utils;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,8 @@ public class Anonymizer {
    */
   public String anonymize(String toAnonymize) {
     try {
-      SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getBytes(), ALGORITHM);
+      byte[] bytes = Base64.getDecoder().decode(secretKey);
+      SecretKeySpec secretKeySpec = new SecretKeySpec(bytes, ALGORITHM);
       Mac hmac = Mac.getInstance(ALGORITHM);
       hmac.init(secretKeySpec);
       byte[] hmacBytes = hmac.doFinal(toAnonymize.getBytes());
