@@ -62,6 +62,7 @@ public class BlobRestConnector {
   private final CloseableHttpClient httpClient;
 
   private static final String APIM_SUBSCRIPTION_HEADER = "Ocp-Apim-Subscription-Key";
+  private static final String CONTRACT_HMAC_HEADER = "x-contract-hmac";
 
 
   /**
@@ -132,7 +133,8 @@ public class BlobRestConnector {
     }
   }
 
-  public boolean postContract(ContractMethodAttributes contract) throws JsonProcessingException {
+  public boolean postContract(ContractMethodAttributes contract, String contractHmac)
+      throws JsonProcessingException {
     ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
     String contractJson = ow.writeValueAsString(contract);
     StringEntity contractEntity = new StringEntity(
@@ -143,6 +145,7 @@ public class BlobRestConnector {
     final HttpPost postContract = new HttpPost(uri);
     postContract.setEntity(contractEntity);
     postContract.setHeader(new BasicHeader(APIM_SUBSCRIPTION_HEADER, walletApiKey));
+    postContract.setHeader(new BasicHeader(CONTRACT_HMAC_HEADER, contractHmac));
 
     try (CloseableHttpResponse myResponse = httpClient.execute(postContract)) {
       int statusCode = myResponse.getStatusLine().getStatusCode();
@@ -160,10 +163,12 @@ public class BlobRestConnector {
     }
   }
 
-  public boolean deleteContract(String contractIdentifier) throws JsonProcessingException {
+  public boolean deleteContract(String contractIdentifier, String contractHmac) {
     String uri = walletBaseUrl + deleteContractsEndpoint;
     final HttpPost deleteContract = new HttpPost(uri);
     deleteContract.setHeader(new BasicHeader(APIM_SUBSCRIPTION_HEADER, walletApiKey));
+    deleteContract.setHeader(new BasicHeader(CONTRACT_HMAC_HEADER, contractHmac));
+
     StringEntity newContractIdentifierEntity = new StringEntity(
         "{\"contractIdentifier\": \"" + contractIdentifier + "\"}",
         ContentType.APPLICATION_JSON);

@@ -208,6 +208,8 @@ public class EventProcessor {
     }
 
     contract = adapter.adapt(contract);
+    String currContractId;
+    String contractIdHmac;
 
     if (!"OK".equals(contract.getImportOutcome())) {
       log.error("Import outcome not OK on contract {}", contract);
@@ -216,9 +218,10 @@ public class EventProcessor {
 
     if (contract.getAction().equals(CREATE_ACTION)) {
       log.debug("Saving contract {}", contract);
-      MDC.put("ContractID",
-          anonymizer.anonymize(contract.getMethodAttributes().getContractIdentifier()));
-      if (!connector.postContract(contract.getMethodAttributes())) {
+      currContractId = contract.getMethodAttributes().getContractIdentifier();
+      contractIdHmac = anonymizer.anonymize(currContractId);
+      MDC.put("ContractID", contractIdHmac);
+      if (!connector.postContract(contract.getMethodAttributes(), contractIdHmac)) {
         log.error("Failed saving contract {}", contract);
         return false;
       } else {
@@ -226,8 +229,10 @@ public class EventProcessor {
       }
     } else if (contract.getAction().equals(DELETE_ACTION)) {
       log.debug("Deleting contract {}", contract);
-      MDC.put("ContractID", anonymizer.anonymize(contract.getContractIdentifier()));
-      if (!connector.deleteContract(contract.getContractIdentifier())) {
+      currContractId = contract.getContractIdentifier();
+      contractIdHmac = anonymizer.anonymize(currContractId);
+      MDC.put("ContractID", contractIdHmac);
+      if (!connector.deleteContract(contract.getContractIdentifier(), contractIdHmac)) {
         log.error("Failed deleting contract {}", contract);
         return false;
       } else {

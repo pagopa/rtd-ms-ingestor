@@ -88,8 +88,8 @@ class EventProcessorTest {
     fakeBlobWallet.setTargetDir(tmpDirectory);
     fakeBlobWallet.setStatus(BlobApplicationAware.Status.DOWNLOADED);
 
-    doReturn(true).when(connector).postContract(any(ContractMethodAttributes.class));
-    doReturn(true).when(connector).deleteContract(any(String.class));
+    doReturn(true).when(connector).postContract(any(ContractMethodAttributes.class), any(String.class));
+    doReturn(true).when(connector).deleteContract(any(String.class), any(String.class));
 
 
     blobProcessor.process(fakeBlobWallet);
@@ -113,7 +113,7 @@ class EventProcessorTest {
     fakeBlobWallet.setTargetDir(tmpDirectory);
     fakeBlobWallet.setStatus(BlobApplicationAware.Status.DOWNLOADED);
 
-    doReturn(false).when(connector).postContract(any(ContractMethodAttributes.class));
+    doReturn(false).when(connector).postContract(any(ContractMethodAttributes.class), any(String.class));
 
     blobProcessor.process(fakeBlobWallet);
     await().atMost(Duration.ofSeconds(1)).untilAsserted(() -> {
@@ -136,7 +136,7 @@ class EventProcessorTest {
     fakeBlobWalletMalformed.setTargetDir(tmpDirectory);
     fakeBlobWalletMalformed.setStatus(BlobApplicationAware.Status.DOWNLOADED);
 
-    doReturn(false).when(connector).postContract(any(ContractMethodAttributes.class));
+    doReturn(false).when(connector).postContract(any(ContractMethodAttributes.class), any(String.class));
 
     blobProcessor.process(fakeBlobWalletMalformed);
     await().atMost(Duration.ofSeconds(1)).untilAsserted(() -> {
