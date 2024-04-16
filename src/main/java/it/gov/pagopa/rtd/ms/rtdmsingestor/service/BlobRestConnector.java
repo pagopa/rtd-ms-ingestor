@@ -3,6 +3,7 @@ package it.gov.pagopa.rtd.ms.rtdmsingestor.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.ContractMethodAttributes;
@@ -133,6 +134,7 @@ public class BlobRestConnector {
     }
   }
 
+  @WithSpan
   public boolean postContract(ContractMethodAttributes contract, String contractHmac)
       throws JsonProcessingException {
     ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
@@ -163,6 +165,7 @@ public class BlobRestConnector {
     }
   }
 
+  @WithSpan
   public boolean deleteContract(String contractIdentifier, String contractHmac) {
     String uri = walletBaseUrl + deleteContractsEndpoint;
     final HttpPost deleteContract = new HttpPost(uri);
