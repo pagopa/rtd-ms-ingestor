@@ -168,7 +168,8 @@ public class BlobRestConnector {
   }
 
   @WithSpan
-  public boolean deleteContract(String contractIdentifier, @SpanAttribute("hmac") String contractHmac) {
+  public boolean deleteContract(String contractIdentifier,
+      @SpanAttribute("hmac") String contractHmac) {
     String uri = walletBaseUrl + deleteContractsEndpoint;
     final HttpPost deleteContract = new HttpPost(uri);
     deleteContract.setHeader(new BasicHeader(APIM_SUBSCRIPTION_HEADER, walletApiKey));
