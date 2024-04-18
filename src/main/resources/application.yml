@@ -22,8 +22,8 @@ ingestor:
     baseurl: https://${CSV_INGESTOR_HOST:internal.it}
     wallet:
       baseurl: https://${WALLET_HOST:wallet.it}
-      updateContracts: /payment-wallet-migrations/v1/migrations/wallets/updateDetails
-      deleteContracts: /payment-wallet-migrations/v1/migrations/wallets/delete
+      updateContracts: /payment-wallet-migrations/cstar/v1/migrations/wallets/updateDetails
+      deleteContracts: /payment-wallet-migrations/cstar/v1/migrations/wallets/delete
       apikey: ${WALLET_API_KEY:myapikey}
   blobclient:
     basepath: storage
