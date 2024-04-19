@@ -203,7 +203,7 @@ public class EventProcessor {
       throws JsonProcessingException {
 
     if (contract == null) {
-      log.error("Failed deserializing contract {}", numTotalContracts + 1);
+      log.error("Failed deserializing contract at {}", numTotalContracts + 1);
       return false;
     }
 
@@ -212,34 +212,32 @@ public class EventProcessor {
     String contractIdHmac;
 
     if (!"OK".equals(contract.getImportOutcome())) {
-      log.error("Import outcome not OK on contract {}", contract);
+      log.error("Import outcome not OK on contract at position {}", numTotalContracts + 1);
       return false;
     }
 
     if (contract.getAction().equals(CREATE_ACTION)) {
-      log.debug("Saving contract {}", contract);
       currContractId = contract.getMethodAttributes().getContractIdentifier();
       contractIdHmac = anonymizer.anonymize(currContractId);
       MDC.put("ContractID", contractIdHmac);
       if (!connector.postContract(contract.getMethodAttributes(), contractIdHmac)) {
-        log.error("Failed saving contract {}", contract);
+        log.error("Failed saving contract at position {}", numTotalContracts + 1);
         return false;
       } else {
         return true;
       }
     } else if (contract.getAction().equals(DELETE_ACTION)) {
-      log.debug("Deleting contract {}", contract);
       currContractId = contract.getContractIdentifier();
       contractIdHmac = anonymizer.anonymize(currContractId);
       MDC.put("ContractID", contractIdHmac);
       if (!connector.deleteContract(contract.getContractIdentifier(), contractIdHmac)) {
-        log.error("Failed deleting contract {}", contract);
+        log.error("Failed deleting contract at position {}", numTotalContracts + 1);
         return false;
       } else {
         return true;
       }
     }
-    log.error("Unrecognized action on contract {}", contract);
+    log.error("Unrecognized action on contract at position {}", numTotalContracts + 1);
     return false;
   }
 
