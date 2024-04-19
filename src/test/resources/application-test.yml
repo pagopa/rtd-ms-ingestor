@@ -4,7 +4,7 @@ logging:
 
 ingestor:
   anonymizePaymentInstrument: true
-  contractIdObfuscationHmacKey: ${CONTRACT_ID_OBFUSCATION_HMAC_KEY:mykeybase64}
+  contractIdObfuscationHmacKey: ${CONTRACT_ID_OBFUSCATION_HMAC_KEY:nXegOrPs5wrRPOM6VNOlkxT3PPjruUk5ppohs6fIVQk=}
   resources:
     base:
       path: src/test/resources
