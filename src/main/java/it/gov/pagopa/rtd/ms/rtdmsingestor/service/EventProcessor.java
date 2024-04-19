@@ -19,6 +19,7 @@ import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.WalletContract;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.utils.Anonymizer;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -26,11 +27,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
@@ -42,8 +43,8 @@ import org.springframework.validation.annotation.Validated;
 @RequiredArgsConstructor
 public class EventProcessor {
 
-  private final String CREATE_ACTION = "CREATE";
-  private final String DELETE_ACTION = "DELETE";
+  private static final String CREATE_ACTION = "CREATE";
+  private static final String DELETE_ACTION = "DELETE";
 
   private final StreamBridge sb;
 
@@ -52,15 +53,13 @@ public class EventProcessor {
   private int numCorrectTrx;
   private int numTotalTrx;
 
-  private int numCorrectlyExportedContracts;
-
-  private int numFailedContracts;
-
   private int numTotalContracts;
 
   private final BlobRestConnector connector;
 
   private final ContractAdapter adapter;
+
+  private final Anonymizer anonymizer;
 
   public BlobApplicationAware process(BlobApplicationAware blob) {
     Path blobPath = Path.of(blob.getTargetDir(), blob.getBlob());
@@ -134,8 +133,8 @@ public class EventProcessor {
   private BlobApplicationAware processWalletContracts(BlobApplicationAware blob, Path blobPath) {
     log.info("Extracting contracts from:{}", blob.getBlobUri());
 
-    numCorrectlyExportedContracts = 0;
-    numFailedContracts = 0;
+    int numCorrectlyExportedContracts = 0;
+    int numFailedContracts = 0;
     numTotalContracts = 0;
 
     ObjectMapper objectMapper = new ObjectMapper();
@@ -153,12 +152,18 @@ public class EventProcessor {
         numTotalContracts++;
 
         WalletContract contract = objectMapper.readValue(jsonParser, WalletContract.class);
-        if (processContract(contract)) {
+        boolean updateOutcome = processContract(contract);
+        if (updateOutcome) {
           numCorrectlyExportedContracts++;
         } else {
           numFailedContracts++;
         }
-
+        MDC.put("Filename", blob.getBlob());
+        MDC.put("Position", String.valueOf(numTotalContracts));
+        MDC.put("Action", contract.getAction());
+        MDC.put("Successful", String.valueOf(updateOutcome));
+        log.info("");
+        MDC.clear();
       }
     } catch (JsonParseException | MismatchedInputException e) {
       log.error("Validation error: malformed wallet export");
@@ -198,35 +203,41 @@ public class EventProcessor {
       throws JsonProcessingException {
 
     if (contract == null) {
-      log.error("Failed deserializing contract {}", numTotalContracts + 1);
+      log.error("Failed deserializing contract at {}", numTotalContracts + 1);
       return false;
     }
 
     contract = adapter.adapt(contract);
+    String currContractId;
+    String contractIdHmac;
 
     if (!"OK".equals(contract.getImportOutcome())) {
-      log.error("Import outcome not OK on contract {}", contract);
+      log.error("Import outcome not OK on contract at position {}", numTotalContracts + 1);
       return false;
     }
 
     if (contract.getAction().equals(CREATE_ACTION)) {
-      log.debug("Saving contract {}", contract);
-      if (!connector.postContract(contract.getMethodAttributes())) {
-        log.error("Failed saving contract {}", contract);
+      currContractId = contract.getMethodAttributes().getContractIdentifier();
+      contractIdHmac = anonymizer.anonymize(currContractId);
+      MDC.put("ContractID", contractIdHmac);
+      if (!connector.postContract(contract.getMethodAttributes(), contractIdHmac)) {
+        log.error("Failed saving contract at position {}", numTotalContracts + 1);
         return false;
       } else {
         return true;
       }
     } else if (contract.getAction().equals(DELETE_ACTION)) {
-      log.debug("Deleting contract {}", contract);
-      if (!connector.deleteContract(contract.getContractIdentifier())) {
-        log.error("Failed deleting contract {}", contract);
+      currContractId = contract.getContractIdentifier();
+      contractIdHmac = anonymizer.anonymize(currContractId);
+      MDC.put("ContractID", contractIdHmac);
+      if (!connector.deleteContract(contract.getContractIdentifier(), contractIdHmac)) {
+        log.error("Failed deleting contract at position {}", numTotalContracts + 1);
         return false;
       } else {
         return true;
       }
     }
-    log.error("Unrecognized action on contract {}", contract);
+    log.error("Unrecognized action on contract at position {}", numTotalContracts + 1);
     return false;
   }
 
