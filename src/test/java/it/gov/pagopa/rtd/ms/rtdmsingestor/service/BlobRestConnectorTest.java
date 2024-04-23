@@ -25,6 +25,7 @@ import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.WalletContract;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.utils.Anonymizer;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -94,6 +95,9 @@ class BlobRestConnectorTest {
   IngestorRepository repository;
   @MockBean
   IngestorDAO dao;
+
+  @SpyBean
+  Anonymizer anonymizer;
 
   private final String containerRtd = "rtd-transactions-decrypted";
 
@@ -165,8 +169,10 @@ class BlobRestConnectorTest {
     doReturn(mockedResponse).when(client).execute(any(HttpPost.class));
     when(mockedResponse.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1,
         HttpStatus.SC_OK, contract.getContractIdentifier()));
+    String currContractId = contract.getMethodAttributes().getContractIdentifier();
+    String contractIdHmac = anonymizer.anonymize(currContractId);
 
-    assertTrue(blobRestConnector.postContract(contract.getMethodAttributes()));
+    assertTrue(blobRestConnector.postContract(contract.getMethodAttributes(), contractIdHmac));
     verify(client, times(1)).execute(any(HttpPost.class));
   }
 
@@ -183,8 +189,10 @@ class BlobRestConnectorTest {
     doReturn(mockedResponse).when(client).execute(any(HttpPost.class));
     when(mockedResponse.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1,
         HttpStatus.SC_NO_CONTENT, contract.getContractIdentifier()));
+    String currContractId = contract.getContractIdentifier();
+    String contractIdHmac = anonymizer.anonymize(currContractId);
 
-    assertTrue(blobRestConnector.deleteContract(contract.getContractIdentifier()));
+    assertTrue(blobRestConnector.deleteContract(contract.getContractIdentifier(), contractIdHmac));
     verify(client, times(1)).execute(any(HttpPost.class));
   }
 
@@ -201,8 +209,10 @@ class BlobRestConnectorTest {
     doReturn(mockedResponse).when(client).execute(any(HttpPost.class));
     when(mockedResponse.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1,
         HttpStatus.SC_TOO_MANY_REQUESTS, "Too many requests"));
+    String currContractId = contract.getMethodAttributes().getContractIdentifier();
+    String contractIdHmac = anonymizer.anonymize(currContractId);
 
-    assertFalse(blobRestConnector.postContract(contract.getMethodAttributes()));
+    assertFalse(blobRestConnector.postContract(contract.getMethodAttributes(), contractIdHmac));
     verify(client, times(1)).execute(any(HttpPost.class));
   }
 
@@ -215,8 +225,10 @@ class BlobRestConnectorTest {
     WalletContract contract = objectMapper.readValue(jsonParser, WalletContract.class);
 
     doThrow(new IOException()).when(client).execute(any(HttpPost.class));
+    String currContractId = contract.getMethodAttributes().getContractIdentifier();
+    String contractIdHmac = anonymizer.anonymize(currContractId);
 
-    assertFalse(blobRestConnector.postContract(contract.getMethodAttributes()));
+    assertFalse(blobRestConnector.postContract(contract.getMethodAttributes(), contractIdHmac));
     verify(client, times(1)).execute(any(HttpPost.class));
   }
 
@@ -233,8 +245,10 @@ class BlobRestConnectorTest {
     doReturn(mockedResponse).when(client).execute(any(HttpPost.class));
     when(mockedResponse.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1,
         HttpStatus.SC_NOT_FOUND, "Contract not found"));
+    String currContractId = contract.getContractIdentifier();
+    String contractIdHmac = anonymizer.anonymize(currContractId);
 
-    assertFalse(blobRestConnector.deleteContract(contract.getContractIdentifier()));
+    assertFalse(blobRestConnector.deleteContract(contract.getContractIdentifier(), contractIdHmac));
     verify(client, times(1)).execute(any(HttpPost.class));
   }
 
@@ -247,8 +261,10 @@ class BlobRestConnectorTest {
     WalletContract contract = objectMapper.readValue(jsonParser, WalletContract.class);
 
     doThrow(new IOException()).when(client).execute(any(HttpPost.class));
+    String currContractId = contract.getContractIdentifier();
+    String contractIdHmac = anonymizer.anonymize(currContractId);
 
-    assertFalse(blobRestConnector.deleteContract(contract.getContractIdentifier()));
+    assertFalse(blobRestConnector.deleteContract(contract.getContractIdentifier(), contractIdHmac));
     verify(client, times(1)).execute(any(HttpPost.class));
   }
 

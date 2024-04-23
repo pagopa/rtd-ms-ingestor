@@ -3,6 +3,8 @@ package it.gov.pagopa.rtd.ms.rtdmsingestor.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.ContractMethodAttributes;
@@ -62,6 +64,7 @@ public class BlobRestConnector {
   private final CloseableHttpClient httpClient;
 
   private static final String APIM_SUBSCRIPTION_HEADER = "Ocp-Apim-Subscription-Key";
+  private static final String CONTRACT_HMAC_HEADER = "x-contract-hmac";
 
 
   /**
@@ -132,7 +135,10 @@ public class BlobRestConnector {
     }
   }
 
-  public boolean postContract(ContractMethodAttributes contract) throws JsonProcessingException {
+  @WithSpan
+  public boolean postContract(ContractMethodAttributes contract,
+      @SpanAttribute("hmac") String contractHmac)
+      throws JsonProcessingException {
     ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
     String contractJson = ow.writeValueAsString(contract);
     StringEntity contractEntity = new StringEntity(
@@ -143,27 +149,32 @@ public class BlobRestConnector {
     final HttpPost postContract = new HttpPost(uri);
     postContract.setEntity(contractEntity);
     postContract.setHeader(new BasicHeader(APIM_SUBSCRIPTION_HEADER, walletApiKey));
+    postContract.setHeader(new BasicHeader(CONTRACT_HMAC_HEADER, contractHmac));
 
     try (CloseableHttpResponse myResponse = httpClient.execute(postContract)) {
       int statusCode = myResponse.getStatusLine().getStatusCode();
       if (statusCode == HttpStatus.SC_OK) {
-        log.info("Successfully updated contract {}", contract);
+        log.debug("Successfully updated contract");
         return true;
       } else {
-        log.error("Can't update contract {}. Invalid HTTP response: {}, {}", contract, statusCode,
+        log.error("Can't update contract. Invalid HTTP response: {}, {}", statusCode,
             myResponse.getStatusLine().getReasonPhrase());
         return false;
       }
     } catch (Exception ex) {
-      log.error("Can't update contract {}. Unexpected error: {}", contract, ex.getMessage());
+      log.error("Can't update contract. Unexpected error: {}", ex.getMessage());
       return false;
     }
   }
 
-  public boolean deleteContract(String contractIdentifier) throws JsonProcessingException {
+  @WithSpan
+  public boolean deleteContract(String contractIdentifier,
+      @SpanAttribute("hmac") String contractHmac) {
     String uri = walletBaseUrl + deleteContractsEndpoint;
     final HttpPost deleteContract = new HttpPost(uri);
     deleteContract.setHeader(new BasicHeader(APIM_SUBSCRIPTION_HEADER, walletApiKey));
+    deleteContract.setHeader(new BasicHeader(CONTRACT_HMAC_HEADER, contractHmac));
+
     StringEntity newContractIdentifierEntity = new StringEntity(
         "{\"contractIdentifier\": \"" + contractIdentifier + "\"}",
         ContentType.APPLICATION_JSON);
@@ -172,17 +183,15 @@ public class BlobRestConnector {
     try (CloseableHttpResponse myResponse = httpClient.execute(deleteContract)) {
       int statusCode = myResponse.getStatusLine().getStatusCode();
       if (statusCode == HttpStatus.SC_NO_CONTENT) {
-        log.info("Successfully delete contract {}", contractIdentifier);
+        log.debug("Successfully updated contract");
         return true;
       } else {
-        log.error("Can't delete contract {}. Invalid HTTP response: {}, {}", contractIdentifier,
-            statusCode,
+        log.error("Can't delete contract. Invalid HTTP response: {}, {}", statusCode,
             myResponse.getStatusLine().getReasonPhrase());
         return false;
       }
     } catch (Exception ex) {
-      log.error("Can't delete contract {}. Unexpected error: {}", contractIdentifier,
-          ex.getMessage());
+      log.error("Can't delete contract. Unexpected error: {}", ex.getMessage());
       return false;
     }
   }

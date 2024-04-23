@@ -56,6 +56,7 @@ microservice-chart:
     KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_TRX: evh-rtd-trx-rtd-trx-producer-rtd
     INTERNAL_SERVICES_API_KEY: rtd-internal-api-product-subscription-key
     WALLET_API_KEY: wallet-api-product-subscription-key
+    CONTRACT_ID_OBFUSCATION_HMAC_KEY: contract-id-obfuscation-hmac-key
     MONGODB_CONNECTION_URI: mongo-db-connection-uri
 
   envConfigMapExternals:
