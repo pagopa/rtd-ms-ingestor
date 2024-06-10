@@ -11,6 +11,7 @@ import com.opencsv.bean.BeanVerifier;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.exceptions.CsvException;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.adapter.ContractAdapter;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
@@ -161,6 +162,7 @@ public class EventProcessor {
         MDC.put("Filename", blob.getBlob());
         MDC.put("Position", String.valueOf(numTotalContracts));
         MDC.put("Action", contract.getAction());
+        MDC.put("ImportOutcome", contract.getImportOutcome());
         MDC.put("Successful", String.valueOf(updateOutcome));
         log.info("");
         MDC.clear();
@@ -199,11 +201,12 @@ public class EventProcessor {
     });
   }
 
+  @WithSpan
   private boolean processContract(WalletContract contract)
       throws JsonProcessingException {
 
-    if (contract == null) {
-      log.error("Failed deserializing contract at {}", numTotalContracts + 1);
+    if (contract.getAction() == null) {
+      log.error("Null action on contract at {}", numTotalContracts);
       return false;
     }
 
@@ -212,8 +215,11 @@ public class EventProcessor {
     String contractIdHmac;
 
     if (!"OK".equals(contract.getImportOutcome())) {
-      log.error("Import outcome not OK on contract at position {}", numTotalContracts + 1);
-      return false;
+      currContractId = contract.getContractIdentifier();
+      contractIdHmac = anonymizer.anonymize(currContractId);
+      MDC.put("ImportOutcome", contract.getImportOutcome());
+      MDC.put("ContractID", contractIdHmac);
+      return true;
     }
 
     if (contract.getAction().equals(CREATE_ACTION)) {
@@ -221,7 +227,7 @@ public class EventProcessor {
       contractIdHmac = anonymizer.anonymize(currContractId);
       MDC.put("ContractID", contractIdHmac);
       if (!connector.postContract(contract.getMethodAttributes(), contractIdHmac)) {
-        log.error("Failed saving contract at position {}", numTotalContracts + 1);
+        log.error("Failed saving contract at position {}", numTotalContracts);
         return false;
       } else {
         return true;
@@ -231,13 +237,13 @@ public class EventProcessor {
       contractIdHmac = anonymizer.anonymize(currContractId);
       MDC.put("ContractID", contractIdHmac);
       if (!connector.deleteContract(contract.getContractIdentifier(), contractIdHmac)) {
-        log.error("Failed deleting contract at position {}", numTotalContracts + 1);
+        log.error("Failed deleting contract at position {}", numTotalContracts);
         return false;
       } else {
         return true;
       }
     }
-    log.error("Unrecognized action on contract at position {}", numTotalContracts + 1);
+    log.error("Unrecognized action on contract at position {}", numTotalContracts);
     return false;
   }
 

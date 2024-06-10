@@ -135,7 +135,6 @@ public class BlobRestConnector {
     }
   }
 
-  @WithSpan
   public boolean postContract(ContractMethodAttributes contract,
       @SpanAttribute("hmac") String contractHmac)
       throws JsonProcessingException {
@@ -167,7 +166,6 @@ public class BlobRestConnector {
     }
   }
 
-  @WithSpan
   public boolean deleteContract(String contractIdentifier,
       @SpanAttribute("hmac") String contractHmac) {
     String uri = walletBaseUrl + deleteContractsEndpoint;
