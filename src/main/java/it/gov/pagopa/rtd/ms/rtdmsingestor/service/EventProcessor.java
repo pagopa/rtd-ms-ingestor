@@ -165,8 +165,11 @@ public class EventProcessor {
 
     if (numFailedContracts == 0) {
       log.info("Blob {} processed successfully", blob.getBlob());
-      blob.setStatus(Status.PROCESSED);
+    } else {
+      log.info("Blob {} processed with {} failures", blob.getBlob(), numFailedContracts);
     }
+    // The file is still considered processed in order to delete decrypted export file
+    blob.setStatus(Status.PROCESSED);
 
     return blob;
   }
