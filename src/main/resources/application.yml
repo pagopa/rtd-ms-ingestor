@@ -2,6 +2,25 @@ logging:
   level:
     root: INFO
 
+# OpenTelemetry
+applicationinsights:
+  enabled: '@applicationinsights.enabled@'
+  connection-string: ${APPLICATIONINSIGHTS_CONNECTION_STRING:myconnectionstring}
+otel:
+  log:
+    level: ${OPENTELEMETRY_LOG_LEVEL:INFO}
+  traces:
+    sampler:
+      probability: 1.0 # sample probability for tracing (spans)
+  metric:
+    export:
+      interval: 60000 # sampling rate for metrics (millis)
+  instrumentation:
+    logback-appender:
+      enabled: true # enable logback instrumentation
+    micrometer:
+      enabled: true
+
 # Expose only health probes
 management:
   metrics.export.defaults.enabled: false
