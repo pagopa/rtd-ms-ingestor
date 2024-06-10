@@ -30,6 +30,7 @@
     <cloudevents-kafka.version>2.5.0</cloudevents-kafka.version>
     <mockito-inline.version>5.2.0</mockito-inline.version>
     <kafka.version>3.5.1</kafka.version>
+    <applicationinsights.enabled>true</applicationinsights.enabled>
   </properties>
 
   <dependencies>
@@ -178,6 +179,54 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+  <profiles>
+    <profile>
+      <id>native</id>
+      <properties>
+        <applicationinsights.enabled>true</applicationinsights.enabled>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.graalvm.buildtools</groupId>
+            <artifactId>native-maven-plugin</artifactId>
+            <configuration>
+              <metadataRepository>
+                <enabled>true</enabled>
+              </metadataRepository>
+              <buildArgs>
+                <arg>--initialize-at-build-time=org.slf4j.LoggerFactory,ch.qos.logback</arg>
+                <arg>--initialize-at-build-time=com.azure.core.util.logging.ClientLogger</arg>
+                <arg>--initialize-at-build-time=org.apache.commons.logging.LogFactory</arg>
+              </buildArgs>
+            </configuration>
+            <executions>
+              <execution>
+                <id>build-native</id>
+                <goals>
+                  <goal>compile-no-fork</goal>
+                </goals>
+                <phase>package</phase>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <version>${project.parent.version}</version>
+            <configuration>
+              <excludes>
+                <exclude>
+                  <groupId>org.projectlombok</groupId>
+                  <artifactId>lombok</artifactId>
+                </exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
   <build>
     <plugins>
       <plugin>
