@@ -136,10 +136,17 @@ public class BlobRestConnector {
   }
 
   public boolean postContract(ContractMethodAttributes contract,
-      @SpanAttribute("hmac") String contractHmac)
-      throws JsonProcessingException {
+      @SpanAttribute("hmac") String contractHmac) {
     ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
-    String contractJson = ow.writeValueAsString(contract);
+    String contractJson;
+
+    try {
+      contractJson = ow.writeValueAsString(contract);
+    } catch (JsonProcessingException e) {
+      log.error("Cannot serialize contract");
+      return false;
+    }
+
     StringEntity contractEntity = new StringEntity(
         contractJson,
         ContentType.APPLICATION_JSON);
