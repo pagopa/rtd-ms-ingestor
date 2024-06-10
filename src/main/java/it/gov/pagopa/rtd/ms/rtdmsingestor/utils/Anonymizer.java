@@ -36,6 +36,9 @@ public class Anonymizer {
       hmac.init(secretKeySpec);
       byte[] hmacBytes = hmac.doFinal(toAnonymize.getBytes());
       return Hex.encodeHexString(hmacBytes);
+    } catch (NullPointerException e) {
+      log.error("Empty contract identifier");
+      return FAILED_HMAC_STUB;
     } catch (NoSuchAlgorithmException | InvalidKeyException e) {
       log.error("Cannot produce HMAC: {}", e.getMessage());
       return FAILED_HMAC_STUB;
