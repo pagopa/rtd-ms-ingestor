@@ -28,8 +28,9 @@
     }
   },
   {
-    "import_outcome" : "OK",
-    "action" : "DELETE",
-    "original_contract_identifier" : "W1710350703035tZlo"
+      "import_outcome" : "KO",
+      "action" : "CREATE",
+      "original_contract_identifier" : "e386404adca94111b6d91508d2758bb2",
+      "reason_message" : "No payment circuit could be found for contract with id e386404adca94111b6d91508d2758bb2"
   }
 ]
