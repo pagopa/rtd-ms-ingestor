@@ -11,6 +11,7 @@ import com.opencsv.bean.BeanVerifier;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.exceptions.CsvException;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.adapter.ContractAdapter;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
@@ -199,6 +200,7 @@ public class EventProcessor {
     });
   }
 
+  @WithSpan
   private boolean processContract(WalletContract contract)
       throws JsonProcessingException {
 
