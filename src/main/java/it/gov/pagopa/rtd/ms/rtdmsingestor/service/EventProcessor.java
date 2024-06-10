@@ -205,7 +205,6 @@ public class EventProcessor {
     MDC.clear();
   }
 
-  @WithSpan
   private boolean processContract(WalletContract contract)
       throws JsonProcessingException {
 
