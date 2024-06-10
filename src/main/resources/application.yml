@@ -1,6 +1,7 @@
 logging:
   level:
     root: INFO
+    org.apache.kafka: WARN
 
 # Expose only health probes
 management:
@@ -44,19 +45,19 @@ spring:
       definition: blobStorageConsumer
     stream:
       source: rtdTrxProducer
-      defaultBinder: rtd-trx
+      defaultBinder: rtdtrx
       bindings:
         blobStorageConsumer-in-0: # name must match [handler name]-in-0
           destination: rtd-platform-events
           group: rtd-ingestor-consumer-group
           content-type: application/json
-          binder: blob-storage
+          binder: blobstorage
         rtdTrxProducer-out-0: # name must match [handler name]-out-0
           destination: rtd-trx
           content-type: application/json
-          binder: rtd-trx
+          binder: rtdtrx
       binders:
-        rtd-trx:
+        rtdtrx:
           type: kafka
           environment:
             spring:
@@ -75,7 +76,7 @@ spring:
                           protocol: SASL_SSL
                         default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
                         default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-        blob-storage:
+        blobstorage:
           type: kafka
           environment:
             spring:
