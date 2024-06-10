@@ -45,19 +45,19 @@ spring:
       definition: blobStorageConsumer
     stream:
       source: rtdTrxProducer
-      defaultBinder: rtdtrx
+      defaultBinder: rtd-trx
       bindings:
         blobStorageConsumer-in-0: # name must match [handler name]-in-0
           destination: rtd-platform-events
           group: rtd-ingestor-consumer-group
           content-type: application/json
-          binder: blobstorage
+          binder: blob-storage
         rtdTrxProducer-out-0: # name must match [handler name]-out-0
           destination: rtd-trx
           content-type: application/json
-          binder: rtdtrx
+          binder: rtd-trx
       binders:
-        rtdtrx:
+        rtd-trx:
           type: kafka
           environment:
             spring:
@@ -76,7 +76,7 @@ spring:
                           protocol: SASL_SSL
                         default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
                         default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-        blobstorage:
+        blob-storage:
           type: kafka
           environment:
             spring:
