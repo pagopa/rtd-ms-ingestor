@@ -202,8 +202,8 @@ public class EventProcessor {
   private boolean processContract(WalletContract contract)
       throws JsonProcessingException {
 
-    if (contract == null) {
-      log.error("Failed deserializing contract at {}", numTotalContracts + 1);
+    if (contract.getAction() == null) {
+      log.error("Null action on contract at {}", numTotalContracts + 1);
       return false;
     }
 
@@ -212,8 +212,11 @@ public class EventProcessor {
     String contractIdHmac;
 
     if (!"OK".equals(contract.getImportOutcome())) {
-      log.error("Import outcome not OK on contract at position {}", numTotalContracts + 1);
-      return false;
+      currContractId = contract.getContractIdentifier();
+      contractIdHmac = anonymizer.anonymize(currContractId);
+      MDC.put("ImportOutcome", contract.getImportOutcome());
+      MDC.put("ContractID", contractIdHmac);
+      return true;
     }
 
     if (contract.getAction().equals(CREATE_ACTION)) {
