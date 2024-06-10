@@ -162,6 +162,7 @@ public class EventProcessor {
         MDC.put("Filename", blob.getBlob());
         MDC.put("Position", String.valueOf(numTotalContracts));
         MDC.put("Action", contract.getAction());
+        MDC.put("ImportOutcome", contract.getImportOutcome());
         MDC.put("Successful", String.valueOf(updateOutcome));
         log.info("");
         MDC.clear();
