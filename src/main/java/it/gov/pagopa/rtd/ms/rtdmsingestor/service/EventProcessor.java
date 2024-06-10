@@ -203,7 +203,7 @@ public class EventProcessor {
       throws JsonProcessingException {
 
     if (contract.getAction() == null) {
-      log.error("Null action on contract at {}", numTotalContracts + 1);
+      log.error("Null action on contract at {}", numTotalContracts);
       return false;
     }
 
@@ -224,7 +224,7 @@ public class EventProcessor {
       contractIdHmac = anonymizer.anonymize(currContractId);
       MDC.put("ContractID", contractIdHmac);
       if (!connector.postContract(contract.getMethodAttributes(), contractIdHmac)) {
-        log.error("Failed saving contract at position {}", numTotalContracts + 1);
+        log.error("Failed saving contract at position {}", numTotalContracts);
         return false;
       } else {
         return true;
@@ -234,13 +234,13 @@ public class EventProcessor {
       contractIdHmac = anonymizer.anonymize(currContractId);
       MDC.put("ContractID", contractIdHmac);
       if (!connector.deleteContract(contract.getContractIdentifier(), contractIdHmac)) {
-        log.error("Failed deleting contract at position {}", numTotalContracts + 1);
+        log.error("Failed deleting contract at position {}", numTotalContracts);
         return false;
       } else {
         return true;
       }
     }
-    log.error("Unrecognized action on contract at position {}", numTotalContracts + 1);
+    log.error("Unrecognized action on contract at position {}", numTotalContracts);
     return false;
   }
 
