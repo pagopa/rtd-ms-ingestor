@@ -55,6 +55,7 @@ public class EventProcessor {
   private int numTotalTrx;
 
   private int numTotalContracts;
+  private int numFailedContracts;
 
   private final BlobRestConnector connector;
 
@@ -134,8 +135,7 @@ public class EventProcessor {
   private BlobApplicationAware processWalletContracts(BlobApplicationAware blob, Path blobPath) {
     log.info("Extracting contracts from:{}", blob.getBlobUri());
 
-    int numCorrectlyExportedContracts = 0;
-    int numFailedContracts = 0;
+    numFailedContracts = 0;
     numTotalContracts = 0;
 
     ObjectMapper objectMapper = new ObjectMapper();
@@ -153,19 +153,7 @@ public class EventProcessor {
         numTotalContracts++;
 
         WalletContract contract = objectMapper.readValue(jsonParser, WalletContract.class);
-        boolean updateOutcome = processContract(contract);
-        if (updateOutcome) {
-          numCorrectlyExportedContracts++;
-        } else {
-          numFailedContracts++;
-        }
-        MDC.put("Filename", blob.getBlob());
-        MDC.put("Position", String.valueOf(numTotalContracts));
-        MDC.put("Action", contract.getAction());
-        MDC.put("ImportOutcome", contract.getImportOutcome());
-        MDC.put("Successful", String.valueOf(updateOutcome));
-        log.info("");
-        MDC.clear();
+        processContractWrapper(blob.getBlob(), contract);
       }
     } catch (JsonParseException | MismatchedInputException e) {
       log.error("Validation error: malformed wallet export");
@@ -199,6 +187,22 @@ public class EventProcessor {
         log.error("Error getting records : {}", ex.getMessage());
       }
     });
+  }
+
+  @WithSpan
+  private void processContractWrapper(String fileName, WalletContract contract)
+      throws JsonProcessingException {
+    boolean updateOutcome = processContract(contract);
+    if (!updateOutcome) {
+      numFailedContracts++;
+    }
+    MDC.put("Filename", fileName);
+    MDC.put("Position", String.valueOf(numTotalContracts));
+    MDC.put("Action", contract.getAction());
+    MDC.put("ImportOutcome", contract.getImportOutcome());
+    MDC.put("Successful", String.valueOf(updateOutcome));
+    log.info("");
+    MDC.clear();
   }
 
   @WithSpan
