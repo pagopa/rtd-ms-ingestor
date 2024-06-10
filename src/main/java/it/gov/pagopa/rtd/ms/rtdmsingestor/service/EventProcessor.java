@@ -220,7 +220,6 @@ public class EventProcessor {
     if (!"OK".equals(contract.getImportOutcome())) {
       currContractId = contract.getContractIdentifier();
       contractIdHmac = anonymizer.anonymize(currContractId);
-      MDC.put("ImportOutcome", contract.getImportOutcome());
       MDC.put("ContractID", contractIdHmac);
       return true;
     }
