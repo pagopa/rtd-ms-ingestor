@@ -22,7 +22,6 @@ trigger:
       - src/*
       - pom.xml
       - helm/*
-      - Dockerfile
       - Dockerfile.native
 
 pr: none
@@ -111,8 +110,8 @@ stages:
               command: 'buildAndPush'
               ${{ if eq(parameters.buildNative, true) }}:
                 Dockerfile: 'Dockerfile.native'
-                ${{ else }}:
-                  Dockerfile: 'Dockerfile'
+              ${{ else }}:
+                Dockerfile: 'Dockerfile'
               tags: |
                 $(Build.BuildId)
                 latest
