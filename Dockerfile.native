@@ -15,6 +15,6 @@ EXPOSE 8080
 RUN useradd --uid 10000 runner
 USER 10000
 
-COPY --from=builder /build/target/rtd-ms-sender-auth .
+COPY --from=builder /build/target/rtd-ms-ingestor .
 
 ENTRYPOINT ["./rtd-ms-ingestor"]
