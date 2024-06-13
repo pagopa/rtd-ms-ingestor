@@ -14,6 +14,19 @@
     }
   },
   {
+      "action" : "CREATE",
+      "import_outcome" : "OK",
+      "payment_method" : "CARD",
+      "method_attributes" : {
+        "pan_tail" : "9883",
+        "expdate" : "03/31",
+        "card_id_4" : "4e5a7161726e704459694a325038624a796d585575707a70366d366978523446574b52665a31794a5771633d",
+        "card_payment_circuit" : "MASTERCARD",
+        "new_contract_identifier" : "f94b8c8ad0104685891fa682a611e5c4",
+        "card_bin" : "3742"
+      }
+    },
+  {
     "import_outcome" : "KO",
     "action" : "DELETE",
     "original_contract_identifier" : "W1710350703035tZlo"
