@@ -29,6 +29,7 @@
     <modelmapper.version>3.2.0</modelmapper.version>
     <cloudevents-kafka.version>3.0.0</cloudevents-kafka.version>
     <mockito-inline.version>5.2.0</mockito-inline.version>
+    <sonar.exclusions>**/telemetry/**.java</sonar.exclusions>
     <applicationinsights.enabled>true</applicationinsights.enabled>
   </properties>
 
@@ -245,7 +246,6 @@
               <buildArgs>
                 <arg>--initialize-at-build-time=org.slf4j.LoggerFactory,ch.qos.logback</arg>
                 <arg>--initialize-at-build-time=com.azure.core.util.logging.ClientLogger</arg>
-                <arg>--initialize-at-build-time=org.apache.commons.logging.LogFactory</arg>
               </buildArgs>
             </configuration>
             <executions>
