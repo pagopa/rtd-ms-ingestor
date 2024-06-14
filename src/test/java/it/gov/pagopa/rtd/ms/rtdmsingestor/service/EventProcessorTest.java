@@ -117,7 +117,7 @@ class EventProcessorTest {
 
     blobProcessor.process(fakeBlobWallet);
     await().atMost(Duration.ofSeconds(1)).untilAsserted(() -> {
-      assertEquals(Status.DOWNLOADED, fakeBlobWallet.getStatus());
+      assertEquals(Status.PROCESSED, fakeBlobWallet.getStatus());
     });
   }
 
@@ -140,7 +140,7 @@ class EventProcessorTest {
 
     blobProcessor.process(fakeBlobWalletMalformed);
     await().atMost(Duration.ofSeconds(1)).untilAsserted(() -> {
-      assertEquals(Status.DOWNLOADED, fakeBlobWalletMalformed.getStatus());
+      assertEquals(Status.PROCESSED, fakeBlobWalletMalformed.getStatus());
     });
   }
 }
