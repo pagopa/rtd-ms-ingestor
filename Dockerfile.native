@@ -1,0 +1,20 @@
+FROM ghcr.io/graalvm/graalvm-community:21.0.2-ol9-20240116@sha256:6e46c711c90bdbc24e23ccdb6e3fba837d660e68dd4ffeb87abbd3d08e115653 AS builder
+
+WORKDIR /build
+COPY . .
+
+RUN ./mvnw clean package -Pnative -DskipTests
+
+FROM ubuntu:noble-20240530@sha256:e3f92abc0967a6c19d0dfa2d55838833e947b9d74edbcb0113e48535ad4be12a AS cve
+COPY --from=builder /build/target/rtd-ms-ingestor*.jar .
+
+FROM ubuntu:noble-20240530@sha256:e3f92abc0967a6c19d0dfa2d55838833e947b9d74edbcb0113e48535ad4be12a AS runtime
+
+EXPOSE 8080
+
+RUN useradd --uid 10000 runner
+USER 10000
+
+COPY --from=builder /build/target/rtd-ms-ingestor .
+
+ENTRYPOINT ["./rtd-ms-ingestor"]

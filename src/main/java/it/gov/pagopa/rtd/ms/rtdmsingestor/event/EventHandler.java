@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.Getter;
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -26,6 +27,7 @@ public class EventHandler {
    * @return a consumer for Event Grid events.
    */
   @Bean
+  @RegisterReflectionForBinding(EventGridEvent.class)
   public Consumer<Message<List<EventGridEvent>>> blobStorageConsumer(
       BlobRestConnector blobRestConnector, EventProcessor blobProcessor) {
     return message -> message.getPayload().stream()

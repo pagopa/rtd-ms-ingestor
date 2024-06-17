@@ -3,9 +3,38 @@ logging:
     root: INFO
     org.apache.kafka: WARN
 
+# OpenTelemetry
+applicationinsights:
+  enabled: '@applicationinsights.enabled@'
+  connection-string: ${APPLICATIONINSIGHTS_CONNECTION_STRING:myconnectionstring}
+otel:
+  log:
+    level: ${OPENTELEMETRY_LOG_LEVEL:INFO}
+  traces:
+    sampler:
+      probability: 1.0 # sample probability for tracing (spans)
+  metric:
+    export:
+      interval: 60000 # sampling rate for metrics (millis)
+  instrumentation:
+    logback-appender:
+      enabled: true # enable logback instrumentation
+    micrometer:
+      enabled: true
+
 # Expose only health probes
 management:
-  metrics.export.defaults.enabled: false
+  metrics:
+    export.defaults.enabled: false
+    enable:
+      all: false
+      process.cpu: false
+      system.cpu: false
+      jvm.memory: false
+      application: false
+  endpoints:
+    enabled-by-default: false
+    web.exposure.include: health
   info.defaults.enabled: false
   endpoints.enabled-by-default: false
   endpoint:
@@ -42,59 +71,52 @@ spring:
       database: ${MONGODB_NAME:rtd}
   cloud:
     function:
-      definition: blobStorageConsumer
+      definition: blobStorageConsumer,rtdTrxProducer
     stream:
-      source: rtdTrxProducer
       defaultBinder: rtd-trx
+      kafka:
+        binder:
+            configuration:
+                security.protocol: SASL_SSL
+                sasl.mechanism: PLAIN
+  #                        Recommended Values for both consumer and producer for azure eventhub
+                metadata.max.age.ms: 180000
+                connections.max.idle.ms: 180000
+  #                        The service will close connections if requests larger than 1046528 bytes are sent
+                max.request.size: 1000000
       bindings:
         blobStorageConsumer-in-0: # name must match [handler name]-in-0
           destination: rtd-platform-events
           group: rtd-ingestor-consumer-group
           content-type: application/json
-          binder: blob-storage
+          binder: blobstorage
         rtdTrxProducer-out-0: # name must match [handler name]-out-0
           destination: rtd-trx
           content-type: application/json
-          binder: rtd-trx
+          binder: rtdtrx
       binders:
-        rtd-trx:
+        rtdtrx:
           type: kafka
           environment:
-            spring:
-              cloud:
-                stream:
-                  kafka:
-                    binder:
-                      auto-create-topics: false
-                      brokers: ${KAFKA_BROKER_RTD_TRX://localhost:29095}
-                      configuration:
-                        sasl:
-                          jaas:
-                            config: ${KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_TRX}
-                          mechanism: PLAIN
-                        security:
-                          protocol: SASL_SSL
-                        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-                        default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-        blob-storage:
+            spring.cloud.stream.kafka.binder:
+              auto-create-topics: false
+              brokers: ${KAFKA_BROKER_RTD_TRX://localhost:29095}
+              configuration:
+                sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_TRX}
+                sasl.jaas.mechanism: PLAIN
+                security.protocol: SASL_SSL
+                default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+                default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        blobstorage:
           type: kafka
           environment:
-            spring:
-              cloud:
-                stream:
-                  kafka:
-                    binder:
-                      auto-create-topics: false
-                      brokers: ${KAFKA_BROKER_PLATFORM_EVENTS://localhost:29095}
-                      configuration:
-                        sasl:
-                          jaas:
-                            config: ${KAFKA_SASL_JAAS_CONFIG_CONSUMER_BLOB_STORAGE_EVENTS}
-                          mechanism: PLAIN
-                        security:
-                          protocol: SASL_SSL
-                      consumerProperties:
-                        key:
-                          deserializer: org.apache.kafka.common.serialization.StringDeserializer
-                        value:
-                          deserializer: org.apache.kafka.common.serialization.StringDeserializer
+            spring.cloud.stream.kafka.binder:
+              auto-create-topics: false
+              brokers: ${KAFKA_BROKER_PLATFORM_EVENTS://localhost:29095}
+              configuration:
+                sasl.jaas.config: ${KAFKA_SASL_JAAS_CONFIG_CONSUMER_BLOB_STORAGE_EVENTS}
+                sasl.jaas.mechanism: PLAIN
+                security.protocol: SASL_SSL
+              consumerProperties:
+                key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
+                value.deserializer: org.apache.kafka.common.serialization.StringDeserializer
