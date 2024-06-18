@@ -1,6 +1,7 @@
 logging:
   level:
     root: INFO
+    org.apache.kafka: WARN
 
 # Expose only health probes
 management:
@@ -15,11 +16,19 @@ management:
 
 ingestor:
   anonymizePaymentInstrument: ${ANONYMIZE_PAYMENT_INSTRUMENT:true}
+  contractIdObfuscationHmacKey: ${CONTRACT_ID_OBFUSCATION_HMAC_KEY:nXegOrPs5wrRPOM6VNOlkxT3PPjruUk5ppohs6fIVQk=}
   resources:
     base:
       path: src/test/resources
   api:
     baseurl: https://${CSV_INGESTOR_HOST:internal.it}
+    wallet:
+      baseurl: https://${WALLET_HOST:wallet.it}
+      updateContracts: /payment-wallet-migrations/cstar/v1/migrations/wallets/updateDetails
+      deleteContracts: /payment-wallet-migrations/cstar/v1/migrations/wallets/delete
+      apikey: ${WALLET_API_KEY:myapikey}
+      rateLimit: ${WALLET_RATE_LIMIT:10}
+      maxRetryAttempt: ${WALLET_MAX_RETRIES:3}
   blobclient:
     basepath: storage
     apikey: ${INTERNAL_SERVICES_API_KEY:myapikey}

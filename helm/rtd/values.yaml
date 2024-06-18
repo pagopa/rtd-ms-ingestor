@@ -49,18 +49,25 @@ microservice-chart:
 
   envConfig:
     APPLICATIONINSIGHTS_PREVIEW_PROFILER_ENABLED: "false"
+    APPLICATIONINSIGHTS_SAMPLING_PERCENTAGE: "100"
+    OTEL_TRACES_SAMPLER: "always_on"
+    WALLET_RATE_LIMIT: "50"
+    WALLET_MAX_RETRIES: "3"
 
   envSecret:
     APPLICATIONINSIGHTS_CONNECTION_STRING: appinsights-instrumentation-key
     KAFKA_SASL_JAAS_CONFIG_CONSUMER_BLOB_STORAGE_EVENTS: evh-rtd-platform-events-rtd-platform-events-sub-rtd
     KAFKA_SASL_JAAS_CONFIG_PRODUCER_RTD_TRX: evh-rtd-trx-rtd-trx-producer-rtd
     INTERNAL_SERVICES_API_KEY: rtd-internal-api-product-subscription-key
+    WALLET_API_KEY: wallet-api-product-subscription-key
+    CONTRACT_ID_OBFUSCATION_HMAC_KEY: contract-id-obfuscation-hmac-key
     MONGODB_CONNECTION_URI: mongo-db-connection-uri
 
   envConfigMapExternals:
     rtdingestor:
       JAVA_TOOL_OPTIONS: JAVA_TOOL_OPTIONS
       CSV_INGESTOR_HOST: CSV_INGESTOR_HOST
+      WALLET_HOST: WALLET_HOST
       MONGODB_NAME: MONGODB_NAME
       APPLICATIONINSIGHTS_ROLE_NAME: APPLICATIONINSIGHTS_ROLE_NAME
       APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL: APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL
