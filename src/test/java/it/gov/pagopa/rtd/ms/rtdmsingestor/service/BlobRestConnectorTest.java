@@ -157,7 +157,7 @@ class BlobRestConnectorTest {
   }
 
   @Test
-  void shouldUpdateContract() throws IOException {
+  void shouldUpdateContractWithRateLimiter() throws IOException {
 
     String serializedContract = "{ \"action\": \"CREATE\", \"import_outcome\": \"OK\", \"payment_method\": \"CARD\", \"method_attributes\": { \"pan_tail\": \"6295\", \"expdate\": \"04/28\", \"card_id_4\": \"6b4d345a594e69654478796546556c384c6955765a42794a345139305457424c394d794e4b4566466c44593d\", \"card_payment_circuit\": \"MC\", \"new_contract_identifier\": \"1e04de1f762b440fa5c444464603bc7c\", \"original_contract_identifier\": \"3b1288edc1f14e0a97129d84fbf1f01e\", \"card_bin\": \"459521\" } }";
     ObjectMapper objectMapper = new ObjectMapper();
@@ -213,7 +213,7 @@ class BlobRestConnectorTest {
     String contractIdHmac = anonymizer.anonymize(currContractId);
 
     assertFalse(blobRestConnector.postContract(contract.getMethodAttributes(), contractIdHmac));
-    verify(client, times(1)).execute(any(HttpPost.class));
+    verify(client, times(3)).execute(any(HttpPost.class));
   }
 
   @Test
@@ -229,7 +229,7 @@ class BlobRestConnectorTest {
     String contractIdHmac = anonymizer.anonymize(currContractId);
 
     assertFalse(blobRestConnector.postContract(contract.getMethodAttributes(), contractIdHmac));
-    verify(client, times(1)).execute(any(HttpPost.class));
+    verify(client, times(3)).execute(any(HttpPost.class));
   }
 
   @Test
@@ -265,7 +265,7 @@ class BlobRestConnectorTest {
     String contractIdHmac = anonymizer.anonymize(currContractId);
 
     assertFalse(blobRestConnector.deleteContract(contract.getContractIdentifier(), contractIdHmac));
-    verify(client, times(1)).execute(any(HttpPost.class));
+    verify(client, times(3)).execute(any(HttpPost.class));
   }
 
   @Test
