@@ -1,13 +1,10 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
-import io.opentelemetry.instrumentation.annotations.WithSpan;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.ContractMethodAttributes;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.service.wallet.WalletService;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -21,9 +18,6 @@ import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicHeader;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,29 +37,16 @@ public class BlobRestConnector {
   @Value("${ingestor.api.baseurl}")
   private String baseUrl;
 
-  @Value("${ingestor.api.wallet.baseurl}")
-  private String walletBaseUrl;
-
-  @Value("${ingestor.api.wallet.updateContracts}")
-  private String updateContractsEndpoint;
-
-  @Value("${ingestor.api.wallet.deleteContracts}")
-  private String deleteContractsEndpoint;
-
   @Value("${ingestor.blobclient.apikey}")
   private String blobApiKey;
-
-  @Value("${ingestor.api.wallet.apikey}")
-  private String walletApiKey;
 
   @Value("${ingestor.blobclient.basepath}")
   private String blobBasePath;
 
   private final CloseableHttpClient httpClient;
+  private final WalletService walletService;
 
   private static final String APIM_SUBSCRIPTION_HEADER = "Ocp-Apim-Subscription-Key";
-  private static final String CONTRACT_HMAC_HEADER = "x-contract-hmac";
-
 
   /**
    * Method that allows the get of the blob from a remote storage.
@@ -136,62 +117,12 @@ public class BlobRestConnector {
   }
 
   public boolean postContract(ContractMethodAttributes contract,
-      @SpanAttribute("hmac") String contractHmac)
-      throws JsonProcessingException {
-    ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
-    String contractJson = ow.writeValueAsString(contract);
-    StringEntity contractEntity = new StringEntity(
-        contractJson,
-        ContentType.APPLICATION_JSON);
-
-    String uri = walletBaseUrl + updateContractsEndpoint;
-    final HttpPost postContract = new HttpPost(uri);
-    postContract.setEntity(contractEntity);
-    postContract.setHeader(new BasicHeader(APIM_SUBSCRIPTION_HEADER, walletApiKey));
-    postContract.setHeader(new BasicHeader(CONTRACT_HMAC_HEADER, contractHmac));
-
-    try (CloseableHttpResponse myResponse = httpClient.execute(postContract)) {
-      int statusCode = myResponse.getStatusLine().getStatusCode();
-      if (statusCode == HttpStatus.SC_OK) {
-        log.debug("Successfully updated contract");
-        return true;
-      } else {
-        log.error("Can't update contract. Invalid HTTP response: {}, {}", statusCode,
-            myResponse.getStatusLine().getReasonPhrase());
-        return false;
-      }
-    } catch (Exception ex) {
-      log.error("Can't update contract. Unexpected error: {}", ex.getMessage());
-      return false;
-    }
+      @SpanAttribute("hmac") String contractHmac) {
+    return walletService.postContract(contract, contractHmac);
   }
 
   public boolean deleteContract(String contractIdentifier,
       @SpanAttribute("hmac") String contractHmac) {
-    String uri = walletBaseUrl + deleteContractsEndpoint;
-    final HttpPost deleteContract = new HttpPost(uri);
-    deleteContract.setHeader(new BasicHeader(APIM_SUBSCRIPTION_HEADER, walletApiKey));
-    deleteContract.setHeader(new BasicHeader(CONTRACT_HMAC_HEADER, contractHmac));
-
-    StringEntity newContractIdentifierEntity = new StringEntity(
-        "{\"contractIdentifier\": \"" + contractIdentifier + "\"}",
-        ContentType.APPLICATION_JSON);
-    deleteContract.setEntity(newContractIdentifierEntity);
-
-    try (CloseableHttpResponse myResponse = httpClient.execute(deleteContract)) {
-      int statusCode = myResponse.getStatusLine().getStatusCode();
-      if (statusCode == HttpStatus.SC_NO_CONTENT) {
-        log.debug("Successfully updated contract");
-        return true;
-      } else {
-        log.error("Can't delete contract. Invalid HTTP response: {}, {}", statusCode,
-            myResponse.getStatusLine().getReasonPhrase());
-        return false;
-      }
-    } catch (Exception ex) {
-      log.error("Can't delete contract. Unexpected error: {}", ex.getMessage());
-      return false;
-    }
+    return walletService.deleteContract(contractIdentifier, contractHmac);
   }
-
 }
