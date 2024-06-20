@@ -27,8 +27,14 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,20 +54,18 @@ public class EventProcessor {
   private static final String DELETE_ACTION = "DELETE";
 
   private final StreamBridge sb;
-
   private final IngestorRepository repository;
+  private final BlobRestConnector connector;
+  private final ContractAdapter adapter;
+  private final Anonymizer anonymizer;
+
   private int numNotEnrolledCards;
   private int numCorrectTrx;
   private int numTotalTrx;
-
   private int numTotalContracts;
   private int numFailedContracts;
 
-  private final BlobRestConnector connector;
-
-  private final ContractAdapter adapter;
-
-  private final Anonymizer anonymizer;
+  private final ExecutorService executorService = Executors.newFixedThreadPool(10);
 
   public BlobApplicationAware process(BlobApplicationAware blob) {
     Path blobPath = Path.of(blob.getTargetDir(), blob.getBlob());
@@ -97,9 +101,11 @@ public class EventProcessor {
 
     BeanVerifier<Transaction> verifier = new TransactionVerifier();
 
-    CsvToBeanBuilder<Transaction> builder =
-        new CsvToBeanBuilder<Transaction>(fileReader).withType(Transaction.class).withSeparator(';')
-            .withVerifier(verifier).withThrowExceptions(false);
+    CsvToBeanBuilder<Transaction> builder = new CsvToBeanBuilder<Transaction>(fileReader)
+        .withType(Transaction.class)
+        .withSeparator(';')
+        .withVerifier(verifier)
+        .withThrowExceptions(false);
 
     CsvToBean<Transaction> csvToBean = builder.build();
     Stream<Transaction> readTransaction = csvToBean.stream();
@@ -107,8 +113,7 @@ public class EventProcessor {
     transactionCheckProcess(readTransaction);
 
     List<CsvException> violations = csvToBean.getCapturedExceptions();
-
-    numTotalTrx = numTotalTrx + violations.size();
+    numTotalTrx += violations.size();
 
     if (!violations.isEmpty()) {
       for (CsvException e : violations) {
@@ -140,6 +145,7 @@ public class EventProcessor {
 
     ObjectMapper objectMapper = new ObjectMapper();
     JsonFactory jsonFactory = new JsonFactory();
+    List<Future<Void>> futures = new ArrayList<>();
 
     try (InputStream inputStream = new FileInputStream(blobPath.toFile())) {
       JsonParser jsonParser = jsonFactory.createParser(inputStream);
@@ -151,9 +157,11 @@ public class EventProcessor {
 
       while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
         numTotalContracts++;
-
         WalletContract contract = objectMapper.readValue(jsonParser, WalletContract.class);
-        processContractWrapper(blob.getBlob(), contract);
+        futures.add(executorService.submit(() -> {
+          processContractWrapper(blob.getBlob(), contract);
+          return null;
+        }));
       }
     } catch (JsonParseException | MismatchedInputException e) {
       log.error("Validation error: malformed wallet export");
@@ -162,6 +170,25 @@ public class EventProcessor {
       log.error("Missing blob file:{}", blobPath);
       return blob;
     }
+
+    for (Future<Void> future : futures) {
+      try {
+        future.get();
+      } catch (InterruptedException | ExecutionException e) {
+        log.error("Error processing contract: {}", e.getMessage());
+        numFailedContracts++;
+      }
+    }
+
+    executorService.shutdown();
+    try {
+      if (!executorService.awaitTermination(1000, TimeUnit.MILLISECONDS)) {
+        executorService.shutdownNow();
+      }
+    } catch (InterruptedException e) {
+      executorService.shutdownNow();
+    }
+
 
     if (numFailedContracts == 0) {
       log.info("Blob {} processed successfully", blob.getBlob());
@@ -193,24 +220,25 @@ public class EventProcessor {
   }
 
   @WithSpan
-  private void processContractWrapper(String fileName, WalletContract contract)
-      throws JsonProcessingException {
-    boolean updateOutcome = processContract(contract);
-    if (!updateOutcome) {
-      numFailedContracts++;
+  private void processContractWrapper(String fileName, WalletContract contract) {
+    try {
+      boolean updateOutcome = processContract(contract);
+      if (!updateOutcome) {
+        numFailedContracts++;
+      }
+      MDC.put("Filename", fileName);
+      MDC.put("Position", String.valueOf(numTotalContracts));
+      MDC.put("Action", contract.getAction());
+      MDC.put("ImportOutcome", contract.getImportOutcome());
+      MDC.put("Successful", String.valueOf(updateOutcome));
+      log.info("");
+      MDC.clear();
+    } catch (JsonProcessingException e) {
+      log.error("Error processing contract: {}", e.getMessage());
     }
-    MDC.put("Filename", fileName);
-    MDC.put("Position", String.valueOf(numTotalContracts));
-    MDC.put("Action", contract.getAction());
-    MDC.put("ImportOutcome", contract.getImportOutcome());
-    MDC.put("Successful", String.valueOf(updateOutcome));
-    log.info("");
-    MDC.clear();
   }
 
-  private boolean processContract(WalletContract contract)
-      throws JsonProcessingException {
-
+  private boolean processContract(WalletContract contract) throws JsonProcessingException {
     if (contract.getAction() == null) {
       log.error("Null action on contract at {}", numTotalContracts);
       return false;
