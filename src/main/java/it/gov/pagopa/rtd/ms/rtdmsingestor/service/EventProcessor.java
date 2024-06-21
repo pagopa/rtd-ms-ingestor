@@ -145,7 +145,7 @@ public class EventProcessor {
 
     ObjectMapper objectMapper = new ObjectMapper();
     JsonFactory jsonFactory = new JsonFactory();
-    List<Future<Void>> futures = new ArrayList<>();
+    List<Future<Boolean>> futures = new ArrayList<>();
 
     try (InputStream inputStream = new FileInputStream(blobPath.toFile())) {
       JsonParser jsonParser = jsonFactory.createParser(inputStream);
@@ -157,10 +157,10 @@ public class EventProcessor {
 
       while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
         WalletContract contract = objectMapper.readValue(jsonParser, WalletContract.class);
-        futures.add(executorService.submit(() -> {
-          processContractWrapper(blob.getBlob(), contract);
-          return null;
-        }));
+        numTotalContracts++;
+        futures.add(executorService.submit(
+            () -> processContractWrapper(blob.getBlob(), contract, numTotalContracts)
+        ));
       }
     } catch (JsonParseException | MismatchedInputException e) {
       log.error("Validation error: malformed wallet export");
@@ -170,9 +170,12 @@ public class EventProcessor {
       return blob;
     }
 
-    for (Future<Void> future : futures) {
+    for (Future<Boolean> future : futures) {
       try {
-        future.get();
+        boolean outcome = future.get();
+        if (!outcome) {
+          numFailedContracts++;
+        }
       } catch (InterruptedException | ExecutionException e) {
         log.error("Error processing contract: {}", e.getMessage());
         numFailedContracts++;
@@ -187,7 +190,6 @@ public class EventProcessor {
     } catch (InterruptedException e) {
       executorService.shutdownNow();
     }
-
 
     if (numFailedContracts == 0) {
       log.info("Blob {} processed successfully", blob.getBlob());
@@ -219,26 +221,20 @@ public class EventProcessor {
   }
 
   @WithSpan
-  private void processContractWrapper(String fileName, WalletContract contract) {
-    try {
-      boolean updateOutcome = processContract(contract);
-      numTotalContracts++;
-      if (!updateOutcome) {
-        numFailedContracts++;
-      }
-      MDC.put("Filename", fileName);
-      MDC.put("Position", String.valueOf(numTotalContracts));
-      MDC.put("Action", contract.getAction());
-      MDC.put("ImportOutcome", contract.getImportOutcome());
-      MDC.put("Successful", String.valueOf(updateOutcome));
-      log.info("");
-      MDC.clear();
-    } catch (JsonProcessingException e) {
-      log.error("Error processing contract: {}", e.getMessage());
-    }
+  private boolean processContractWrapper(String fileName, WalletContract contract,
+      int contractPosition) {
+    boolean updateOutcome = processContract(contract);
+    MDC.put("Filename", fileName);
+    MDC.put("Position", String.valueOf(contractPosition));
+    MDC.put("Action", contract.getAction());
+    MDC.put("ImportOutcome", contract.getImportOutcome());
+    MDC.put("Successful", String.valueOf(updateOutcome));
+    log.info("");
+    MDC.clear();
+    return updateOutcome;
   }
 
-  private boolean processContract(WalletContract contract) throws JsonProcessingException {
+  private boolean processContract(WalletContract contract) {
     if (contract.getAction() == null) {
       log.error("Null action on contract at {}", numTotalContracts);
       return false;
