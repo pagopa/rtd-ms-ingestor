@@ -15,7 +15,6 @@ import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.DefaultConnectionKeepAliveStrategy;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.ssl.SSLContexts;
@@ -48,17 +47,13 @@ public class ThreadSafeHttpClient {
 
     return HttpClients.custom()
         .setConnectionManager(connectionManager)
-        .setKeepAliveStrategy(new DefaultConnectionKeepAliveStrategy())
         .addInterceptorFirst((HttpRequestInterceptor) (request, context) -> {
-          log.info(
-              "Before - Leased Connections = " + connectionManager.getTotalStats().getLeased());
-          log.info("Before - Available Connections = " + connectionManager.getTotalStats()
-              .getAvailable());
+          log.info("Before - Leased Connections = " + connectionManager.getTotalStats().getLeased());
+          log.info("Before - Available Connections = " + connectionManager.getTotalStats().getAvailable());
         })
         .addInterceptorFirst((HttpResponseInterceptor) (response, context) -> {
           log.info("After - Leased Connections = " + connectionManager.getTotalStats().getLeased());
-          log.info("After - Available Connections = " + connectionManager.getTotalStats()
-              .getAvailable());
+          log.info("After - Available Connections = " + connectionManager.getTotalStats().getAvailable());
         })
         .build();
   }
