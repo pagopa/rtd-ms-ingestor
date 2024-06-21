@@ -3,7 +3,6 @@ package it.gov.pagopa.rtd.ms.rtdmsingestor.service;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
@@ -13,6 +12,7 @@ import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.exceptions.CsvException;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.adapter.ContractAdapter;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.configuration.WalletConfiguration;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Application;
@@ -34,9 +34,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.cloud.stream.function.StreamBridge;
@@ -47,8 +45,17 @@ import org.springframework.validation.annotation.Validated;
 @Service
 @Slf4j
 @Validated
-@RequiredArgsConstructor
 public class EventProcessor {
+
+  public EventProcessor(StreamBridge sb, IngestorRepository repository, BlobRestConnector connector,
+      ContractAdapter adapter, Anonymizer anonymizer, WalletConfiguration configuration) {
+    this.sb = sb;
+    this.repository = repository;
+    this.connector = connector;
+    this.adapter = adapter;
+    this.anonymizer = anonymizer;
+    this.executorService = Executors.newFixedThreadPool(configuration.getThreadPool());
+  }
 
   private static final String CREATE_ACTION = "CREATE";
   private static final String DELETE_ACTION = "DELETE";
@@ -58,14 +65,13 @@ public class EventProcessor {
   private final BlobRestConnector connector;
   private final ContractAdapter adapter;
   private final Anonymizer anonymizer;
+  private final ExecutorService executorService;
 
   private int numNotEnrolledCards;
   private int numCorrectTrx;
   private int numTotalTrx;
   private int numTotalContracts;
   private int numFailedContracts;
-
-  private final ExecutorService executorService = Executors.newFixedThreadPool(25);
 
   public BlobApplicationAware process(BlobApplicationAware blob) {
     Path blobPath = Path.of(blob.getTargetDir(), blob.getBlob());

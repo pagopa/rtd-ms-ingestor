@@ -16,4 +16,6 @@ public class WalletConfiguration {
   private String deleteContracts;
   private Integer rateLimit;
   private Integer maxRetryAttempt;
+  private Integer threadPool;
+  private Integer connectionPool;
 }

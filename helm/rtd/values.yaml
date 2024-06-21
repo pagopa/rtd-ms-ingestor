@@ -53,6 +53,8 @@ microservice-chart:
     OTEL_TRACES_SAMPLER: "always_on"
     WALLET_RATE_LIMIT: "50"
     WALLET_MAX_RETRIES: "3"
+    THREAD_POOL: "25"
+    CONNECTION_POOL: "25"
 
   envSecret:
     APPLICATIONINSIGHTS_CONNECTION_STRING: appinsights-instrumentation-key

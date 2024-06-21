@@ -17,6 +17,8 @@ ingestor:
       apikey: ${WALLET_API_KEY:myapikey}
       rateLimit: ${WALLET_RATE_LIMIT:10}
       maxRetryAttempt: ${WALLET_MAX_RETRIES:3}
+      threadPool: ${THREAD_POOL:25}
+      connectionPool: ${CONNECTION_POOL:25}
   blobclient:
     basepath: storage
     apikey: ${INTERNAL_SERVICES_API_KEY:myapikey}

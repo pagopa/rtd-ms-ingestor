@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Configuration;
 public class ThreadSafeHttpClient {
 
   @Bean
-  CloseableHttpClient myHttpClient()
+  public CloseableHttpClient myHttpClient(WalletConfiguration configuration)
       throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
     SSLContext sslContext =
         SSLContexts.custom().loadTrustMaterial(TrustSelfSignedStrategy.INSTANCE).build();
@@ -42,18 +42,21 @@ public class ThreadSafeHttpClient {
     PoolingHttpClientConnectionManager connectionManager =
         new PoolingHttpClientConnectionManager(registry);
 
-    connectionManager.setMaxTotal(25);
-    connectionManager.setDefaultMaxPerRoute(25);
+    connectionManager.setMaxTotal(configuration.getConnectionPool());
+    connectionManager.setDefaultMaxPerRoute(configuration.getConnectionPool());
 
     return HttpClients.custom()
         .setConnectionManager(connectionManager)
         .addInterceptorFirst((HttpRequestInterceptor) (request, context) -> {
-          log.info("Before - Leased Connections = " + connectionManager.getTotalStats().getLeased());
-          log.info("Before - Available Connections = " + connectionManager.getTotalStats().getAvailable());
+          log.info(
+              "Before - Leased Connections = " + connectionManager.getTotalStats().getLeased());
+          log.info("Before - Available Connections = " + connectionManager.getTotalStats()
+              .getAvailable());
         })
         .addInterceptorFirst((HttpResponseInterceptor) (response, context) -> {
           log.info("After - Leased Connections = " + connectionManager.getTotalStats().getLeased());
-          log.info("After - Available Connections = " + connectionManager.getTotalStats().getAvailable());
+          log.info("After - Available Connections = " + connectionManager.getTotalStats()
+              .getAvailable());
         })
         .build();
   }

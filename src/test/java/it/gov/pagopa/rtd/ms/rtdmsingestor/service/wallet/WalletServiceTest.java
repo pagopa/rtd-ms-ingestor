@@ -38,7 +38,9 @@ class WalletServiceTest {
         "/updateDetails",
         "/delete",
         5,
-        3
+        3,
+        25,
+        25
         ),
         apacheClient
     );
