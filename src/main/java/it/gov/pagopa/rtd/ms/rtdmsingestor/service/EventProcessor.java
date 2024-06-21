@@ -182,15 +182,6 @@ public class EventProcessor {
       }
     }
 
-    executorService.shutdown();
-    try {
-      if (!executorService.awaitTermination(1000, TimeUnit.MILLISECONDS)) {
-        executorService.shutdownNow();
-      }
-    } catch (InterruptedException e) {
-      executorService.shutdownNow();
-    }
-
     if (numFailedContracts == 0) {
       log.info("Blob {} processed successfully", blob.getBlob());
     } else {
