@@ -156,7 +156,6 @@ public class EventProcessor {
       }
 
       while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
-        numTotalContracts++;
         WalletContract contract = objectMapper.readValue(jsonParser, WalletContract.class);
         futures.add(executorService.submit(() -> {
           processContractWrapper(blob.getBlob(), contract);
@@ -223,6 +222,7 @@ public class EventProcessor {
   private void processContractWrapper(String fileName, WalletContract contract) {
     try {
       boolean updateOutcome = processContract(contract);
+      numTotalContracts++;
       if (!updateOutcome) {
         numFailedContracts++;
       }
