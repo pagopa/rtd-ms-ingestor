@@ -65,7 +65,7 @@ public class EventProcessor {
   private int numTotalContracts;
   private int numFailedContracts;
 
-  private final ExecutorService executorService = Executors.newFixedThreadPool(10);
+  private final ExecutorService executorService = Executors.newFixedThreadPool(25);
 
   public BlobApplicationAware process(BlobApplicationAware blob) {
     Path blobPath = Path.of(blob.getTargetDir(), blob.getBlob());
