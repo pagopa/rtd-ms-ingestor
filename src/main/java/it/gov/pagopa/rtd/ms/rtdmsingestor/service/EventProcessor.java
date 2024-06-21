@@ -164,8 +164,9 @@ public class EventProcessor {
       while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
         WalletContract contract = objectMapper.readValue(jsonParser, WalletContract.class);
         numTotalContracts++;
+        int currNumTotalContracts = numTotalContracts;
         futures.add(executorService.submit(
-            () -> processContractWrapper(blob.getBlob(), contract, numTotalContracts)
+            () -> processContractWrapper(blob.getBlob(), contract, currNumTotalContracts)
         ));
       }
     } catch (JsonParseException | MismatchedInputException e) {
