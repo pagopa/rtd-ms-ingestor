@@ -38,6 +38,8 @@ public class ThreadSafeHttpClient {
     PoolingHttpClientConnectionManager connectionManager =
         new PoolingHttpClientConnectionManager(registry);
 
+    connectionManager.setDefaultMaxPerRoute(10);
+
     return HttpClients.custom().setConnectionManager(connectionManager).build();
   }
 }
