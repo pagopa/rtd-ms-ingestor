@@ -162,8 +162,7 @@ public class EventProcessor {
 
       while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
         WalletContract contract = objectMapper.readValue(jsonParser, WalletContract.class);
-        numTotalContracts++;
-        int currNumTotalContracts = numTotalContracts;
+        int currNumTotalContracts = ++numTotalContracts;
         walletImportTaskData.add(Pair.of(
             new WalletImportTaskData(contract, currNumTotalContracts),
             executorService.submit(
