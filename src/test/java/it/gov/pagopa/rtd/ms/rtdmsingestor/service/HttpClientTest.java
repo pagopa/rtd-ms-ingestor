@@ -23,6 +23,7 @@ class HttpClientTest {
       "/updateDetails",
       "/delete",
       5,
+      10,
       3,
       25,
       25
