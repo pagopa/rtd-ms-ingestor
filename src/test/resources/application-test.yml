@@ -16,6 +16,7 @@ ingestor:
       deleteContracts: /payment-wallet-migrations/cstar/v1/migrations/wallets/delete
       apikey: ${WALLET_API_KEY:myapikey}
       rateLimit: ${WALLET_RATE_LIMIT:10}
+      rateLimitTimeoutSeconds: ${WALLET_RATE_LIMIT_TIMEOUT_SECONDS:10}
       maxRetryAttempt: ${WALLET_MAX_RETRIES:3}
       threadPool: ${THREAD_POOL:25}
       connectionPool: ${CONNECTION_POOL:25}
