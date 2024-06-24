@@ -4,6 +4,9 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import javax.net.ssl.SSLContext;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpRequestInterceptor;
+import org.apache.http.HttpResponseInterceptor;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
@@ -25,7 +28,7 @@ import org.springframework.context.annotation.Configuration;
 public class ThreadSafeHttpClient {
 
   @Bean
-  CloseableHttpClient myHttpClient()
+  public CloseableHttpClient myHttpClient(WalletConfiguration configuration)
       throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
     SSLContext sslContext =
         SSLContexts.custom().loadTrustMaterial(TrustSelfSignedStrategy.INSTANCE).build();
@@ -38,6 +41,11 @@ public class ThreadSafeHttpClient {
     PoolingHttpClientConnectionManager connectionManager =
         new PoolingHttpClientConnectionManager(registry);
 
-    return HttpClients.custom().setConnectionManager(connectionManager).build();
+    connectionManager.setMaxTotal(configuration.getConnectionPool());
+    connectionManager.setDefaultMaxPerRoute(configuration.getConnectionPool());
+
+    return HttpClients.custom()
+        .setConnectionManager(connectionManager)
+        .build();
   }
 }
