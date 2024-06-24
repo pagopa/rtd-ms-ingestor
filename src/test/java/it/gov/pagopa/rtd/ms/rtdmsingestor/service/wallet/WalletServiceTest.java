@@ -51,7 +51,7 @@ class WalletServiceTest {
   void shouldLimitWalletApiCalls() throws IOException {
     String serializedContract = "{ \"action\": \"CREATE\", \"import_outcome\": \"OK\", \"payment_method\": \"CARD\", \"method_attributes\": { \"pan_tail\": \"6295\", \"expdate\": \"04/28\", \"card_id_4\": \"6b4d345a594e69654478796546556c384c6955765a42794a345139305457424c394d794e4b4566466c44593d\", \"card_payment_circuit\": \"MC\", \"new_contract_identifier\": \"1e04de1f762b440fa5c444464603bc7c\", \"original_contract_identifier\": \"3b1288edc1f14e0a97129d84fbf1f01e\", \"card_bin\": \"459521\" } }";
     ObjectMapper objectMapper = new ObjectMapper();
-    JsonParser jsonParser = new JsonFactory().createJsonParser(serializedContract);
+    JsonParser jsonParser = new JsonFactory().createParser(serializedContract);
     WalletContract contract = objectMapper.readValue(jsonParser, WalletContract.class);
 
     CloseableHttpResponse mockedResponse = Mockito.mock(CloseableHttpResponse.class);
@@ -59,7 +59,7 @@ class WalletServiceTest {
         HttpStatus.SC_OK, contract.getContractIdentifier()));
     doReturn(mockedResponse).when(apacheClient).execute(any(HttpPost.class));
 
-    for (final var index : IntStream.range(0, 100).boxed().toList()) {
+    for (final var ignored : IntStream.range(0, 100).boxed().toList()) {
       walletService.postContract(contract.getMethodAttributes(), contract.getContractIdentifier());
     }
 
@@ -70,7 +70,7 @@ class WalletServiceTest {
   void shouldRetryWhenWalletReturns429() throws IOException {
     String serializedContract = "{ \"action\": \"CREATE\", \"import_outcome\": \"OK\", \"payment_method\": \"CARD\", \"method_attributes\": { \"pan_tail\": \"6295\", \"expdate\": \"04/28\", \"card_id_4\": \"6b4d345a594e69654478796546556c384c6955765a42794a345139305457424c394d794e4b4566466c44593d\", \"card_payment_circuit\": \"MC\", \"new_contract_identifier\": \"1e04de1f762b440fa5c444464603bc7c\", \"original_contract_identifier\": \"3b1288edc1f14e0a97129d84fbf1f01e\", \"card_bin\": \"459521\" } }";
     ObjectMapper objectMapper = new ObjectMapper();
-    JsonParser jsonParser = new JsonFactory().createJsonParser(serializedContract);
+    JsonParser jsonParser = new JsonFactory().createParser(serializedContract);
     WalletContract contract = objectMapper.readValue(jsonParser, WalletContract.class);
 
     CloseableHttpResponse mockedResponse = Mockito.mock(CloseableHttpResponse.class);

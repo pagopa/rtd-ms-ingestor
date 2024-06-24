@@ -22,6 +22,7 @@ import it.gov.pagopa.rtd.ms.rtdmsingestor.model.WalletContract;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.service.wallet.WalletImportTaskData;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.utils.Anonymizer;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.utils.OpenTelemetryKeys.Wallet;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -31,6 +32,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -183,6 +185,9 @@ public class EventProcessor {
         if (!outcome) {
           numFailedContracts++;
         }
+      } catch (InterruptedException | ExecutionException e) {
+        log.error("Unexpected thread interruption error during result collection", e);
+        Thread.currentThread().interrupt();
       } catch (Exception e) {
         log.error("Error processing contract", e);
         this.logImportOutcome(blob.getBlob(), task.getLeft().contract(), task.getLeft().contractFilePosition(), false);
@@ -243,14 +248,14 @@ public class EventProcessor {
     if (!"OK".equals(contract.getImportOutcome())) {
       currContractId = contract.getContractIdentifier();
       contractIdHmac = anonymizer.anonymize(currContractId);
-      MDC.put("ContractID", contractIdHmac);
+      MDC.put(Wallet.MDC_CONTRACT_ID, contractIdHmac);
       return true;
     }
 
     if (contract.getAction().equals(CREATE_ACTION)) {
       currContractId = contract.getMethodAttributes().getContractIdentifier();
       contractIdHmac = anonymizer.anonymize(currContractId);
-      MDC.put("ContractID", contractIdHmac);
+      MDC.put(Wallet.MDC_CONTRACT_ID, contractIdHmac);
       if (!connector.postContract(contract.getMethodAttributes(), contractIdHmac)) {
         log.error("Failed saving contract at position {}", contractFilePosition);
         return false;
@@ -260,7 +265,7 @@ public class EventProcessor {
     } else if (contract.getAction().equals(DELETE_ACTION)) {
       currContractId = contract.getContractIdentifier();
       contractIdHmac = anonymizer.anonymize(currContractId);
-      MDC.put("ContractID", contractIdHmac);
+      MDC.put(Wallet.MDC_CONTRACT_ID, contractIdHmac);
       if (!connector.deleteContract(contract.getContractIdentifier(), contractIdHmac)) {
         log.error("Failed deleting contract at position {}", contractFilePosition);
         return false;
