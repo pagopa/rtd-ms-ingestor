@@ -20,6 +20,7 @@ import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.WalletContract;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.service.wallet.WalletImportTaskData;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.utils.Anonymizer;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -30,12 +31,12 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.MDC;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.messaging.support.MessageBuilder;
@@ -70,8 +71,6 @@ public class EventProcessor {
   private int numNotEnrolledCards;
   private int numCorrectTrx;
   private int numTotalTrx;
-  private int numTotalContracts;
-  private int numFailedContracts;
 
   public BlobApplicationAware process(BlobApplicationAware blob) {
     Path blobPath = Path.of(blob.getTargetDir(), blob.getBlob());
@@ -146,12 +145,12 @@ public class EventProcessor {
   private BlobApplicationAware processWalletContracts(BlobApplicationAware blob, Path blobPath) {
     log.info("Extracting contracts from:{}", blob.getBlobUri());
 
-    numFailedContracts = 0;
-    numTotalContracts = 0;
+    int numFailedContracts = 0;
+    int numTotalContracts = 0;
 
     ObjectMapper objectMapper = new ObjectMapper();
     JsonFactory jsonFactory = new JsonFactory();
-    List<Future<Boolean>> futures = new ArrayList<>();
+    List<Pair<WalletImportTaskData, Future<Boolean>>> walletImportTaskData = new ArrayList<>();
 
     try (InputStream inputStream = new FileInputStream(blobPath.toFile())) {
       JsonParser jsonParser = jsonFactory.createParser(inputStream);
@@ -165,26 +164,28 @@ public class EventProcessor {
         WalletContract contract = objectMapper.readValue(jsonParser, WalletContract.class);
         numTotalContracts++;
         int currNumTotalContracts = numTotalContracts;
-        futures.add(executorService.submit(
-            () -> processContractWrapper(blob.getBlob(), contract, currNumTotalContracts)
+        walletImportTaskData.add(Pair.of(
+            new WalletImportTaskData(contract, currNumTotalContracts),
+            executorService.submit(
+                () -> processContractWrapper(blob.getBlob(), contract, currNumTotalContracts)
+            )
         ));
       }
     } catch (JsonParseException | MismatchedInputException e) {
-      log.error("Validation error: malformed wallet export");
-      return blob;
+      log.error("Validation error: malformed wallet export at position [{}]", numTotalContracts);
     } catch (IOException e) {
       log.error("Missing blob file:{}", blobPath);
-      return blob;
     }
 
-    for (Future<Boolean> future : futures) {
+    for (Pair<WalletImportTaskData, Future<Boolean>> task: walletImportTaskData) {
       try {
-        boolean outcome = future.get();
+        boolean outcome = task.getRight().get();
         if (!outcome) {
           numFailedContracts++;
         }
-      } catch (InterruptedException | ExecutionException e) {
-        log.error("Error processing contract: {}", e.getMessage());
+      } catch (Exception e) {
+        log.error("Error processing contract", e);
+        this.logImportOutcome(blob.getBlob(), task.getLeft().contract(), task.getLeft().contractFilePosition(), false);
         numFailedContracts++;
       }
     }
@@ -219,22 +220,19 @@ public class EventProcessor {
   }
 
   @WithSpan
-  private boolean processContractWrapper(String fileName, WalletContract contract,
-      int contractPosition) {
-    boolean updateOutcome = processContract(contract);
-    MDC.put("Filename", fileName);
-    MDC.put("Position", String.valueOf(contractPosition));
-    MDC.put("Action", contract.getAction());
-    MDC.put("ImportOutcome", contract.getImportOutcome());
-    MDC.put("Successful", String.valueOf(updateOutcome));
-    log.info("");
-    MDC.clear();
+  private boolean processContractWrapper(
+      String fileName,
+      WalletContract contract,
+      int contractPosition
+  ) {
+    boolean updateOutcome = processContract(contract, contractPosition);
+    this.logImportOutcome(fileName, contract, contractPosition, updateOutcome);
     return updateOutcome;
   }
 
-  private boolean processContract(WalletContract contract) {
+  private boolean processContract(WalletContract contract, int contractFilePosition) {
     if (contract.getAction() == null) {
-      log.error("Null action on contract at {}", numTotalContracts);
+      log.error("Null action on contract at {}", contractFilePosition);
       return false;
     }
 
@@ -254,7 +252,7 @@ public class EventProcessor {
       contractIdHmac = anonymizer.anonymize(currContractId);
       MDC.put("ContractID", contractIdHmac);
       if (!connector.postContract(contract.getMethodAttributes(), contractIdHmac)) {
-        log.error("Failed saving contract at position {}", numTotalContracts);
+        log.error("Failed saving contract at position {}", contractFilePosition);
         return false;
       } else {
         return true;
@@ -264,13 +262,13 @@ public class EventProcessor {
       contractIdHmac = anonymizer.anonymize(currContractId);
       MDC.put("ContractID", contractIdHmac);
       if (!connector.deleteContract(contract.getContractIdentifier(), contractIdHmac)) {
-        log.error("Failed deleting contract at position {}", numTotalContracts);
+        log.error("Failed deleting contract at position {}", contractFilePosition);
         return false;
       } else {
         return true;
       }
     }
-    log.error("Unrecognized action on contract at position {}", numTotalContracts);
+    log.error("Unrecognized action on contract at position {}", contractFilePosition);
     return false;
   }
 
@@ -284,5 +282,20 @@ public class EventProcessor {
 
   protected int getNumCorrectTrx() {
     return numCorrectTrx;
+  }
+
+  private void logImportOutcome(
+      String fileName,
+      WalletContract contract,
+      int contractPosition,
+      boolean importOutcome
+  ) {
+    MDC.put("Filename", fileName);
+    MDC.put("Position", String.valueOf(contractPosition));
+    MDC.put("Action", contract.getAction());
+    MDC.put("ImportOutcome", contract.getImportOutcome());
+    MDC.put("Successful", String.valueOf(importOutcome));
+    log.info("");
+    MDC.clear();
   }
 }

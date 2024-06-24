@@ -25,7 +25,6 @@ import org.springframework.context.annotation.Configuration;
  * Thread safe HTTP client implementing pooling.
  */
 @Configuration
-@Slf4j
 public class ThreadSafeHttpClient {
 
   @Bean
@@ -47,17 +46,6 @@ public class ThreadSafeHttpClient {
 
     return HttpClients.custom()
         .setConnectionManager(connectionManager)
-        .addInterceptorFirst((HttpRequestInterceptor) (request, context) -> {
-          log.info(
-              "Before - Leased Connections = " + connectionManager.getTotalStats().getLeased());
-          log.info("Before - Available Connections = " + connectionManager.getTotalStats()
-              .getAvailable());
-        })
-        .addInterceptorFirst((HttpResponseInterceptor) (response, context) -> {
-          log.info("After - Leased Connections = " + connectionManager.getTotalStats().getLeased());
-          log.info("After - Available Connections = " + connectionManager.getTotalStats()
-              .getAvailable());
-        })
         .build();
   }
 }
