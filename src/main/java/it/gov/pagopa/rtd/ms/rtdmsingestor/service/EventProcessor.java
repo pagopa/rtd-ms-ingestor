@@ -3,7 +3,6 @@ package it.gov.pagopa.rtd.ms.rtdmsingestor.service;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
@@ -13,6 +12,7 @@ import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.exceptions.CsvException;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.adapter.ContractAdapter;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.configuration.WalletConfiguration;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.infrastructure.mongo.EPIItem;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Application;
@@ -20,18 +20,25 @@ import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.Transaction;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.WalletContract;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.repository.IngestorRepository;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.service.wallet.WalletImportTaskData;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.utils.Anonymizer;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.utils.OpenTelemetryKeys.Wallet;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Stream;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.MDC;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.messaging.support.MessageBuilder;
@@ -41,27 +48,31 @@ import org.springframework.validation.annotation.Validated;
 @Service
 @Slf4j
 @Validated
-@RequiredArgsConstructor
 public class EventProcessor {
+
+  public EventProcessor(StreamBridge sb, IngestorRepository repository, BlobRestConnector connector,
+      ContractAdapter adapter, Anonymizer anonymizer, WalletConfiguration configuration) {
+    this.sb = sb;
+    this.repository = repository;
+    this.connector = connector;
+    this.adapter = adapter;
+    this.anonymizer = anonymizer;
+    this.executorService = Executors.newFixedThreadPool(configuration.getThreadPool());
+  }
 
   private static final String CREATE_ACTION = "CREATE";
   private static final String DELETE_ACTION = "DELETE";
 
   private final StreamBridge sb;
-
   private final IngestorRepository repository;
+  private final BlobRestConnector connector;
+  private final ContractAdapter adapter;
+  private final Anonymizer anonymizer;
+  private final ExecutorService executorService;
+
   private int numNotEnrolledCards;
   private int numCorrectTrx;
   private int numTotalTrx;
-
-  private int numTotalContracts;
-  private int numFailedContracts;
-
-  private final BlobRestConnector connector;
-
-  private final ContractAdapter adapter;
-
-  private final Anonymizer anonymizer;
 
   public BlobApplicationAware process(BlobApplicationAware blob) {
     Path blobPath = Path.of(blob.getTargetDir(), blob.getBlob());
@@ -97,9 +108,11 @@ public class EventProcessor {
 
     BeanVerifier<Transaction> verifier = new TransactionVerifier();
 
-    CsvToBeanBuilder<Transaction> builder =
-        new CsvToBeanBuilder<Transaction>(fileReader).withType(Transaction.class).withSeparator(';')
-            .withVerifier(verifier).withThrowExceptions(false);
+    CsvToBeanBuilder<Transaction> builder = new CsvToBeanBuilder<Transaction>(fileReader)
+        .withType(Transaction.class)
+        .withSeparator(';')
+        .withVerifier(verifier)
+        .withThrowExceptions(false);
 
     CsvToBean<Transaction> csvToBean = builder.build();
     Stream<Transaction> readTransaction = csvToBean.stream();
@@ -107,8 +120,7 @@ public class EventProcessor {
     transactionCheckProcess(readTransaction);
 
     List<CsvException> violations = csvToBean.getCapturedExceptions();
-
-    numTotalTrx = numTotalTrx + violations.size();
+    numTotalTrx += violations.size();
 
     if (!violations.isEmpty()) {
       for (CsvException e : violations) {
@@ -135,11 +147,12 @@ public class EventProcessor {
   private BlobApplicationAware processWalletContracts(BlobApplicationAware blob, Path blobPath) {
     log.info("Extracting contracts from:{}", blob.getBlobUri());
 
-    numFailedContracts = 0;
-    numTotalContracts = 0;
+    int numFailedContracts = 0;
+    int numTotalContracts = 0;
 
     ObjectMapper objectMapper = new ObjectMapper();
     JsonFactory jsonFactory = new JsonFactory();
+    List<Pair<WalletImportTaskData, Future<Boolean>>> walletImportTaskData = new ArrayList<>();
 
     try (InputStream inputStream = new FileInputStream(blobPath.toFile())) {
       JsonParser jsonParser = jsonFactory.createParser(inputStream);
@@ -150,17 +163,35 @@ public class EventProcessor {
       }
 
       while (jsonParser.nextToken() != JsonToken.END_ARRAY) {
-        numTotalContracts++;
-
         WalletContract contract = objectMapper.readValue(jsonParser, WalletContract.class);
-        processContractWrapper(blob.getBlob(), contract);
+        int currNumTotalContracts = ++numTotalContracts;
+        walletImportTaskData.add(Pair.of(
+            new WalletImportTaskData(contract, currNumTotalContracts),
+            executorService.submit(
+                () -> processContractWrapper(blob.getBlob(), contract, currNumTotalContracts)
+            )
+        ));
       }
     } catch (JsonParseException | MismatchedInputException e) {
-      log.error("Validation error: malformed wallet export");
-      return blob;
+      log.error("Validation error: malformed wallet export at position [{}]", numTotalContracts);
     } catch (IOException e) {
       log.error("Missing blob file:{}", blobPath);
-      return blob;
+    }
+
+    for (Pair<WalletImportTaskData, Future<Boolean>> task: walletImportTaskData) {
+      try {
+        boolean outcome = task.getRight().get();
+        if (!outcome) {
+          numFailedContracts++;
+        }
+      } catch (InterruptedException | ExecutionException e) {
+        log.error("Unexpected thread interruption error during result collection", e);
+        Thread.currentThread().interrupt();
+      } catch (Exception e) {
+        log.error("Error processing contract", e);
+        this.logImportOutcome(blob.getBlob(), task.getLeft().contract(), task.getLeft().contractFilePosition(), false);
+        numFailedContracts++;
+      }
     }
 
     if (numFailedContracts == 0) {
@@ -193,26 +224,19 @@ public class EventProcessor {
   }
 
   @WithSpan
-  private void processContractWrapper(String fileName, WalletContract contract)
-      throws JsonProcessingException {
-    boolean updateOutcome = processContract(contract);
-    if (!updateOutcome) {
-      numFailedContracts++;
-    }
-    MDC.put("Filename", fileName);
-    MDC.put("Position", String.valueOf(numTotalContracts));
-    MDC.put("Action", contract.getAction());
-    MDC.put("ImportOutcome", contract.getImportOutcome());
-    MDC.put("Successful", String.valueOf(updateOutcome));
-    log.info("");
-    MDC.clear();
+  private boolean processContractWrapper(
+      String fileName,
+      WalletContract contract,
+      int contractPosition
+  ) {
+    boolean updateOutcome = processContract(contract, contractPosition);
+    this.logImportOutcome(fileName, contract, contractPosition, updateOutcome);
+    return updateOutcome;
   }
 
-  private boolean processContract(WalletContract contract)
-      throws JsonProcessingException {
-
+  private boolean processContract(WalletContract contract, int contractFilePosition) {
     if (contract.getAction() == null) {
-      log.error("Null action on contract at {}", numTotalContracts);
+      log.error("Null action on contract at {}", contractFilePosition);
       return false;
     }
 
@@ -223,16 +247,16 @@ public class EventProcessor {
     if (!"OK".equals(contract.getImportOutcome())) {
       currContractId = contract.getContractIdentifier();
       contractIdHmac = anonymizer.anonymize(currContractId);
-      MDC.put("ContractID", contractIdHmac);
+      MDC.put(Wallet.MDC_CONTRACT_ID, contractIdHmac);
       return true;
     }
 
     if (contract.getAction().equals(CREATE_ACTION)) {
       currContractId = contract.getMethodAttributes().getContractIdentifier();
       contractIdHmac = anonymizer.anonymize(currContractId);
-      MDC.put("ContractID", contractIdHmac);
+      MDC.put(Wallet.MDC_CONTRACT_ID, contractIdHmac);
       if (!connector.postContract(contract.getMethodAttributes(), contractIdHmac)) {
-        log.error("Failed saving contract at position {}", numTotalContracts);
+        log.error("Failed saving contract at position {}", contractFilePosition);
         return false;
       } else {
         return true;
@@ -240,15 +264,15 @@ public class EventProcessor {
     } else if (contract.getAction().equals(DELETE_ACTION)) {
       currContractId = contract.getContractIdentifier();
       contractIdHmac = anonymizer.anonymize(currContractId);
-      MDC.put("ContractID", contractIdHmac);
+      MDC.put(Wallet.MDC_CONTRACT_ID, contractIdHmac);
       if (!connector.deleteContract(contract.getContractIdentifier(), contractIdHmac)) {
-        log.error("Failed deleting contract at position {}", numTotalContracts);
+        log.error("Failed deleting contract at position {}", contractFilePosition);
         return false;
       } else {
         return true;
       }
     }
-    log.error("Unrecognized action on contract at position {}", numTotalContracts);
+    log.error("Unrecognized action on contract at position {}", contractFilePosition);
     return false;
   }
 
@@ -262,5 +286,20 @@ public class EventProcessor {
 
   protected int getNumCorrectTrx() {
     return numCorrectTrx;
+  }
+
+  private void logImportOutcome(
+      String fileName,
+      WalletContract contract,
+      int contractPosition,
+      boolean importOutcome
+  ) {
+    MDC.put("Filename", fileName);
+    MDC.put("Position", String.valueOf(contractPosition));
+    MDC.put("Action", contract.getAction());
+    MDC.put("ImportOutcome", contract.getImportOutcome());
+    MDC.put("Successful", String.valueOf(importOutcome));
+    log.info("");
+    MDC.clear();
   }
 }
