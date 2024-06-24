@@ -49,7 +49,7 @@ public class WalletService {
             result -> result.getStatusLine().getStatusCode() == HttpStatus.SC_TOO_MANY_REQUESTS ||
                 result.getStatusLine().getStatusCode() >= HttpStatus.SC_INTERNAL_SERVER_ERROR)
         .maxAttempts(configuration.getMaxRetryAttempt())
-        .intervalFunction(IntervalFunction.ofRandomized(Duration.ofSeconds(1)))
+        .intervalFunction(IntervalFunction.ofRandomized(Duration.ofSeconds(configuration.getRateLimitTimeoutSeconds())))
         .failAfterMaxAttempts(true)
         .build()
     );

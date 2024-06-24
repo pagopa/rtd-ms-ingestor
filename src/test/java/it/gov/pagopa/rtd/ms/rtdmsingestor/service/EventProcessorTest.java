@@ -29,6 +29,8 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -41,6 +43,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @TestPropertySource(value = {"classpath:application-test.yml"}, inheritProperties = false)
 @ExtendWith(OutputCaptureExtension.class)
 @ExtendWith(SpringExtension.class)
+@DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 class EventProcessorTest {
 
   @Value("${ingestor.resources.base.path}")
@@ -88,9 +91,9 @@ class EventProcessorTest {
     fakeBlobWallet.setTargetDir(tmpDirectory);
     fakeBlobWallet.setStatus(BlobApplicationAware.Status.DOWNLOADED);
 
-    doReturn(true).when(connector).postContract(any(ContractMethodAttributes.class), any(String.class));
+    doReturn(true).when(connector)
+        .postContract(any(ContractMethodAttributes.class), any(String.class));
     doReturn(true).when(connector).deleteContract(any(String.class), any(String.class));
-
 
     blobProcessor.process(fakeBlobWallet);
     await().atMost(Duration.ofSeconds(1)).untilAsserted(() -> {
@@ -113,7 +116,8 @@ class EventProcessorTest {
     fakeBlobWallet.setTargetDir(tmpDirectory);
     fakeBlobWallet.setStatus(BlobApplicationAware.Status.DOWNLOADED);
 
-    doReturn(false).when(connector).postContract(any(ContractMethodAttributes.class), any(String.class));
+    doReturn(false).when(connector)
+        .postContract(any(ContractMethodAttributes.class), any(String.class));
 
     blobProcessor.process(fakeBlobWallet);
     await().atMost(Duration.ofSeconds(1)).untilAsserted(() -> {
@@ -136,7 +140,8 @@ class EventProcessorTest {
     fakeBlobWalletMalformed.setTargetDir(tmpDirectory);
     fakeBlobWalletMalformed.setStatus(BlobApplicationAware.Status.DOWNLOADED);
 
-    doReturn(false).when(connector).postContract(any(ContractMethodAttributes.class), any(String.class));
+    doReturn(false).when(connector)
+        .postContract(any(ContractMethodAttributes.class), any(String.class));
 
     blobProcessor.process(fakeBlobWalletMalformed);
     await().atMost(Duration.ofSeconds(1)).untilAsserted(() -> {
