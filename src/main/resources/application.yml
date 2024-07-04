@@ -3,6 +3,9 @@ logging:
     root: INFO
     org.apache.kafka: INFO
 
+server.shutdown: graceful
+spring.lifecycle.timeout-per-shutdown-phase: ${GRACEFUL_SHUTDOWN_TIMEOUT}
+
 # Expose only health probes
 management:
   metrics.export.defaults.enabled: false
