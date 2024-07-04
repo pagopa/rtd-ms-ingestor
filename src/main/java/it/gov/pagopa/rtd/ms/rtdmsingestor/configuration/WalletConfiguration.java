@@ -14,6 +14,8 @@ public class WalletConfiguration {
   private String apiKey;
   private String updateContracts;
   private String deleteContracts;
+  private Integer readTimeout;
+  private Integer connectionTimeout;
   private Integer rateLimit;
   private Integer rateLimitTimeoutSeconds;
   private Integer maxRetryAttempt;

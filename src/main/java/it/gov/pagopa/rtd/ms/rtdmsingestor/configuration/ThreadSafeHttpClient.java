@@ -1,12 +1,6 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.configuration;
 
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import javax.net.ssl.SSLContext;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.HttpResponseInterceptor;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
@@ -20,6 +14,11 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.ssl.SSLContexts;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import javax.net.ssl.SSLContext;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * Thread safe HTTP client implementing pooling.
@@ -44,8 +43,15 @@ public class ThreadSafeHttpClient {
     connectionManager.setMaxTotal(configuration.getConnectionPool());
     connectionManager.setDefaultMaxPerRoute(configuration.getConnectionPool());
 
+    final RequestConfig requestConfig = RequestConfig.copy(RequestConfig.DEFAULT)
+            .setConnectTimeout(configuration.getConnectionTimeout())
+            .setConnectionRequestTimeout(configuration.getConnectionTimeout())
+            .setSocketTimeout(configuration.getConnectionTimeout())
+            .build();
+
     return HttpClients.custom()
         .setConnectionManager(connectionManager)
+        .setDefaultRequestConfig(requestConfig)
         .build();
   }
 }
