@@ -10,6 +10,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.Objects;
+
+import it.gov.pagopa.rtd.ms.rtdmsingestor.utils.ApacheUtils;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpResponse;
@@ -21,9 +24,11 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicHeader;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * This class contains handling methods for blobs.
@@ -60,11 +65,12 @@ public class BlobRestConnector {
     getBlob.setHeader(new BasicHeader(APIM_SUBSCRIPTION_HEADER, blobApiKey));
 
     try {
-      OutputStream result = httpClient.execute(getBlob, new FileDownloadResponseHandler(
-          new FileOutputStream(Path.of(blob.getTargetDir(), blob.getBlob()).toFile())));
-      result.close();
+      httpClient.execute(getBlob, downloadFileIn(blob));
       blob.setStatus(BlobApplicationAware.Status.DOWNLOADED);
       log.info("Successful GET of blob {} from {}", blob.getBlob(), blob.getContainer());
+    } catch (ResponseStatusException ex) {
+        log.error("Cannot GET blob {} from {}. Invalid HTTP response: {}, {}", blob.getBlob(),
+                blob.getTargetContainer(), ex.getStatusCode().value(), ex.getReason());
     } catch (Exception ex) {
       log.error("Cannot GET blob {} from {}: {}", blob.getBlob(), blob.getContainer(),
           ex.getMessage());
@@ -72,6 +78,19 @@ public class BlobRestConnector {
 
     return blob;
   }
+
+  @NotNull
+  protected ResponseHandler<Integer> downloadFileIn(BlobApplicationAware blob) {
+    return response -> {
+      if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+        throw new ResponseStatusException(HttpStatusCode.valueOf(response.getStatusLine().getStatusCode()),
+                ApacheUtils.readEntityResponse(response.getEntity()));
+      }
+      return StreamUtils.copy(Objects.requireNonNull(response.getEntity().getContent()),
+              new FileOutputStream(Path.of(blob.getTargetDir(), blob.getBlob()).toFile()));
+    };
+  }
+
 
   /**
    * Method that allows the deletion of the blob from a remote storage.
