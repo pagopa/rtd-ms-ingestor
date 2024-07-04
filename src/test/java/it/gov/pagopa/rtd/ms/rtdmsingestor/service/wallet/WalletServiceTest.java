@@ -40,6 +40,7 @@ class WalletServiceTest {
         5,
         10,
         3,
+        10,
         25,
         25
         ),
