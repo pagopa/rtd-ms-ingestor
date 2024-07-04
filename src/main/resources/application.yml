@@ -1,7 +1,7 @@
 logging:
   level:
     root: INFO
-    org.apache.kafka: WARN
+    org.apache.kafka: INFO
 
 # Expose only health probes
 management:
