@@ -11,9 +11,8 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.configuration.WalletConfiguration;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.ContractMethodAttributes;
-import java.time.Duration;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.utils.ApacheUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -22,14 +21,14 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicHeader;
-import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Component;
+
+import java.time.Duration;
 
 @Component
 @Slf4j
 public class WalletService {
 
-  private static final String EMPTY_BODY = "EMPTY_BODY";
   private final CloseableHttpClient httpClient;
   private final Retry retry;
   private final RateLimiter rateLimiter;
@@ -105,23 +104,12 @@ public class WalletService {
         return true;
       } else {
         log.error("Can't update contract. Invalid HTTP response: {}, {}, {}", statusCode,
-            myResponse.getStatusLine().getReasonPhrase(), readEntityResponse(myResponse.getEntity()));
+            myResponse.getStatusLine().getReasonPhrase(), ApacheUtils.readEntityResponse(myResponse.getEntity()));
         return false;
       }
     } catch (Throwable ex) {
       log.error("Can't update contract. Unexpected error: {}", ex.getMessage());
       return false;
-    }
-  }
-
-  private String readEntityResponse(HttpEntity entity) {
-    try {
-      if (entity != null) {
-        return EntityUtils.toString(entity);
-      }
-      return EMPTY_BODY;
-    } catch (Exception e) {
-      return EMPTY_BODY;
     }
   }
 
