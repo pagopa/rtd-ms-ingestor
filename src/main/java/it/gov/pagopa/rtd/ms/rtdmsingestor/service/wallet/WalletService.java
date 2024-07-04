@@ -49,14 +49,14 @@ public class WalletService {
             result -> result.getStatusLine().getStatusCode() == HttpStatus.SC_TOO_MANY_REQUESTS ||
                 result.getStatusLine().getStatusCode() >= HttpStatus.SC_INTERNAL_SERVER_ERROR)
         .maxAttempts(configuration.getMaxRetryAttempt())
-        .intervalFunction(IntervalFunction.ofRandomized(Duration.ofSeconds(configuration.getRateLimitTimeoutSeconds())))
+        .intervalFunction(IntervalFunction.ofRandomized(Duration.ofSeconds(configuration.getRetryMaxIntervalSeconds())))
         .failAfterMaxAttempts(true)
         .build()
     );
     this.rateLimiter = RateLimiter.of("wallet-ratelimit", RateLimiterConfig.custom()
         .limitForPeriod(configuration.getRateLimit())
         .limitRefreshPeriod(Duration.ofSeconds(1))
-        .timeoutDuration(Duration.ofSeconds(10))
+        .timeoutDuration(Duration.ofSeconds(configuration.getRateLimitTimeoutSeconds()))
         .build());
 
     this.walletBaseUrl = configuration.getBaseUrl();
