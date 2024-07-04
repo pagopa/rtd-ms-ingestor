@@ -11,7 +11,7 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.configuration.WalletConfiguration;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.ContractMethodAttributes;
-import java.time.Duration;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.utils.ApacheUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -22,6 +22,8 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicHeader;
 import org.springframework.stereotype.Component;
+
+import java.time.Duration;
 
 @Component
 @Slf4j
@@ -49,14 +51,14 @@ public class WalletService {
             result -> result.getStatusLine().getStatusCode() == HttpStatus.SC_TOO_MANY_REQUESTS ||
                 result.getStatusLine().getStatusCode() >= HttpStatus.SC_INTERNAL_SERVER_ERROR)
         .maxAttempts(configuration.getMaxRetryAttempt())
-        .intervalFunction(IntervalFunction.ofRandomized(Duration.ofSeconds(configuration.getRateLimitTimeoutSeconds())))
+        .intervalFunction(IntervalFunction.ofRandomized(Duration.ofSeconds(configuration.getRetryMaxIntervalSeconds())))
         .failAfterMaxAttempts(true)
         .build()
     );
     this.rateLimiter = RateLimiter.of("wallet-ratelimit", RateLimiterConfig.custom()
         .limitForPeriod(configuration.getRateLimit())
         .limitRefreshPeriod(Duration.ofSeconds(1))
-        .timeoutDuration(Duration.ofSeconds(10))
+        .timeoutDuration(Duration.ofSeconds(configuration.getRateLimitTimeoutSeconds()))
         .build());
 
     this.walletBaseUrl = configuration.getBaseUrl();
@@ -101,8 +103,8 @@ public class WalletService {
         log.debug("Successfully updated contract");
         return true;
       } else {
-        log.error("Can't update contract. Invalid HTTP response: {}, {}", statusCode,
-            myResponse.getStatusLine().getReasonPhrase());
+        log.error("Can't update contract. Invalid HTTP response: {}, {}, {}", statusCode,
+            myResponse.getStatusLine().getReasonPhrase(), ApacheUtils.readEntityResponse(myResponse.getEntity()));
         return false;
       }
     } catch (Throwable ex) {

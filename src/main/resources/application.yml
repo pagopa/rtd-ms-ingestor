@@ -1,7 +1,10 @@
 logging:
   level:
     root: INFO
-    org.apache.kafka: WARN
+    org.apache.kafka: INFO
+
+server.shutdown: graceful
+spring.lifecycle.timeout-per-shutdown-phase: ${GRACEFUL_SHUTDOWN_TIMEOUT}
 
 # Expose only health probes
 management:
@@ -30,6 +33,7 @@ ingestor:
       rateLimit: ${WALLET_RATE_LIMIT:10}
       rateLimitTimeoutSeconds: ${WALLET_RATE_LIMIT_TIMEOUT_SECONDS:10}
       maxRetryAttempt: ${WALLET_MAX_RETRIES:3}
+      retryMaxIntervalSeconds: ${WALLET_RETRY_MAX_INTERVAL_SECONDS:10}
       threadPool: ${THREAD_POOL:25}
       connectionPool: ${CONNECTION_POOL:25}
   blobclient:
@@ -92,6 +96,8 @@ spring:
                       auto-create-topics: false
                       brokers: ${KAFKA_BROKER_PLATFORM_EVENTS://localhost:29095}
                       configuration:
+                        max.poll.interval.ms: ${CONSUMER_TIMEOUT_MS:600000} # default to 10 min
+                        max.poll.records: ${CONSUMER_POLL_SIZE:1}
                         sasl:
                           jaas:
                             config: ${KAFKA_SASL_JAAS_CONFIG_CONSUMER_BLOB_STORAGE_EVENTS}
