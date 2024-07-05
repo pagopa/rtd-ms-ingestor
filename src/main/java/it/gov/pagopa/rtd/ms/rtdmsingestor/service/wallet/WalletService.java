@@ -7,6 +7,7 @@ import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterConfig;
+import io.github.resilience4j.ratelimiter.internal.SemaphoreBasedRateLimiter;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.configuration.WalletConfiguration;
@@ -24,6 +25,7 @@ import org.apache.http.message.BasicHeader;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.util.Optional;
 
 @Component
 @Slf4j
@@ -51,11 +53,12 @@ public class WalletService {
             result -> result.getStatusLine().getStatusCode() == HttpStatus.SC_TOO_MANY_REQUESTS ||
                 result.getStatusLine().getStatusCode() >= HttpStatus.SC_INTERNAL_SERVER_ERROR)
         .maxAttempts(configuration.getMaxRetryAttempt())
-        .intervalFunction(IntervalFunction.ofRandomized(Duration.ofSeconds(configuration.getRetryMaxIntervalSeconds())))
+        .intervalFunction(IntervalFunction.ofExponentialRandomBackoff(Duration.ofSeconds(configuration.getRetryMaxIntervalSeconds())))
         .failAfterMaxAttempts(true)
         .build()
     );
-    this.rateLimiter = RateLimiter.of("wallet-ratelimit", RateLimiterConfig.custom()
+
+    this.rateLimiter = new SemaphoreBasedRateLimiter("wallet-ratelimit", RateLimiterConfig.custom()
         .limitForPeriod(configuration.getRateLimit())
         .limitRefreshPeriod(Duration.ofSeconds(1))
         .timeoutDuration(Duration.ofSeconds(configuration.getRateLimitTimeoutSeconds()))
@@ -66,6 +69,8 @@ public class WalletService {
     this.updateContractsEndpoint = configuration.getUpdateContracts();
     this.deleteContractsEndpoint = configuration.getDeleteContracts();
     this.httpClient = httpClient;
+
+    attachLoggerToRetryEvents(this.retry);
   }
 
   public boolean postContract(ContractMethodAttributes contract, String contractHmac) {
@@ -146,5 +151,15 @@ public class WalletService {
       log.error("Can't delete contract. Unexpected error: {}", ex.getMessage());
       return false;
     }
+  }
+
+  private void attachLoggerToRetryEvents(Retry retry) {
+     retry.getEventPublisher().onRetry(e -> {
+       log.warn("Retrying after [{}], attempts: [{}], last error [{}]", e.getWaitInterval(), e.getNumberOfRetryAttempts(),
+               Optional.ofNullable(e.getLastThrowable()).map(Throwable::getMessage).orElse(""));
+     }).onError(e -> {
+       log.error("Retry exhausted attempts: [{}], last error [{}]", e.getNumberOfRetryAttempts(),
+               Optional.ofNullable(e.getLastThrowable()).map(Throwable::getMessage).orElse(""));
+     });
   }
 }
