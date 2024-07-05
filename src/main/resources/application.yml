@@ -29,6 +29,8 @@ ingestor:
       baseurl: https://${WALLET_HOST:wallet.it}
       updateContracts: /payment-wallet-migrations/cstar/v1/migrations/wallets/updateDetails
       deleteContracts: /payment-wallet-migrations/cstar/v1/migrations/wallets/delete
+      readTimeout: ${WALLET_READ_TIMEOUT:10000}
+      connectionTimeout: ${WALLET_CONNECTION_TIMEOUT:10000}
       apikey: ${WALLET_API_KEY:myapikey}
       rateLimit: ${WALLET_RATE_LIMIT:10}
       rateLimitTimeoutSeconds: ${WALLET_RATE_LIMIT_TIMEOUT_SECONDS:10}
