@@ -24,6 +24,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicHeader;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.Optional;
 
@@ -54,13 +55,11 @@ public class WalletService {
       CloseableHttpClient httpClient
   ) {
     this.retry = Retry.of("wallet-retry", RetryConfig
-        .<Either<Throwable, ParsedHttpResponse>>custom()
+        .<ParsedHttpResponse>custom()
         .retryOnResult(
-            result -> result.fold(
-                    e -> false,
-                    r -> r.statusCode == HttpStatus.SC_TOO_MANY_REQUESTS ||
-                            r.statusCode >= HttpStatus.SC_INTERNAL_SERVER_ERROR
-            ))
+                response -> response.statusCode == HttpStatus.SC_TOO_MANY_REQUESTS ||
+                        response.statusCode >= HttpStatus.SC_INTERNAL_SERVER_ERROR
+        )
         .maxAttempts(configuration.getMaxRetryAttempt())
         .intervalFunction(IntervalFunction.ofExponentialRandomBackoff(Duration.ofSeconds(configuration.getRetryMaxIntervalSeconds())))
         .failAfterMaxAttempts(true)
@@ -103,7 +102,7 @@ public class WalletService {
     postContract.setHeader(new BasicHeader(APIM_SUBSCRIPTION_HEADER, walletApiKey));
     postContract.setHeader(new BasicHeader(CONTRACT_HMAC_HEADER, contractHmac));
 
-    final CheckedSupplier<Either<Throwable, ParsedHttpResponse>> request = Retry.decorateCheckedSupplier(
+    final CheckedSupplier<ParsedHttpResponse> request = Retry.decorateCheckedSupplier(
         retry,
         RateLimiter.decorateCheckedSupplier(
             rateLimiter,
@@ -112,19 +111,13 @@ public class WalletService {
     );
 
       try {
-          Either<Throwable, ParsedHttpResponse> result = request.get();
-          if (result.isRight()) {
-            ParsedHttpResponse response = result.get();
-            if (response.statusCode == HttpStatus.SC_OK) {
-              log.debug("Successfully updated contract");
-              return true;
-            } else {
-              log.error("Can't update contract. Invalid HTTP response: {}, {}, {}", response.statusCode,
-                      response.statusReason, response.bodyResponse);
-              return false;
-            }
+          ParsedHttpResponse response = request.get();
+          if (response.statusCode == HttpStatus.SC_OK) {
+            log.debug("Successfully updated contract");
+            return true;
           } else {
-            log.error("Can't update contract. Unexpected error: {}", result.getLeft().getMessage());
+            log.error("Can't update contract. Invalid HTTP response: {}, {}, {}", response.statusCode,
+                    response.statusReason, response.bodyResponse);
             return false;
           }
       } catch (Throwable e) {
@@ -144,7 +137,7 @@ public class WalletService {
         ContentType.APPLICATION_JSON);
     deleteContract.setEntity(newContractIdentifierEntity);
 
-    final CheckedSupplier<Either<Throwable, ParsedHttpResponse>> request = Retry.decorateCheckedSupplier(
+    final CheckedSupplier<ParsedHttpResponse> request = Retry.decorateCheckedSupplier(
         retry,
         RateLimiter.decorateCheckedSupplier(
             rateLimiter,
@@ -153,19 +146,13 @@ public class WalletService {
     );
 
     try {
-      Either<Throwable, ParsedHttpResponse> result = request.get();
-      if (result.isRight()) {
-        ParsedHttpResponse response = result.get();
-        if (response.statusCode == HttpStatus.SC_NO_CONTENT) {
-          log.debug("Successfully deleted contract");
-          return true;
-        } else {
-          log.error("Can't delete contract. Invalid HTTP response: {}, {}, {}", response.statusCode,
-                  response.statusReason, response.bodyResponse);
-          return false;
-        }
+      ParsedHttpResponse response = request.get();
+      if (response.statusCode == HttpStatus.SC_NO_CONTENT) {
+        log.debug("Successfully deleted contract");
+        return true;
       } else {
-        log.error("Can't delete contract. Unexpected error: {}", result.getLeft().getMessage());
+        log.error("Can't delete contract. Invalid HTTP response: {}, {}, {}", response.statusCode,
+                response.statusReason, response.bodyResponse);
         return false;
       }
     } catch (Throwable e) {
@@ -174,25 +161,22 @@ public class WalletService {
     }
   }
 
-  private Either<Throwable, ParsedHttpResponse> executeApacheClientRequest(HttpPost request) {
+  private ParsedHttpResponse executeApacheClientRequest(HttpPost request) throws IOException {
     try (CloseableHttpResponse myResponse = httpClient.execute(request)) {
       int statusCode = myResponse.getStatusLine().getStatusCode();
       if (statusCode == HttpStatus.SC_OK || statusCode == HttpStatus.SC_NO_CONTENT) {
-        return Either.right(new ParsedHttpResponse(
+        return new ParsedHttpResponse(
                 myResponse.getStatusLine().getStatusCode(),
                 "",
                 myResponse.getStatusLine().getReasonPhrase()
-        ));
+        );
       } else {
-        return Either.right(new ParsedHttpResponse(
+        return new ParsedHttpResponse(
                 myResponse.getStatusLine().getStatusCode(),
                 ApacheUtils.readEntityResponse(myResponse.getEntity()),
                 myResponse.getStatusLine().getReasonPhrase()
-        ));
+        );
       }
-    } catch (Throwable ex) {
-      log.error("Can't delete contract. Unexpected error: {}", ex.getMessage());
-      return Either.left(ex);
     }
   }
 
