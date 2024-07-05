@@ -45,8 +45,8 @@ public class ThreadSafeHttpClient {
 
     final RequestConfig requestConfig = RequestConfig.copy(RequestConfig.DEFAULT)
             .setConnectTimeout(configuration.getConnectionTimeout())
-            .setConnectionRequestTimeout(configuration.getConnectionTimeout())
-            .setSocketTimeout(configuration.getConnectionTimeout())
+            .setConnectionRequestTimeout(configuration.getReadTimeout())
+            .setSocketTimeout(configuration.getReadTimeout())
             .build();
 
     return HttpClients.custom()
