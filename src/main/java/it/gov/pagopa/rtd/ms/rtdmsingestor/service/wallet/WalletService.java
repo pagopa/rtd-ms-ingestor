@@ -169,7 +169,7 @@ public class WalletService {
         return false;
       }
     } catch (Throwable e) {
-      log.error("Can't delete contract. Unexpected error: {}", e.getMessage(), e);
+      log.error("Can't delete contract. Unexpected error: {}", e.getMessage());
       return false;
     }
   }
@@ -192,7 +192,7 @@ public class WalletService {
       }
     } catch (Throwable ex) {
       log.error("Can't delete contract. Unexpected error: {}", ex.getMessage());
-      return false;
+      return Either.left(ex);
     }
   }
 
