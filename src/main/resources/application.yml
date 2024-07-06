@@ -100,17 +100,6 @@ spring:
                       configuration:
                         max.poll.interval.ms: ${CONSUMER_TIMEOUT_MS:600000} # default to 10 min
                         max.poll.records: ${CONSUMER_POLL_SIZE:1}
-                        sasl:
-                          jaas:
-                            config: ${KAFKA_SASL_JAAS_CONFIG_CONSUMER_BLOB_STORAGE_EVENTS}
-                          mechanism: PLAIN
-                        security:
-                          protocol: SASL_SSL
-                      consumerProperties:
-                        key:
-                          deserializer: org.apache.kafka.common.serialization.StringDeserializer
-                        value:
-                          deserializer: org.apache.kafka.common.serialization.StringDeserializer
                         socket:
                           connection:
                             setup:
@@ -136,5 +125,16 @@ spring:
                           max:
                             age:
                               ms: 180000
+                        sasl:
+                          jaas:
+                            config: ${KAFKA_SASL_JAAS_CONFIG_CONSUMER_BLOB_STORAGE_EVENTS}
+                          mechanism: PLAIN
+                        security:
+                          protocol: SASL_SSL
+                      consumerProperties:
+                        key:
+                          deserializer: org.apache.kafka.common.serialization.StringDeserializer
+                        value:
+                          deserializer: org.apache.kafka.common.serialization.StringDeserializer
                       producerProperties:
                         autoStartup: false
