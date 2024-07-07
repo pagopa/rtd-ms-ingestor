@@ -78,7 +78,7 @@ public class WalletService {
             Duration.ofMillis(configuration.getLimitRefreshPeriodMilliSeconds())
           )
           .timeoutDuration(
-            Duration.ofSeconds(configuration.getRateLimitTimeoutMilliSeconds())
+            Duration.ofMillis(configuration.getRateLimitTimeoutMilliSeconds())
           )
           .build()
       );
@@ -196,7 +196,7 @@ public class WalletService {
   private void attachLoggerToRetryEvents(Retry retry) {
     retry
       .getEventPublisher()
-      .onRetry(e -> {
+      .onRetry(e ->
         log.warn(
           "Retrying after [{}], attempts: [{}], last error [{}]",
           e.getWaitInterval(),
@@ -205,9 +205,9 @@ public class WalletService {
             .ofNullable(e.getLastThrowable())
             .map(Throwable::getMessage)
             .orElse("")
-        );
-      })
-      .onError(e -> {
+        )
+      )
+      .onError(e ->
         log.error(
           "Retry exhausted attempts: [{}], last error [{}]",
           e.getNumberOfRetryAttempts(),
@@ -215,7 +215,7 @@ public class WalletService {
             .ofNullable(e.getLastThrowable())
             .map(Throwable::getMessage)
             .orElse("")
-        );
-      });
+        )
+      );
   }
 }
