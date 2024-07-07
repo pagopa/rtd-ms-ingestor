@@ -18,29 +18,30 @@ class HttpClientTest {
 
   @SpyBean
   WalletConfiguration configuration = new WalletConfiguration(
-      "http://localhost:8080",
-      "123",
-      "/updateDetails",
-      "/delete",
-      10000,
-      10000,
-      10,
-      10,
-      3,
-      10,
-      25,
-      25
+    "http://localhost:8080",
+    "123",
+    "/updateDetails",
+    "/delete",
+    10000,
+    10000,
+    10,
+    1000,
+    10000,
+    3,
+    10,
+    25,
+    25
   );
 
   @Test
   void shouldNotBeClosed()
-      throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-    CloseableHttpClient client = new ThreadSafeHttpClient().myHttpClient(configuration);
+    throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+    CloseableHttpClient client = new ThreadSafeHttpClient()
+      .myHttpClient(configuration);
     String uri = "https://eu.httpbin.org/get";
     final HttpGet getBlob = new HttpGet(uri);
     CloseableHttpResponse response;
     response = client.execute(getBlob);
     assertEquals(200, response.getStatusLine().getStatusCode());
   }
-
 }
