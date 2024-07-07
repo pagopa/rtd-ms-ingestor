@@ -60,7 +60,7 @@ public class WalletService {
           )
           .maxAttempts(configuration.getMaxRetryAttempt())
           .intervalFunction(
-            IntervalFunction.ofExponentialRandomBackoff(
+            IntervalFunction.ofRandomized(
               Duration.ofMillis(configuration.getRetryMaxIntervalMilliSeconds())
             )
           )
