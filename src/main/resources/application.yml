@@ -36,7 +36,7 @@ ingestor:
       rateLimitTimeoutMilliSeconds: ${WALLET_RATE_LIMIT_TIMEOUT_MS:200}
       limitRefreshPeriodMilliSeconds: ${WALLET_REFRESH_PERIOD_MS:20}
       maxRetryAttempt: ${WALLET_MAX_RETRIES:3}
-      retryMaxIntervalSeconds: ${WALLET_RETRY_MAX_INTERVAL_SECONDS:10}
+      retryMaxIntervalMilliSeconds: ${WALLET_RETRY_MAX_INTERVAL_MS:10}
       threadPool: ${THREAD_POOL:25}
       connectionPool: ${CONNECTION_POOL:25}
   blobclient:
