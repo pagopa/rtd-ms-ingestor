@@ -21,7 +21,7 @@ public class WalletConfiguration {
   private Integer limitRefreshPeriodMilliSeconds;
   private Integer rateLimitTimeoutMilliSeconds;
   private Integer maxRetryAttempt;
-  private Integer retryMaxIntervalSeconds;
+  private Integer retryMaxIntervalMilliSeconds;
   private Integer threadPool;
   private Integer connectionPool;
 }
