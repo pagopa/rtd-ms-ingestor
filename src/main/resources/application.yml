@@ -136,3 +136,5 @@ spring:
                           max:
                             age:
                               ms: 180000
+                      producerProperties:
+                        autoStartup: false
