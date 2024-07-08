@@ -5,17 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.core.functions.CheckedSupplier;
-import io.github.resilience4j.core.functions.Either;
-import io.github.resilience4j.ratelimiter.RateLimiter;
-import io.github.resilience4j.ratelimiter.RateLimiterConfig;
-import io.github.resilience4j.ratelimiter.internal.SemaphoreBasedRateLimiter;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.configuration.WalletConfiguration;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.ContractMethodAttributes;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.utils.ApacheUtils;
-import java.time.Duration;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -36,7 +30,6 @@ public class WalletService {
 
   private final CloseableHttpClient httpClient;
   private final RetryConfig retryConfig;
-  private final RateLimiter rateLimiter;
 
   private final String walletBaseUrl;
   private final String updateContractsEndpoint;
@@ -72,21 +65,6 @@ public class WalletService {
             )
             .failAfterMaxAttempts(true)
             .build();
-
-    this.rateLimiter =
-      new SemaphoreBasedRateLimiter(
-        "wallet-ratelimit",
-        RateLimiterConfig
-          .custom()
-          .limitForPeriod(configuration.getRateLimit())
-          .limitRefreshPeriod(
-            Duration.ofMillis(configuration.getLimitRefreshPeriodMilliSeconds())
-          )
-          .timeoutDuration(
-            Duration.ofMillis(configuration.getRateLimitTimeoutMilliSeconds())
-          )
-          .build()
-      );
 
     this.walletBaseUrl = configuration.getBaseUrl();
     this.walletApiKey = configuration.getApiKey();
