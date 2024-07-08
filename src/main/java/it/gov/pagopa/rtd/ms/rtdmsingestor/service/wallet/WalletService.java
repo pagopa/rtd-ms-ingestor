@@ -35,7 +35,7 @@ import java.util.Optional;
 public class WalletService {
 
   private final CloseableHttpClient httpClient;
-  private final Retry retry;
+  private final RetryConfig retryConfig;
   private final RateLimiter rateLimiter;
 
   private final String walletBaseUrl;
@@ -57,25 +57,21 @@ public class WalletService {
     WalletConfiguration configuration,
     CloseableHttpClient httpClient
   ) {
-    this.retry =
-      Retry.of(
-        "wallet-retry",
-        RetryConfig
-          .<ParsedHttpResponse>custom()
-        .retryOnResult(
-                response -> response.statusCode == HttpStatus.SC_TOO_MANY_REQUESTS ||
-                        response.statusCode >= HttpStatus.SC_INTERNAL_SERVER_ERROR
+    this.retryConfig = RetryConfig
+            .<ParsedHttpResponse>custom()
+            .retryOnResult(
+                    response -> response.statusCode == HttpStatus.SC_TOO_MANY_REQUESTS ||
+                            response.statusCode >= HttpStatus.SC_INTERNAL_SERVER_ERROR
 
-          )
-          .maxAttempts(configuration.getMaxRetryAttempt())
-          .intervalFunction(
-            IntervalFunction.ofRandomized(
-              Duration.ofMillis(configuration.getRetryMaxIntervalMilliSeconds())
             )
-          )
-          .failAfterMaxAttempts(true)
-          .build()
-      );
+            .maxAttempts(configuration.getMaxRetryAttempt())
+            .intervalFunction(
+                    IntervalFunction.ofRandomized(
+                            Duration.ofMillis(configuration.getRetryMaxIntervalMilliSeconds())
+                    )
+            )
+            .failAfterMaxAttempts(true)
+            .build();
 
     this.rateLimiter =
       new SemaphoreBasedRateLimiter(
@@ -97,8 +93,6 @@ public class WalletService {
     this.updateContractsEndpoint = configuration.getUpdateContracts();
     this.deleteContractsEndpoint = configuration.getDeleteContracts();
     this.httpClient = httpClient;
-
-    attachLoggerToRetryEvents(this.retry);
   }
 
   public boolean postContract(
@@ -128,13 +122,12 @@ public class WalletService {
     );
     postContract.setHeader(new BasicHeader(CONTRACT_HMAC_HEADER, contractHmac));
 
+    final var retry = Retry.of("wallet-retry-" + contractHmac, retryConfig);
+    attachLoggerToRetryEvents(retry);
     final CheckedSupplier<ParsedHttpResponse> request = Retry.decorateCheckedSupplier(
       retry,
-      RateLimiter.decorateCheckedSupplier(
-        rateLimiter,
         () -> executeApacheClientRequest(postContract)
-      )
-    );
+      );
 
       try {
           ParsedHttpResponse response = request.get();
@@ -171,12 +164,11 @@ public class WalletService {
     );
     deleteContract.setEntity(newContractIdentifierEntity);
 
+    final var retry = Retry.of("wallet-retry-" + contractHmac, retryConfig);
+    attachLoggerToRetryEvents(retry);
     final CheckedSupplier<ParsedHttpResponse> request = Retry.decorateCheckedSupplier(
       retry,
-      RateLimiter.decorateCheckedSupplier(
-        rateLimiter,
-        () -> executeApacheClientRequest(deleteContract)
-      )
+      () -> executeApacheClientRequest(deleteContract)
     );
 
     try {
