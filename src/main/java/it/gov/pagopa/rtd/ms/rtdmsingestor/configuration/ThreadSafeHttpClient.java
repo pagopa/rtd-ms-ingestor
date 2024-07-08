@@ -12,6 +12,7 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicHeaderElementIterator;
 import org.apache.http.protocol.HTTP;
@@ -54,6 +55,7 @@ public class ThreadSafeHttpClient {
             .build();
 
     return HttpClients.custom()
+        .setConnectionManager(new BasicHttpClientConnectionManager(registry))
         .setDefaultRequestConfig(requestConfig)
         .build();
   }
