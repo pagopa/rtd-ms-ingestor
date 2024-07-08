@@ -1,9 +1,9 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.configuration;
 
-import org.apache.http.*;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
+import org.apache.http.config.SocketConfig;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
 import org.apache.http.conn.socket.PlainConnectionSocketFactory;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
@@ -11,7 +11,6 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.ssl.SSLContexts;
 import org.springframework.context.annotation.Bean;
@@ -42,8 +41,11 @@ public class ThreadSafeHttpClient {
     PoolingHttpClientConnectionManager connectionManager =
         new PoolingHttpClientConnectionManager(registry);
 
-    connectionManager.setMaxTotal(configuration.getConnectionPool() * 2);
-    connectionManager.setDefaultMaxPerRoute(configuration.getConnectionPool());
+    connectionManager.setMaxTotal(configuration.getMaxConnectionPool());
+    connectionManager.setDefaultMaxPerRoute(configuration.getConnectionPoolPerRoute());
+    connectionManager.setDefaultSocketConfig(
+            SocketConfig.copy(SocketConfig.DEFAULT).setSoKeepAlive(true).build()
+    );
 
     final RequestConfig requestConfig = RequestConfig.copy(RequestConfig.DEFAULT)
             .setConnectTimeout(configuration.getConnectionTimeout())
@@ -53,6 +55,7 @@ public class ThreadSafeHttpClient {
 
     return HttpClients.custom()
         .setConnectionManagerShared(true)
+        .setKeepAliveStrategy((response, context) -> configuration.getDefaultHttpKeepAlive())
         .setConnectionManager(connectionManager)
         .setDefaultRequestConfig(requestConfig)
         .build();
