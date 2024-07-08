@@ -42,9 +42,8 @@ public class ThreadSafeHttpClient {
     PoolingHttpClientConnectionManager connectionManager =
         new PoolingHttpClientConnectionManager(registry);
 
-    connectionManager.setMaxTotal(configuration.getConnectionPool());
+    connectionManager.setMaxTotal(configuration.getConnectionPool() * 2);
     connectionManager.setDefaultMaxPerRoute(configuration.getConnectionPool());
-
 
     final RequestConfig requestConfig = RequestConfig.copy(RequestConfig.DEFAULT)
             .setConnectTimeout(configuration.getConnectionTimeout())
@@ -53,7 +52,8 @@ public class ThreadSafeHttpClient {
             .build();
 
     return HttpClients.custom()
-        .setConnectionManager(new BasicHttpClientConnectionManager(registry))
+        .setConnectionManagerShared(true)
+        .setConnectionManager(connectionManager)
         .setDefaultRequestConfig(requestConfig)
         .build();
   }
