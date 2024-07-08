@@ -54,7 +54,6 @@ public class ThreadSafeHttpClient {
             .build();
 
     return HttpClients.custom()
-        .setConnectionManager(connectionManager)
         .setDefaultRequestConfig(requestConfig)
         .build();
   }
