@@ -9,10 +9,10 @@ microservice-chart:
 
   resources:
     requests:
-      memory: "1Gi"
-      cpu: "800m"
+      memory: "4Gi"
+      cpu: "1000m"
     limits:
-      memory: "2Gi"
+      memory: "4Gi"
       cpu: "1000m"
 
   envSecret:
@@ -20,6 +20,7 @@ microservice-chart:
 
   envConfig:
     ANONYMIZE_PAYMENT_INSTRUMENT: "false"
+    JAVA_TOOL_OPTIONS: "-javaagent:/app/applicationinsights-agent.jar -Xlog:gc -Xmx2g -Xms2g"
 
   #  autoscaling:
   #    enable: false
