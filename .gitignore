@@ -125,3 +125,8 @@ Desktop.ini
 # ESLint
 ######################
 .eslintcache
+
+
+event.json
+test.json
+docker-compose-2.yaml
