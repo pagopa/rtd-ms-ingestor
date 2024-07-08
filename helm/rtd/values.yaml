@@ -71,6 +71,7 @@ microservice-chart:
     CONSUMER_TIMEOUT_MS: "900000" # 15 minutes
     CONSUMER_POLL_SIZE: "1"
     GRACEFUL_SHUTDOWN_TIMEOUT: "15m"
+    ROOT_LOG_LEVEL: "INFO"
 
   envSecret:
     APPLICATIONINSIGHTS_CONNECTION_STRING: appinsights-instrumentation-key
