@@ -23,5 +23,7 @@ public class WalletConfiguration {
   private Integer maxRetryAttempt;
   private Integer retryMaxIntervalMilliSeconds;
   private Integer threadPool;
-  private Integer connectionPool;
+  private Integer connectionPoolPerRoute;
+  private Integer maxConnectionPool;
+  private Integer defaultHttpKeepAlive;
 }
