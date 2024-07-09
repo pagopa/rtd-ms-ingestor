@@ -1,10 +1,11 @@
 logging:
   level:
     root: ${ROOT_LOG_LEVEL:INFO}
+    org.apache.http.impl.conn: ${APACHE_LOG_LEVEL:INFO}
     org.apache.kafka: INFO
 
 server.shutdown: graceful
-spring.lifecycle.timeout-per-shutdown-phase: ${GRACEFUL_SHUTDOWN_TIMEOUT}
+spring.lifecycle.timeout-per-shutdown-phase: ${GRACEFUL_SHUTDOWN_TIMEOUT:30}
 
 # Expose only health probes
 management:

@@ -30,7 +30,9 @@ class HttpClientTest {
     3,
     10,
     25,
-    25
+    25,
+    25,
+    5
   );
 
   @Test

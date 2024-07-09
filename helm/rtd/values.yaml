@@ -73,7 +73,7 @@ microservice-chart:
     CONSUMER_POLL_SIZE: "1"
     GRACEFUL_SHUTDOWN_TIMEOUT: "15m"
     ROOT_LOG_LEVEL: "INFO"
-    DEFAULT_HTTP_KEEP_ALIVE: "2"
+    DEFAULT_HTTP_KEEP_ALIVE: "30000"
 
   envSecret:
     APPLICATIONINSIGHTS_CONNECTION_STRING: appinsights-instrumentation-key
