@@ -121,7 +121,7 @@ stages:
             displayName: 'Publish Artifact manifests'
             condition: succeeded()
             inputs:
-              targetPath: '$(Build.Repository.LocalPath)/helm/rtd'
+              targetPath: '$(Build.Repository.LocalPath)/helm'
               artifact: 'helm'
               publishLocation: 'pipeline'
 
@@ -146,7 +146,7 @@ stages:
                   inputs:
                     buildType: 'current'
                     artifactName: 'helm'
-                    targetPath: '$(Pipeline.Workspace)/helm/rtd'
+                    targetPath: '$(Pipeline.Workspace)/helm'
                 - task: Bash@3
                   name: helm_dependency_build
                   displayName: Helm dependency build
@@ -179,4 +179,4 @@ stages:
                     valueFile: "$(Pipeline.Workspace)/helm/rtd/values-${{ lower(variables.environment) }}.yaml"
                     install: true
                     waitForExecution: true
-                    arguments: "--timeout 5m00s --debug --post-renderer=$(Pipeline.Workspace)/helm/hook.sh"
+                    arguments: "--timeout 5m00s --debug --post-renderer=$(Pipeline.Workspace)/helm/rtd/hook.sh"
