@@ -47,7 +47,9 @@ class WalletServiceTest {
           3,
           10,
           25,
-          25
+          25,
+                25,
+                5
         ),
         apacheClient
       );
