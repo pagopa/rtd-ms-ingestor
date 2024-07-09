@@ -59,11 +59,11 @@ variables:
     selfHostedAgentPool: $(PROD_AGENT_POOL)
 
   ${{ else }}:
-    environment: 'UAT'
-    dockerRegistryServiceConnection: '$(UAT_CONTAINER_REGISTRY_SERVICE_CONN)'
-    kubernetesServiceConnection: '$(UAT_KUBERNETES_SERVICE_CONN)'
-    containerRegistry: '$(UAT_CONTAINER_REGISTRY_NAME)'
-    selfHostedAgentPool: $(UAT_AGENT_POOL)
+    environment: 'DEV'
+    dockerRegistryServiceConnection: '$(DEV_CONTAINER_REGISTRY_SERVICE_CONN)'
+    kubernetesServiceConnection: '$(DEV_KUBERNETES_SERVICE_CONN)'
+    containerRegistry: '$(DEV_CONTAINER_REGISTRY_NAME)'
+    selfHostedAgentPool: $(DEV_AGENT_POOL)
 
 stages:
   - stage: 'pom_version'
@@ -165,23 +165,6 @@ stages:
                     targetType: 'inline'
                     script: |
                       helm template . -f values-${{ lower(variables.environment) }}.yaml
-                    failOnStderr: true
-                - task: Bash@3
-                  displayName: Make hooks executable
-                  inputs:
-                    workingDirectory: '$(Pipeline.Workspace)/helm'
-                    targetType: 'inline'
-                    script: |
-                      chmod +x ./hook.sh
-                    failOnStderr: true
-                - task: Bash@3
-                  displayName: Install kustomize
-                  inputs:
-                    workingDirectory: '$(Pipeline.Workspace)/'
-                    targetType: 'inline'
-                    script: |
-                      curl -sSL https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.2/kustomize_v5.4.2_linux_amd64.tar.gz | tar -xzv
-                      chmod +x ./kustomize
                     failOnStderr: true
                 - task: HelmDeploy@0
                   displayName: Helm upgrade
