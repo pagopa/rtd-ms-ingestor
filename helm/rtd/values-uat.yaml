@@ -21,6 +21,7 @@ microservice-chart:
   envConfig:
     ANONYMIZE_PAYMENT_INSTRUMENT: "false"
     JAVA_TOOL_OPTIONS: "-javaagent:/app/applicationinsights-agent.jar -Xlog:gc -Xmx256m -Xms256m"
+    APACHE_LOG_LEVEL: "INFO"
 
   #  autoscaling:
   #    enable: false

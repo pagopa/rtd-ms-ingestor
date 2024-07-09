@@ -167,22 +167,22 @@ public class WalletService {
   }
 
   private ParsedHttpResponse executeApacheClientRequest(HttpPost request) throws IOException {
-    try (CloseableHttpResponse myResponse = httpClient.execute(request)) {
-      int statusCode = myResponse.getStatusLine().getStatusCode();
+    return httpClient.execute(request, response -> {
+      int statusCode = response.getStatusLine().getStatusCode();
       if (statusCode == HttpStatus.SC_OK || statusCode == HttpStatus.SC_NO_CONTENT) {
         return new ParsedHttpResponse(
-                myResponse.getStatusLine().getStatusCode(),
-                "",
-                myResponse.getStatusLine().getReasonPhrase()
+                response.getStatusLine().getStatusCode(),
+                ApacheUtils.readEntityResponse(response.getEntity()),
+                response.getStatusLine().getReasonPhrase()
         );
       } else {
         return new ParsedHttpResponse(
-                myResponse.getStatusLine().getStatusCode(),
-                ApacheUtils.readEntityResponse(myResponse.getEntity()),
-                myResponse.getStatusLine().getReasonPhrase()
+                response.getStatusLine().getStatusCode(),
+                ApacheUtils.readEntityResponse(response.getEntity()),
+                response.getStatusLine().getReasonPhrase()
         );
       }
-    }
+    });
   }
 
   private void attachLoggerToRetryEvents(Retry retry) {
