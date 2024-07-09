@@ -1,6 +1,7 @@
 logging:
   level:
     root: ${ROOT_LOG_LEVEL:INFO}
+    org.apache.http.impl.conn: ${APACHE_LOG_LEVEL:INFO}
     org.apache.kafka: INFO
 
 server.shutdown: graceful
