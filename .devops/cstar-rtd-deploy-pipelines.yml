@@ -166,6 +166,14 @@ stages:
                     script: |
                       helm template . -f values-${{ lower(variables.environment) }}.yaml
                     failOnStderr: true
+                - task: Bash@3
+                  displayName: Make hooks executable
+                  inputs:
+                    workingDirectory: '$(Pipeline.Workspace)/helm'
+                    targetType: 'inline'
+                    script: |
+                      chmod +x ./hook.sh
+                    failOnStderr: true
                 - task: HelmDeploy@0
                   displayName: Helm upgrade
                   inputs:
