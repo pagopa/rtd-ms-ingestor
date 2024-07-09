@@ -121,7 +121,7 @@ stages:
             displayName: 'Publish Artifact manifests'
             condition: succeeded()
             inputs:
-              targetPath: '$(Build.Repository.LocalPath)/helm'
+              targetPath: '$(Build.Repository.LocalPath)/helm/rtd'
               artifact: 'helm'
               publishLocation: 'pipeline'
 
@@ -146,7 +146,7 @@ stages:
                   inputs:
                     buildType: 'current'
                     artifactName: 'helm'
-                    targetPath: '$(Pipeline.Workspace)/helm'
+                    targetPath: '$(Pipeline.Workspace)/helm/rtd'
                 - task: Bash@3
                   name: helm_dependency_build
                   displayName: Helm dependency build
