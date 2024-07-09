@@ -179,4 +179,4 @@ stages:
                     valueFile: "$(Pipeline.Workspace)/helm/rtd/values-${{ lower(variables.environment) }}.yaml"
                     install: true
                     waitForExecution: true
-                    arguments: "--timeout 5m00s --debug --post-renderer=./hook.sh"
+                    arguments: "--timeout 5m00s --debug --post-renderer=./helm/hook.sh"
