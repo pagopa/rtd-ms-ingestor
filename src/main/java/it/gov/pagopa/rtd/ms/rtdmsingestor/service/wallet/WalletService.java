@@ -40,7 +40,7 @@ public class WalletService {
     "Ocp-Apim-Subscription-Key";
   private static final String CONTRACT_HMAC_HEADER = "x-contract-hmac";
 
-  record ParsedHttpResponse(
+  public record ParsedHttpResponse(
           int statusCode,
           String bodyResponse,
           String statusReason
