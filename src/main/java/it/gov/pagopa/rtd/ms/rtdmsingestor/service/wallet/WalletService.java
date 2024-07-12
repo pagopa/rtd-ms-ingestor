@@ -7,12 +7,12 @@ import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.configuration.WalletConfiguration;
+import io.opentelemetry.instrumentation.annotations.SpanAttribute;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.configuration.properties.WalletConfigurationProperties;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.ContractMethodAttributes;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.utils.ApacheUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -47,7 +47,7 @@ public class WalletService {
   ) {}
 
   public WalletService(
-    WalletConfiguration configuration,
+    WalletConfigurationProperties configuration,
     CloseableHttpClient httpClient
   ) {
     this.retry = Retry.of("wallet-retry", RetryConfig
@@ -55,7 +55,6 @@ public class WalletService {
             .retryOnResult(
                     response -> response.statusCode == HttpStatus.SC_TOO_MANY_REQUESTS ||
                             response.statusCode >= HttpStatus.SC_INTERNAL_SERVER_ERROR
-
             )
             .maxAttempts(configuration.getMaxRetryAttempt())
             .intervalFunction(
@@ -76,8 +75,8 @@ public class WalletService {
   }
 
   public boolean postContract(
-    ContractMethodAttributes contract,
-    String contractHmac
+      ContractMethodAttributes contract,
+      @SpanAttribute("hmac") String contractHmac
   ) {
     ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
     String contractJson;
@@ -125,9 +124,9 @@ public class WalletService {
 
   public boolean deleteContract(
     String contractIdentifier,
-    String contractHmac
+    @SpanAttribute("hmac") String contractHmac
   ) {
-    String uri = walletBaseUrl + deleteContractsEndpoint;
+    final String uri = walletBaseUrl + deleteContractsEndpoint;
     final HttpPost deleteContract = new HttpPost(uri);
     deleteContract.setHeader(
       new BasicHeader(APIM_SUBSCRIPTION_HEADER, walletApiKey)
@@ -167,22 +166,11 @@ public class WalletService {
   }
 
   private ParsedHttpResponse executeApacheClientRequest(HttpPost request) throws IOException {
-    return httpClient.execute(request, response -> {
-      int statusCode = response.getStatusLine().getStatusCode();
-      if (statusCode == HttpStatus.SC_OK || statusCode == HttpStatus.SC_NO_CONTENT) {
-        return new ParsedHttpResponse(
-                response.getStatusLine().getStatusCode(),
-                ApacheUtils.readEntityResponse(response.getEntity()),
-                response.getStatusLine().getReasonPhrase()
-        );
-      } else {
-        return new ParsedHttpResponse(
-                response.getStatusLine().getStatusCode(),
-                ApacheUtils.readEntityResponse(response.getEntity()),
-                response.getStatusLine().getReasonPhrase()
-        );
-      }
-    });
+    return httpClient.execute(request, response -> new ParsedHttpResponse(
+            response.getStatusLine().getStatusCode(),
+            ApacheUtils.readEntityResponse(response.getEntity()),
+            response.getStatusLine().getReasonPhrase()
+    ));
   }
 
   private void attachLoggerToRetryEvents(Retry retry) {

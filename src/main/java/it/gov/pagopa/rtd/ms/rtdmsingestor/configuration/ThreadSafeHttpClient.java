@@ -1,5 +1,6 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.configuration;
 
+import it.gov.pagopa.rtd.ms.rtdmsingestor.configuration.properties.WalletConfigurationProperties;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
@@ -28,7 +29,7 @@ import java.security.NoSuchAlgorithmException;
 public class ThreadSafeHttpClient {
 
   @Bean
-  public CloseableHttpClient myHttpClient(WalletConfiguration configuration)
+  public CloseableHttpClient myHttpClient(WalletConfigurationProperties configuration)
       throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
     SSLContext sslContext =
         SSLContexts.custom().loadTrustMaterial(TrustSelfSignedStrategy.INSTANCE).build();

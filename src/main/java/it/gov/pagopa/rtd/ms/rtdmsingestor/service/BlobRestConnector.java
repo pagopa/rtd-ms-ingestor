@@ -49,7 +49,6 @@ public class BlobRestConnector {
   private String blobBasePath;
 
   private final CloseableHttpClient httpClient;
-  private final WalletService walletService;
 
   private static final String APIM_SUBSCRIPTION_HEADER = "Ocp-Apim-Subscription-Key";
 
@@ -135,13 +134,4 @@ public class BlobRestConnector {
     }
   }
 
-  public boolean postContract(ContractMethodAttributes contract,
-      @SpanAttribute("hmac") String contractHmac) {
-    return walletService.postContract(contract, contractHmac);
-  }
-
-  public boolean deleteContract(String contractIdentifier,
-      @SpanAttribute("hmac") String contractHmac) {
-    return walletService.deleteContract(contractIdentifier, contractHmac);
-  }
 }

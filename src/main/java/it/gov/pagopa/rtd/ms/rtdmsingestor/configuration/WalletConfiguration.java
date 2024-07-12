@@ -1,29 +1,28 @@
 package it.gov.pagopa.rtd.ms.rtdmsingestor.configuration;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.adapter.ContractAdapter;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.configuration.properties.WalletConfigurationProperties;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.service.wallet.WalletEventProcessorHandler;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.service.wallet.WalletService;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.utils.Anonymizer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-@ConfigurationProperties(prefix = "ingestor.api.wallet")
-@Getter
-@Setter
-@AllArgsConstructor
+@Configuration
 public class WalletConfiguration {
 
-  private String baseUrl;
-  private String apiKey;
-  private String updateContracts;
-  private String deleteContracts;
-  private Integer readTimeout;
-  private Integer connectionTimeout;
-  private Integer rateLimit;
-  private Integer limitRefreshPeriodMilliSeconds;
-  private Integer rateLimitTimeoutMilliSeconds;
-  private Integer maxRetryAttempt;
-  private Integer retryMaxIntervalMilliSeconds;
-  private Integer threadPool;
-  private Integer connectionPoolPerRoute;
-  private Integer maxConnectionPool;
-  private Integer defaultHttpKeepAlive;
+    @Bean
+    WalletEventProcessorHandler walletEventProcessorHandler(
+            WalletConfigurationProperties walletConfigurationProperties,
+            WalletService walletService,
+            Anonymizer anonymizer
+    ) {
+        return new WalletEventProcessorHandler(
+                walletService,
+                new ContractAdapter(),
+                anonymizer,
+                walletConfigurationProperties.getThreadPool()
+        );
+    }
+
 }
