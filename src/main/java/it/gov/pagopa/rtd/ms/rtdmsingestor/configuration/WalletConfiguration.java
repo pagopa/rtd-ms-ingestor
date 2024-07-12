@@ -21,7 +21,7 @@ public class WalletConfiguration {
                 walletService,
                 new ContractAdapter(),
                 anonymizer,
-                walletConfigurationProperties
+                walletConfigurationProperties.getThreadPool()
         );
     }
 

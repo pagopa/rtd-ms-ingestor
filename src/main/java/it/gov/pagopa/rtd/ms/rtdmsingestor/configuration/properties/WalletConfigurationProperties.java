@@ -17,9 +17,6 @@ public class WalletConfigurationProperties {
   private String deleteContracts;
   private Integer readTimeout;
   private Integer connectionTimeout;
-  private Integer rateLimit;
-  private Integer limitRefreshPeriodMilliSeconds;
-  private Integer rateLimitTimeoutMilliSeconds;
   private Integer maxRetryAttempt;
   private Integer retryMaxIntervalMilliSeconds;
   private Integer threadPool;

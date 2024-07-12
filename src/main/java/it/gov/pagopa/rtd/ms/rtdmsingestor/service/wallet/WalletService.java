@@ -126,7 +126,7 @@ public class WalletService {
     String contractIdentifier,
     @SpanAttribute("hmac") String contractHmac
   ) {
-    String uri = walletBaseUrl + deleteContractsEndpoint;
+    final String uri = walletBaseUrl + deleteContractsEndpoint;
     final HttpPost deleteContract = new HttpPost(uri);
     deleteContract.setHeader(
       new BasicHeader(APIM_SUBSCRIPTION_HEADER, walletApiKey)

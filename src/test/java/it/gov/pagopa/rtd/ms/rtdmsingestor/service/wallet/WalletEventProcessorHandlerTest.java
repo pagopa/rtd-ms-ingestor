@@ -36,26 +36,17 @@ class WalletEventProcessorHandlerTest {
     private final BlobApplicationAware fakeBlobWalletMalformed = new BlobApplicationAware(
             "/blobServices/default/containers/" + containerWallet + "/blobs/" + blobNameWalletMalformed);
 
-    private BlobRestConnector connector;
     private WalletService walletService;
     private WalletEventProcessorHandler walletEventProcessorHandler;
 
     @BeforeEach
     void setup() {
-        final var configuration = new WalletConfigurationProperties(
-                "url",
-                "apiKey",
-                "update",
-                "delete",
-                1, 1,1, 1, 1, 1, 1, 1, 1, 1, 1
-        );
-        connector = Mockito.mock(BlobRestConnector.class);
         walletService = Mockito.mock(WalletService.class);
         walletEventProcessorHandler = new WalletEventProcessorHandler(
                 walletService,
                 new ContractAdapter(),
                 new Anonymizer("123"),
-                configuration
+                1
         );
     }
 

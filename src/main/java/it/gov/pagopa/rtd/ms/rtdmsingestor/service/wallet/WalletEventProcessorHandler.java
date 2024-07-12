@@ -38,18 +38,17 @@ public class WalletEventProcessorHandler implements EventProcessorHandler {
     private final ContractAdapter adapter;
     private final Anonymizer anonymizer;
     private final Integer threadPoolSize;
-    private final WalletConfigurationProperties configuration;
 
     public WalletEventProcessorHandler(
             WalletService walletService,
             ContractAdapter adapter,
             Anonymizer anonymizer,
-            WalletConfigurationProperties configuration) {
+            int threadPoolSize
+    ) {
         this.walletService = walletService;
         this.adapter = adapter;
         this.anonymizer = anonymizer;
-        this.configuration = configuration;
-        this.threadPoolSize = configuration.getThreadPool();
+        this.threadPoolSize = threadPoolSize;
     }
 
     @Override
