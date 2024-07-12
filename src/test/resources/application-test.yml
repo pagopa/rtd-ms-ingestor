@@ -17,9 +17,6 @@ ingestor:
       readTimeout: ${WALLET_READ_TIMEOUT:10000}
       connectionTimeout: ${WALLET_CONNECTION_TIMEOUT:10000}
       apikey: ${WALLET_API_KEY:myapikey}
-      rateLimit: ${WALLET_RATE_LIMIT:1}
-      rateLimitTimeoutMilliSeconds: ${WALLET_RATE_LIMIT_TIMEOUT_MS:200}
-      limitRefreshPeriodMilliSeconds: ${WALLET_REFRESH_PERIOD_MS:20}
       maxRetryAttempt: ${WALLET_MAX_RETRIES:3}
       retryMaxIntervalMilliSeconds: ${WALLET_RETRY_MAX_INTERVAL_MS:10}
       threadPool: ${THREAD_POOL:25}
