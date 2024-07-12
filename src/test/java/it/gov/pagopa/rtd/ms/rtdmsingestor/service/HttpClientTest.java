@@ -3,7 +3,7 @@ package it.gov.pagopa.rtd.ms.rtdmsingestor.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import it.gov.pagopa.rtd.ms.rtdmsingestor.configuration.ThreadSafeHttpClient;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.configuration.WalletConfiguration;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.configuration.properties.WalletConfigurationProperties;
 import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -17,7 +17,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 class HttpClientTest {
 
   @SpyBean
-  WalletConfiguration configuration = new WalletConfiguration(
+  WalletConfigurationProperties configuration = new WalletConfigurationProperties(
     "http://localhost:8080",
     "123",
     "/updateDetails",

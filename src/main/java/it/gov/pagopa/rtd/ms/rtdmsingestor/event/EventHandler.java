@@ -4,17 +4,13 @@ import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.BlobApplicationAware.Status;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.model.EventGridEvent;
 import it.gov.pagopa.rtd.ms.rtdmsingestor.service.BlobRestConnector;
-import it.gov.pagopa.rtd.ms.rtdmsingestor.service.EventProcessor;
+import it.gov.pagopa.rtd.ms.rtdmsingestor.service.RootEventProcessor;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.stream.binding.BindingsLifecycleController;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -22,8 +18,6 @@ import org.springframework.messaging.Message;
 /**
  * Component defining the processing steps in response to storage events.
  */
-
-// https://medium.com/codex/dealing-with-long-running-jobs-using-apache-kafka-192f053e1691
 @Configuration
 @Getter
 public class EventHandler {
@@ -37,7 +31,7 @@ public class EventHandler {
 
   @Bean
   public Consumer<Message<List<EventGridEvent>>> blobStorageConsumer(
-      BlobRestConnector blobRestConnector, EventProcessor blobProcessor) {
+      BlobRestConnector blobRestConnector, RootEventProcessor blobProcessor) {
     return message -> message.getPayload().stream()
             .filter(e -> "Microsoft.Storage.BlobCreated".equals(e.getEventType()))
             .map(EventGridEvent::getSubject).map(BlobApplicationAware::new)
