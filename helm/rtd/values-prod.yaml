@@ -20,7 +20,13 @@ microservice-chart:
 
   envConfig:
     ANONYMIZE_PAYMENT_INSTRUMENT: "false"
-    JAVA_TOOL_OPTIONS: "-javaagent:/app/applicationinsights-agent.jar -Xlog:gc -Xmx2g -Xms2g"
+    JAVA_TOOL_OPTIONS: "-javaagent:/app/applicationinsights-agent.jar -Xmx2g -Xms2g"
+    WALLET_MAX_RETRIES: "5"
+    WALLET_RETRY_MAX_INTERVAL_MS: "10"
+    THREAD_POOL: "8"
+    MAX_CONNECTION_POOL: "20"
+    CONNECTION_POOL_PER_ROUTE: "10"
+    DEFAULT_HTTP_KEEP_ALIVE: "30000"
 
   #  autoscaling:
   #    enable: false

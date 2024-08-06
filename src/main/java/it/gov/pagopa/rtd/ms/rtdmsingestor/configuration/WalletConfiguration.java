@@ -10,16 +10,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Setter
 @AllArgsConstructor
 public class WalletConfiguration {
-
   private String baseUrl;
   private String apiKey;
   private String updateContracts;
   private String deleteContracts;
   private Integer readTimeout;
   private Integer connectionTimeout;
-  private Integer rateLimit;
-  private Integer limitRefreshPeriodMilliSeconds;
-  private Integer rateLimitTimeoutMilliSeconds;
   private Integer maxRetryAttempt;
   private Integer retryMaxIntervalMilliSeconds;
   private Integer threadPool;
