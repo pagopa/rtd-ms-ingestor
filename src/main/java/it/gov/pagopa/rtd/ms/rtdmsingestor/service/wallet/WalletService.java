@@ -40,7 +40,7 @@ public class WalletService {
     "Ocp-Apim-Subscription-Key";
   private static final String CONTRACT_HMAC_HEADER = "x-contract-hmac";
 
-  record ParsedHttpResponse(
+  public record ParsedHttpResponse(
           int statusCode,
           String bodyResponse,
           String statusReason
@@ -127,7 +127,7 @@ public class WalletService {
     String contractIdentifier,
     String contractHmac
   ) {
-    String uri = walletBaseUrl + deleteContractsEndpoint;
+    final String uri = walletBaseUrl + deleteContractsEndpoint;
     final HttpPost deleteContract = new HttpPost(uri);
     deleteContract.setHeader(
       new BasicHeader(APIM_SUBSCRIPTION_HEADER, walletApiKey)
@@ -167,22 +167,11 @@ public class WalletService {
   }
 
   private ParsedHttpResponse executeApacheClientRequest(HttpPost request) throws IOException {
-    return httpClient.execute(request, response -> {
-      int statusCode = response.getStatusLine().getStatusCode();
-      if (statusCode == HttpStatus.SC_OK || statusCode == HttpStatus.SC_NO_CONTENT) {
-        return new ParsedHttpResponse(
-                response.getStatusLine().getStatusCode(),
-                ApacheUtils.readEntityResponse(response.getEntity()),
-                response.getStatusLine().getReasonPhrase()
-        );
-      } else {
-        return new ParsedHttpResponse(
-                response.getStatusLine().getStatusCode(),
-                ApacheUtils.readEntityResponse(response.getEntity()),
-                response.getStatusLine().getReasonPhrase()
-        );
-      }
-    });
+    return httpClient.execute(request, response -> new ParsedHttpResponse(
+            response.getStatusLine().getStatusCode(),
+            ApacheUtils.readEntityResponse(response.getEntity()),
+            response.getStatusLine().getReasonPhrase()
+    ));
   }
 
   private void attachLoggerToRetryEvents(Retry retry) {
